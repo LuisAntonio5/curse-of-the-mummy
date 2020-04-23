@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script type="text/javascript" src="phaser.js"></script>
+    <script type="text/javascript" src="Load.js"></script>
+    <script type="text/javascript" src="Menu.js"></script>
+    <script type="text/javascript" src="Level1.js"></script>
+    <script type="text/javascript" src="Boot.js"></script>
+    <script type="text/javascript" src="gameEngine.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript">
+      var game = new GameEngine();
+      window.onload = function() {
+        game.phaser.state.add("Boot", bootState);
+        game.phaser.state.add("Load", loadState);
+        game.phaser.state.add("Menu", menuState);
+        game.phaser.state.add("Level1", level1);
+
+        game.phaser.state.start("Boot");
+      };
+    </script>
+  </body>
+</html>
