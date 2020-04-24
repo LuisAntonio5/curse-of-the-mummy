@@ -1,8 +1,12 @@
+var thisLevel = null;
+
 var level1 = {
   preload: () => {},
   create: () => {
-    console.log(game);
-    var level1 = new Level1();
-    level1.drawMap(game);
+    thisLevel = new Level1();
+    thisLevel.drawMap(game);
+  },
+  update: () => {
+    game.phaser.physics.arcade.collide(thisLevel.bigMack, thisLevel.bounds);
   }
 };

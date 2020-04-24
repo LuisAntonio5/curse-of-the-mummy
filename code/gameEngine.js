@@ -10,27 +10,8 @@ class GameEngine {
   }
 
   loadImages(list) {
-    //RECEBE UM ARRAY DO TIPO [["chao","/assets/chao.png"]]
-    let nLoaded = 0;
-    const imgLoadedHandler = ev => {
-      var img = ev.target;
-      this.sprites[ev.path[0].id] = this.getImageData(img).data;
-      nLoaded += 1;
-      if (nLoaded === list.length) {
-        //TODAS AS IMAGENS SAO CARREGAS NO INICIO COM AS LABELS DEFENIDAS EM BOOT.js
-        console.log(list.length);
-        game.phaser.state.start("Load");
-      }
-    };
-
     list.map(key => {
       this.phaser.load.image(key[0], key[1]);
-      var img = new Image();
-      this.sprites[key[0]] = null;
-      console.log(this.sprites);
-      img.addEventListener("load", imgLoadedHandler);
-      img.id = key[0];
-      img.src = key[1]; //dá ordem de carregamento da imagem
     });
   }
 
@@ -48,14 +29,24 @@ class GameEngine {
     map.immovableObjects.push(newTorch);
   }
 
-  getImageData(img) {
-    const canvas = document.createElement("canvas");
-    canvas.width = this.width;
-    canvas.height = this.height;
+  drawBound(x, y, width, group, vertical) {
+    var platform = group.create(x, y, "bounds");
+    platform.width = width;
+    platform.body.immovable = true;
+    if (vertical) {
+      platform.angle = 90;
+    }
+  }
 
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, img.width, img.height);
-    return ctx.getImageData(0, 0, img.width, img.height);
+  placeCharacter(x, y, character) {
+    var newCharacter = this.phaser.add.sprite(x, y, character);
+    newCharacter.scale.setTo(2, 2);
+    newCharacter.smoothed = false;
+    this.phaser.physics.arcade.enable(newCharacter);
+    newCharacter.body.bounce.y = 0.01;
+    newCharacter.body.gravity.y = 600;
+    newCharacter.body.collideWorldBounds = true;
+    return newCharacter;
   }
 }
 
@@ -102,55 +93,41 @@ class Level {
 class Level1 extends Level {
   constructor() {
     super();
+    this.bigMack = null;
+    this.lilPearnut = null;
+    this.bounds = null;
     //desenha todo o primeiro nivel
-    game.addTorch(50, 50, this.map);
-    game.addTorch(400, 400, this.map);
   }
 
   drawMap(game) {
     var bounds = game.phaser.add.group();
     bounds.enableBody = true;
-    var platform = bounds.create(0, game.phaser.world.height - 80, "bounds");
-    platform.width = 800;
-    platform.body.immovable = true;
-    platform = bounds.create(273, game.phaser.world.height - 406, "bounds");
-    platform.width = 600;
-    platform.body.immovable = true;
-    platform = bounds.create(0, game.phaser.world.height - 222, "bounds");
-    platform.width = 430;
-    platform.body.immovable = true;
-    platform = bounds.create(0, game.phaser.world.height - 206, "bounds");
-    platform.width = 430;
-    platform.body.immovable = true;
-    platform = bounds.create(273, game.phaser.world.height - 392, "bounds");
-    platform.width = 600;
-    platform.body.immovable = true;
-    platform = bounds.create(0, 48, "bounds");
-    platform.width = 800;
-    platform.body.immovable = true;
-    platform = bounds.create(435, 385, "bounds");
-    platform.angle = 90;
-    platform.width = 15;
-    platform.body.immovable = true;
-    platform = bounds.create(281, 200, "bounds");
-    platform.angle = 90;
-    platform.width = 15;
-    platform.body.immovable = true;
-    platform = bounds.create(24, 0, "bounds");
-    platform.angle = 90;
-    platform.width = 600;
-    platform.body.immovable = true;
-    platform = bounds.create(this.phaser.world.width - 10, 0, "bounds");
-    platform.angle = 90;
-    platform.width = 600;
-    platform.body.immovable = true;
-    var background = this.phaser.add.sprite(0, 0, "backgroundLevel");
-    background.scale.setTo(1, 0.5);
-    this.placeObject(50, this.phaser.world.height - 167, "bigMack");
+    //PASSR TUDO PARA A FUNÇAO DRAW BOUND
+    game.drawBound(0, game.phaser.world.height - 80, 800, bounds);
+    game.drawBound(273, game.phaser.world.height - 406, 600, bounds);
+    game.drawBound(0, game.phaser.world.height - 222, 430, bounds);
+    game.drawBound(0, game.phaser.world.height - 206, 430, bounds);
+    game.drawBound(273, game.phaser.world.height - 392, 600, bounds);
+    game.drawBound(0, 48, 800, bounds);
+    game.drawBound(435, 385, 15, bounds, 1);
+    game.drawBound(281, 200, 15, bounds, 1);
+    game.drawBound(24, 0, 600, bounds, 1);
+    game.drawBound(game.phaser.world.width - 10, 0, 600, bounds, 1);
 
-    this.phaser.add.sprite(0, 0, level);
-    map.bounds = this.sprites[level];
+    var background = game.phaser.add.sprite(0, 0, "backgroundLevel");
+    background.scale.setTo(0.5, 0.5);
+    game.addTorch(50, 50, this.map);
+    game.addTorch(400, 400, this.map);
 
     //character creation
+    this.bigMack = game.placeCharacter(
+      50,
+      game.phaser.world.height - 250,
+      "bigMack"
+    );
+    game.phaser.add.sprite(0, 0, "level1");
+    //Adicionar os limites do mapa para as colisoes
+    this.bounds = bounds;
+    console.log(bounds);
   }
 }
