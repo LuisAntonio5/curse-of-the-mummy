@@ -5,8 +5,9 @@ var level1 = {
   create: () => {
     thisLevel = new Level1();
     thisLevel.drawMap(game);
+    thisLevel.initializeCharacters(game);
   },
   update: () => {
-    game.phaser.physics.arcade.collide(thisLevel.bigMack, thisLevel.bounds);
+    game.levelUpdate(thisLevel);
   }
 };

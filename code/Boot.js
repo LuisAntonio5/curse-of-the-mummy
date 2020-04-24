@@ -3,10 +3,13 @@ var bootState = {
     game.loadImages([
       ["level1", "assets/plats1.png"],
       ["torch", "assets/torch.png"],
-      ["bounds", "assets/bounds.png"],
+      ["boundsVertical", "assets/boundsVertical.png"],
+      ["boundsHorizontal", "assets/boundsHorizontal.png"],
       ["backgroundLevel", "assets/level-background.png"],
-      ["bigMack", "assets/Gordo.png"]
+      ["bigMack", "assets/Gordo.png"],
+      ["torchInverted", "assets/torchInverted.png"]
     ]);
+    game.loadSpritesheet([["lilPeanut", "assets/lilPeanutSprite.png"]]);
   },
 
   create: () => {
