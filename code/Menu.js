@@ -1,6 +1,6 @@
 var menuState = {
-  preload: () => {},
-  create: () => {
-    game.phaser.state.start("Level1");
-  }
+	preload: () => {},
+	create: () => {
+		game.phaser.state.start("Options");
+	},
 };
