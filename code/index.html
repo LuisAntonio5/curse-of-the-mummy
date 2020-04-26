@@ -12,6 +12,7 @@
 		<script type="text/javascript" src="Options.js"></script>
 		<script type="text/javascript" src="MainMenu.js"></script>
 		<script type="text/javascript" src="Ranking.js"></script>
+		<script type="text/javascript" src="Help.js"></script>
 	</head>
 	<body>
 		<script type="text/javascript">
@@ -25,6 +26,7 @@
 				game.phaser.state.add("MainMenu", MainMenuState);
 				game.phaser.state.add("Level1", level1);
 				game.phaser.state.add("Ranking", rankingState);
+				game.phaser.state.add("Help", helpState);
 				game.phaser.state.start("Boot");
 			};
 		</script>

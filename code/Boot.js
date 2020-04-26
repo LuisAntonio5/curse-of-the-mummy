@@ -28,6 +28,18 @@ var bootState = {
       //ranking
       ["backBtn", "assets/backBtn.png"],
       ["rankingInline", "assets/ranking.png"],
+      //help
+      ["helpInline", "assets/help.png"],
+      ["dKey", "assets/keys/KeySampleD.png"],
+      ["eKey", "assets/keys/KeySampleE.png"],
+      ["aKey", "assets/keys/KeySampleA.png"],
+      ["downKey", "assets/keys/KeySampleHelpDown.png"],
+      ["leftKey", "assets/keys/KeySampleHelpLeft.png"],
+      ["rightKey", "assets/keys/KeySampleHelpRight.png"],
+      ["upKey", "assets/keys/KeySampleHelpUp.png"],
+      ["sKey", "assets/keys/KeySampleHelpS.png"],
+      ["wKey", "assets/keys/KeySampleHelpW.png"],
+      ["rightShiftKey", "assets/keys/KeySampleRightShift.png"],
     ]);
     game.loadSpritesheet([["lilPeanut", "assets/lilPeanutSprite.png"]]);
     game.loadFonts();
