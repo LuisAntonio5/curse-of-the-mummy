@@ -6,10 +6,15 @@ var bootState = {
       ["boundsVertical", "assets/boundsVertical.png"],
       ["boundsHorizontal", "assets/boundsHorizontal.png"],
       ["backgroundLevel", "assets/level-background.png"],
-      ["bigMack", "assets/Gordo.png"],
-      ["torchInverted", "assets/torchInverted.png"]
+      ["torchInverted", "assets/torchInverted.png"],
+      ["elevator", "assets/elevador.png"],
+      ["chain", "assets/chain.png"],
+      ["bigBox", "assets/bigBox.png"],
+      ["smallBox", "assets/smallBox.png"],
+      ["bigMack", "assets/bigMack.png"]
     ]);
     game.loadSpritesheet([["lilPeanut", "assets/lilPeanutSprite.png"]]);
+    game.phaser.load.json("shapes", "assets/222.json");
   },
 
   create: () => {

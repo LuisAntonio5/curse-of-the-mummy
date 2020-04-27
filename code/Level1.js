@@ -1,13 +1,11 @@
-var thisLevel = null;
-
 var level1 = {
   preload: () => {},
   create: () => {
-    thisLevel = new Level1();
-    thisLevel.drawMap(game);
-    thisLevel.initializeCharacters(game);
+    game.currentLevel = new Level1();
+    game.currentLevel.drawMap(game);
+    game.currentLevel.initializeCharacters(game);
   },
   update: () => {
-    game.levelUpdate(thisLevel);
+    game.levelUpdate(game.currentLevel);
   }
 };
