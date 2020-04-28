@@ -8,6 +8,7 @@ var bootState = {
 			["backgroundLevel", "assets/level-background.png"],
 			["bigMack", "assets/Gordo.png"],
 			["torchInverted", "assets/torchInverted.png"],
+			//mainmenu
 			["menuBackground", "assets/menuBackground.png"],
 			["startBtn", "assets/startBtn.png"],
 			["optionsBtn", "assets/optionsBtn.png"],
@@ -26,8 +27,24 @@ var bootState = {
 			["SoundOff", "../images/Sound/SoundIconBaseSoundOFF.png"],
 			["SoundBarEmpty", "../images/Sound/SoundBarEmpty.png"],
 			["SoundBarFilled", "../images/Sound/SoundBarFilled.png"],
+			//ranking
+			["backBtn", "assets/backBtn.png"],
+			["rankingInline", "assets/ranking.png"],
+			//help
+			["helpInline", "assets/help.png"],
+			["dKey", "assets/keys/KeySampleD.png"],
+			["eKey", "assets/keys/KeySampleE.png"],
+			["aKey", "assets/keys/KeySampleA.png"],
+			["downKey", "assets/keys/KeySampleHelpDown.png"],
+			["leftKey", "assets/keys/KeySampleHelpLeft.png"],
+			["rightKey", "assets/keys/KeySampleHelpRight.png"],
+			["upKey", "assets/keys/KeySampleHelpUp.png"],
+			["sKey", "assets/keys/KeySampleHelpS.png"],
+			["wKey", "assets/keys/KeySampleHelpW.png"],
+			["rightShiftKey", "assets/keys/KeySampleRightShift.png"],
 		]);
 		game.loadSpritesheet([["lilPeanut", "assets/lilPeanutSprite.png"]]);
+		game.loadFonts();
 	},
 
 	create: () => {

@@ -11,6 +11,14 @@ class GameEngine {
 		this.bigMack = null;
 	}
 
+	loadFonts() {
+		this.phaser.load.bitmapFont(
+			"myfont",
+			"assets/font/font.png",
+			"assets/font/font.fnt"
+		);
+	}
+
 	loadImages(list) {
 		list.map((key) => {
 			this.phaser.load.image(key[0], key[1]);
@@ -288,23 +296,45 @@ class Menu {
 		this.sprites = [];
 	}
 
+	toOptions() {
+		game.phaser.state.start("Options");
+	}
+
+	toStart() {
+		game.phaser.state.start("Level1");
+	}
+
+	toRanking() {
+		game.phaser.state.start("Ranking");
+	}
+
+	toMainMenu() {
+		game.phaser.state.start("MainMenu");
+	}
+
+	toHelp() {
+		game.phaser.state.start("Help");
+	}
+
 	addSprite(x, y, name) {
 		var sprite = game.phaser.add.sprite(x, y, name);
+		sprite.smoothed = false;
 		this.sprites.push(sprite);
 		return sprite;
 	}
 
-	addButton(x, y, name, func) {
+	addButton(x, y, name, callToAction) {
 		var button = game.phaser.add.button(
 			x,
 			y,
 			name,
-			func,
-			{ this: this, x: x, y: y, key: name },
+			callToAction,
+			this,
 			0,
 			0,
 			0
 		);
+		button.smoothed = false;
 		this.buttons.push(button);
 		return button;
 	}
@@ -324,8 +354,24 @@ class Options extends Menu {
 		this.MenuMusicFilledSoundBars = [];
 	}
 
+	addButton(x, y, name, callToAction) {
+		var button = game.phaser.add.button(
+			x,
+			y,
+			name,
+			callToAction,
+			{ this: this, x: x, y: y },
+			0,
+			0,
+			0
+		);
+		button.smoothed = false;
+		this.buttons.push(button);
+		return button;
+	}
+
 	setVolume(sound, volume, y) {
-		if (volume <= 10) {
+		if (volume <= 10 && volume >= 0) {
 			if (sound == this.SoundEffectsFilledSoundBars) {
 				this.soundEffectsVolume = volume;
 			} else if (sound == this.GameMusicFilledSoundBars) {
@@ -453,6 +499,9 @@ class Options extends Menu {
 		this.addButton(680, 300, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
 		this.addButton(680, 450, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
 
+		//back button nao tem de ser necessariamente de volta para o main menu
+		this.addButton(30, -20, "backBtn", this.toMainMenu).scale.setTo(2.8, 2.8);
+
 		for (let i = 0; i < 10; i++) {
 			var bar = this.addButton(
 				285 + 30 * i,
@@ -527,5 +576,95 @@ class Options extends Menu {
 		);
 		this.setVolume(this.GameMusicFilledSoundBars, this.gameMusicVolume, 297);
 		this.setVolume(this.MenuMusicFilledSoundBars, this.menuMusicVolume, 447);
+	}
+}
+
+class MainMenu extends Menu {
+	constructor() {
+		super();
+	}
+
+	addSprites(game) {
+		this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
+		this.addSprite(100, -75, "titleInline").scale.setTo(0.6, 0.6);
+		this.addSprite(600, 350, "lilPeanutImg").scale.setTo(6, 6);
+		this.addSprite(110, 255, "bigMackImg").scale.setTo(6, 6);
+	}
+
+	addButtons(game) {
+		this.addButton(330, 150, "startBtn", this.toStart).scale.setTo(2.8, 2.8);
+		this.addButton(330, 220, "optionsBtn", this.toOptions).scale.setTo(
+			2.8,
+			2.8
+		);
+		this.addButton(330, 290, "helpBtn", this.toHelp).scale.setTo(2.8, 2.8);
+		this.addButton(330, 360, "rankingBtn", this.toRanking).scale.setTo(
+			2.8,
+			2.8
+		);
+	}
+}
+
+class Ranking extends Menu {
+	constructor() {
+		super();
+	}
+
+	addText(game, t1, t2, t3, t4, t5) {
+		t1 = game.phaser.add.bitmapText(50, 150, "myfont", t1, 32);
+		t2 = game.phaser.add.bitmapText(50, 220, "myfont", t2, 32);
+		t3 = game.phaser.add.bitmapText(50, 290, "myfont", t3, 32);
+		t4 = game.phaser.add.bitmapText(50, 360, "myfont", t4, 32);
+		t5 = game.phaser.add.bitmapText(50, 430, "myfont", t5, 32);
+	}
+
+	addSprites(game) {
+		this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
+		this.addSprite(45, -255, "rankingInline").scale.setTo(0.6, 0.6);
+	}
+
+	addButtons(game) {
+		this.addButton(30, -20, "backBtn", this.toMainMenu).scale.setTo(2.8, 2.8);
+	}
+}
+
+class Help extends Menu {
+	constructor() {
+		super();
+	}
+
+	addText(game, t1, t2, t3, t4, t5, t6) {
+		game.phaser.add.bitmapText(50, 200, "myfont", t1, 32);
+		game.phaser.add.bitmapText(185, 300, "myfont", t2, 12);
+		game.phaser.add.bitmapText(250, 300, "myfont", t3, 12);
+		game.phaser.add.bitmapText(115, 460, "myfont", t4, 12);
+		game.phaser.add.bitmapText(260, 460, "myfont", t5, 12);
+		game.phaser.add.bitmapText(180, 460, "myfont", t6, 12);
+		game.phaser.add.bitmapText(560, 300, "myfont", t2, 12);
+		game.phaser.add.bitmapText(430, 300, "myfont", t3, 12);
+		game.phaser.add.bitmapText(495, 460, "myfont", t4, 12);
+		game.phaser.add.bitmapText(635, 460, "myfont", t5, 12);
+		game.phaser.add.bitmapText(555, 460, "myfont", t6, 12);
+	}
+
+	addSprites(game) {
+		this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
+		this.addSprite(-180, -50, "helpInline").scale.setTo(0.6, 0.6);
+		this.addSprite(145, 350, "sKey").scale.setTo(2.5, 2.5);
+		this.addSprite(145, 280, "wKey").scale.setTo(2.5, 2.5);
+		this.addSprite(220, 350, "dKey").scale.setTo(2.5, 2.5);
+		this.addSprite(220, 280, "eKey").scale.setTo(2.5, 2.5);
+		this.addSprite(70, 350, "aKey").scale.setTo(2.5, 2.5);
+		this.addSprite(520, 350, "downKey").scale.setTo(2.5, 2.5);
+		this.addSprite(450, 350, "leftKey").scale.setTo(2.5, 2.5);
+		this.addSprite(590, 350, "rightKey").scale.setTo(2.5, 2.5);
+		this.addSprite(520, 280, "upKey").scale.setTo(2.5, 2.5);
+		this.addSprite(390, 260, "rightShiftKey").scale.setTo(2.5, 2.5);
+		this.addSprite(720, 400, "lilPeanutImg").scale.setTo(3, 3);
+		this.addSprite(20, 350, "bigMackImg").scale.setTo(3, 3);
+	}
+
+	addButtons(game) {
+		this.addButton(30, -20, "backBtn", this.toMainMenu).scale.setTo(2.8, 2.8);
 	}
 }
