@@ -8,7 +8,7 @@ var bootState = {
 			["backgroundLevel", "assets/level-background.png"],
 			["bigMack", "assets/Gordo.png"],
 			["torchInverted", "assets/torchInverted.png"],
-			["menuBackground", "assets/menuBackground.png"], // same as Background Menu
+			["menuBackground", "assets/menuBackground.png"],
 			["startBtn", "assets/startBtn.png"],
 			["optionsBtn", "assets/optionsBtn.png"],
 			["helpBtn", "assets/helpBtn.png"],
@@ -16,15 +16,16 @@ var bootState = {
 			["titleInline", "assets/title_inline.png"],
 			["lilPeanutImg", "assets/lil.png"],
 			["bigMackImg", "assets/Gordo.png"],
-			["backgroundMenu", "../images/background_menu.png"], // same as menuBackground
 			//options
 			["optionsTitle", "../images/titles/options.png"],
 			["optionsSoundEffects", "../images/text_sprites/sound_effects.png"],
 			["optionsGameMusic", "../images/text_sprites/game_music.png"],
 			["optionsMenuMusic", "../images/text_sprites/menu_music.png"],
-			["SoundLessSoundEffects", "../images/Sound/SoundIconBaseSound-.png"],
-			["SoundLessGameMusic", "../images/Sound/SoundIconBaseSound-.png"],
-			["SoundLessMenuMusic", "../images/Sound/SoundIconBaseSound-.png"],
+			["SoundLess", "../images/Sound/SoundIconBaseSound-.png"],
+			["SoundPlus", "../images/Sound/SoundIconBaseSound+.png"],
+			["SoundOff", "../images/Sound/SoundIconBaseSoundOFF.png"],
+			["SoundBarEmpty", "../images/Sound/SoundBarEmpty.png"],
+			["SoundBarFilled", "../images/Sound/SoundBarFilled.png"],
 		]);
 		game.loadSpritesheet([["lilPeanut", "assets/lilPeanutSprite.png"]]);
 	},

@@ -294,12 +294,17 @@ class Menu {
 		return sprite;
 	}
 
-	addButton(x, y, name) {
-		function print_smth() {
-			console.log("aa");
-		}
-
-		var button = game.phaser.add.button(x, y, name, print_smth, this, 0, 0, 0);
+	addButton(x, y, name, func) {
+		var button = game.phaser.add.button(
+			x,
+			y,
+			name,
+			func,
+			{ this: this, x: x, y: y, key: name },
+			0,
+			0,
+			0
+		);
 		this.buttons.push(button);
 		return button;
 	}
@@ -308,10 +313,109 @@ class Menu {
 class Options extends Menu {
 	constructor() {
 		super();
+		this.soundEffectsVolume = 5;
+		this.gameMusicVolume = 5;
+		this.menuMusicVolume = 5;
+		this.SoundEffectsEmptySoundBars = [];
+		this.SoundEffectsFilledSoundBars = [];
+		this.GameMusicEmptySoundBars = [];
+		this.GameMusicFilledSoundBars = [];
+		this.MenuMusicEmptySoundBars = [];
+		this.MenuMusicFilledSoundBars = [];
+	}
+
+	setVolume(sound, volume, y) {
+		if (volume <= 10) {
+			if (sound == this.SoundEffectsFilledSoundBars) {
+				this.soundEffectsVolume = volume;
+			} else if (sound == this.GameMusicFilledSoundBars) {
+				this.gameMusicVolume = volume;
+			} else if (sound == this.MenuMusicFilledSoundBars) {
+				this.menuMusicVolume = volume;
+			}
+
+			for (let i = 0; i < volume; i++) {
+				if (!sound[i].alive) {
+					sound[i].reset(285 + 30 * i, y);
+				}
+			}
+			for (let i = volume; i < 10; i++) {
+				if (sound[i].alive) {
+					sound[i].kill();
+				}
+			}
+		}
+	}
+
+	changeVolume() {
+		var volume;
+		if (this.y == 147) {
+			volume = (this.x - 285) / 30 + 1;
+			this.this.setVolume(this.this.SoundEffectsFilledSoundBars, volume, 147);
+		} else if (this.y == 297) {
+			volume = (this.x - 285) / 30 + 1;
+			this.this.setVolume(this.this.GameMusicFilledSoundBars, volume, 297);
+		} else if (this.y == 447) {
+			volume = (this.x - 285) / 30 + 1;
+			this.this.setVolume(this.this.MenuMusicFilledSoundBars, volume, 447);
+		}
+	}
+
+	decreaseVolume() {
+		if (this.y == 150) {
+			this.this.setVolume(
+				this.this.SoundEffectsFilledSoundBars,
+				this.this.soundEffectsVolume - 1,
+				147
+			);
+		} else if (this.y == 300) {
+			this.this.setVolume(
+				this.this.GameMusicFilledSoundBars,
+				this.this.gameMusicVolume - 1,
+				297
+			);
+		} else if (this.y == 450) {
+			this.this.setVolume(
+				this.this.MenuMusicFilledSoundBars,
+				this.this.menuMusicVolume - 1,
+				447
+			);
+		}
+	}
+	increaseVolume() {
+		if (this.y == 150) {
+			this.this.setVolume(
+				this.this.SoundEffectsFilledSoundBars,
+				this.this.soundEffectsVolume + 1,
+				147
+			);
+		} else if (this.y == 300) {
+			this.this.setVolume(
+				this.this.GameMusicFilledSoundBars,
+				this.this.gameMusicVolume + 1,
+				297
+			);
+		} else if (this.y == 450) {
+			this.this.setVolume(
+				this.this.MenuMusicFilledSoundBars,
+				this.this.menuMusicVolume + 1,
+				447
+			);
+		}
+	}
+
+	muteVolume() {
+		if (this.y == 150) {
+			this.this.setVolume(this.this.SoundEffectsFilledSoundBars, 0, 147);
+		} else if (this.y == 300) {
+			this.this.setVolume(this.this.GameMusicFilledSoundBars, 0, 297);
+		} else if (this.y == 450) {
+			this.this.setVolume(this.this.MenuMusicFilledSoundBars, 0, 447);
+		}
 	}
 
 	addSprites(game) {
-		this.addSprite(0, 0, "backgroundMenu");
+		this.addSprite(0, 0, "menuBackground");
 		this.addSprite(175, -100, "optionsTitle").scale.setTo(0.75, 0.75);
 		this.addSprite(50, 150, "optionsSoundEffects").scale.setTo(0.6, 0.6);
 		this.addSprite(65, 300, "optionsGameMusic").scale.setTo(0.6, 0.6);
@@ -319,8 +423,109 @@ class Options extends Menu {
 	}
 
 	addButtons(game) {
-		this.addButton(200, 130, "SoundLessSoundEffects").scale.setTo(1.5, 1.5);
-		this.addButton(200, 280, "SoundLessGameMusic").scale.setTo(1.5, 1.5);
-		this.addButton(200, 430, "SoundLessMenuMusic").scale.setTo(1.5, 1.5);
+		this.addButton(210, 150, "SoundLess", this.decreaseVolume).scale.setTo(
+			1.5,
+			1.5
+		);
+		this.addButton(210, 300, "SoundLess", this.decreaseVolume).scale.setTo(
+			1.5,
+			1.5
+		);
+		this.addButton(210, 450, "SoundLess", this.decreaseVolume).scale.setTo(
+			1.5,
+			1.5
+		);
+
+		this.addButton(605, 150, "SoundPlus", this.increaseVolume).scale.setTo(
+			1.5,
+			1.5
+		);
+		this.addButton(605, 300, "SoundPlus", this.increaseVolume).scale.setTo(
+			1.5,
+			1.5
+		);
+		this.addButton(605, 450, "SoundPlus", this.increaseVolume).scale.setTo(
+			1.5,
+			1.5
+		);
+
+		this.addButton(680, 150, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
+		this.addButton(680, 300, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
+		this.addButton(680, 450, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
+
+		for (let i = 0; i < 10; i++) {
+			var bar = this.addButton(
+				285 + 30 * i,
+				147,
+				"SoundBarEmpty",
+				this.changeVolume
+			);
+			bar.scale.setTo(2.5, 2.2);
+			this.SoundEffectsEmptySoundBars.push(bar);
+		}
+
+		for (let i = 0; i < 10; i++) {
+			var bar = this.addButton(
+				285 + 30 * i,
+				147,
+				"SoundBarFilled",
+				this.changeVolume
+			);
+			bar.scale.setTo(2.6, 2.2);
+
+			this.SoundEffectsFilledSoundBars.push(bar);
+		}
+
+		for (let i = 0; i < 10; i++) {
+			var bar = this.addButton(
+				285 + 30 * i,
+				297,
+				"SoundBarEmpty",
+				this.changeVolume
+			);
+			bar.scale.setTo(2.5, 2.2);
+			this.GameMusicEmptySoundBars.push(bar);
+		}
+
+		for (let i = 0; i < 10; i++) {
+			var bar = this.addButton(
+				285 + 30 * i,
+				297,
+				"SoundBarFilled",
+				this.changeVolume
+			);
+			bar.scale.setTo(2.6, 2.2);
+			this.GameMusicFilledSoundBars.push(bar);
+		}
+
+		for (let i = 0; i < 10; i++) {
+			var bar = this.addButton(
+				285 + 30 * i,
+				447,
+				"SoundBarEmpty",
+				this.changeVolume
+			);
+			bar.scale.setTo(2.5, 2.2);
+			this.MenuMusicEmptySoundBars.push(bar);
+		}
+
+		for (let i = 0; i < 10; i++) {
+			var bar = this.addButton(
+				285 + 30 * i,
+				447,
+				"SoundBarFilled",
+				this.changeVolume
+			);
+			bar.scale.setTo(2.6, 2.2);
+			this.MenuMusicFilledSoundBars.push(bar);
+		}
+
+		this.setVolume(
+			this.SoundEffectsFilledSoundBars,
+			this.soundEffectsVolume,
+			147
+		);
+		this.setVolume(this.GameMusicFilledSoundBars, this.gameMusicVolume, 297);
+		this.setVolume(this.MenuMusicFilledSoundBars, this.menuMusicVolume, 447);
 	}
 }

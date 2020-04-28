@@ -23,6 +23,9 @@ var menuState = {
 			game.phaser.state.start("Level1");
 		});
 
-		//game.phaser.state.start("Options");
+		optionsBtn.inputEnabled = true;
+		optionsBtn.events.onInputDown.add(function () {
+			game.phaser.state.start("Options");
+		});
 	},
 };
