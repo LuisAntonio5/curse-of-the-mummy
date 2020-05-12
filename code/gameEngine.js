@@ -168,7 +168,7 @@ class Player {
 	}
 }
 
-class Map {
+class Map1 {
 	constructor() {
 		this.bounds = null;
 		this.immovableObjects = [];
@@ -204,7 +204,7 @@ class Bounds extends Sprite {
 
 class Level {
 	constructor() {
-		this.map = new Map();
+		this.map = new Map1();
 	}
 }
 
@@ -392,6 +392,23 @@ class Options extends Menu {
 		return button;
 	}
 
+	exitOptions() {
+		//Update DB
+		game.player.docRef
+			.set({
+				name: game.player.name,
+				score: game.player.score,
+				soundEffectsVolume: game.player.soundEffectsVolume,
+				gameMusicVolume: game.player.gameMusicVolume,
+				menuMusicVolume: game.player.menuMusicVolume,
+			})
+			.catch((err) => {
+				console.log("error", err);
+			});
+		//TODO - ver se é para voltar para main menu ou para o nivel
+		this.this.toMainMenu();
+	}
+
 	setVolume(sound, volume, y) {
 		if (volume <= 10 && volume >= 0) {
 			if (sound == this.SoundEffectsFilledSoundBars) {
@@ -415,23 +432,6 @@ class Options extends Menu {
 					sound[i].kill();
 				}
 			}
-
-			//Update db
-			//TODO - mudar para o trigger do backbutton
-			// game.player.docRef
-			// 	.set({
-			// 		name: game.player.name,
-			// 		score: game.player.score,
-			// 		soundEffectsVolume: 10,
-			// 		gameMusicVolume: game.player.gameMusicVolume,
-			// 		menuMusicVolume: game.player.menuMusicVolume,
-			// 	})
-			// 	.then(() => {
-			// 		console.log("success");
-			// 	})
-			// 	.catch((err) => {
-			// 		console.log("error", err);
-			// 	});
 		}
 	}
 
@@ -542,7 +542,7 @@ class Options extends Menu {
 		this.addButton(680, 450, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
 
 		//back button nao tem de ser necessariamente de volta para o main menu
-		this.addButton(50, 30, "backBtn", this.toMainMenu).scale.setTo(2.8, 2.8);
+		this.addButton(50, 30, "backBtn", this.exitOptions).scale.setTo(2.8, 2.8);
 
 		for (let i = 0; i < 10; i++) {
 			var bar = this.addButton(
@@ -786,7 +786,6 @@ class NameInput extends Menu {
 		});
 		this.input.inputEnabled = true;
 		this.input.events.onInputUp.add(this.inputFocus, this);
-		// this.input.input.useHandCursor = true;
 		this.input.canvasInput.value("");
 		this.input.canvasInput.focus();
 	}
@@ -801,44 +800,48 @@ class NameInput extends Menu {
 		if (this.input.canvasInput._value != "") {
 			var docRef = db.collection("players").doc(this.input.canvasInput._value);
 
-			//TODO - verificar se existe
-			docRef
-				.set({
-					name: this.input.canvasInput._value,
-					score: 0,
-					soundEffectsVolume: 5,
-					gameMusicVolume: 5,
-					menuMusicVolume: 5,
-				})
-				.then(() => {
-					console.log("success");
+			var doc = docRef
+				.get()
+				.then((doc) => {
+					if (doc && doc.exists) {
+						//Player exists in DB
+						game.player = new Player(
+							this.input.canvasInput._value,
+							doc.data().soundEffectsVolume,
+							doc.data().gameMusicVolume,
+							doc.data().menuMusicVolume,
+							doc.data().score,
+							docRef
+						);
+					} else {
+						//Player does not exist
+						docRef
+							.set({
+								name: this.input.canvasInput._value,
+								score: 0,
+								soundEffectsVolume: 5,
+								gameMusicVolume: 5,
+								menuMusicVolume: 5,
+							})
+							.then(() => {
+								game.player = new Player(
+									this.input.canvasInput._value,
+									5,
+									5,
+									5,
+									0,
+									docRef
+								);
+							})
+							.catch((err) => {
+								console.log("error setting document", err);
+							});
+					}
 				})
 				.catch((err) => {
-					console.log("error", err);
+					console.log("Error getting document", err);
 				});
 
-			// var doc = docRef
-			// 	.get()
-			// 	.then((doc) => {
-			// 		if (doc && doc.exists) {
-			// 			console.log("Document data:", doc.data());
-			// 		} else {
-			// 			console.log("No such document!");
-			// 		}
-			// 	})
-			// 	.catch((err) => {
-			// 		console.log("Error getting document", err);
-			// 	});
-
-			// console.log(doc);
-			game.player = new Player(
-				this.input.canvasInput._value,
-				5,
-				5,
-				5,
-				0,
-				docRef
-			);
 			this.toMainMenu();
 		} else {
 			alert("Please enter a name");
