@@ -39,7 +39,7 @@ class GameEngine {
     newCharacter.scale.setTo(2, 2);
     newCharacter.smoothed = false;
     this.phaser.physics.arcade.enable(newCharacter);
-    newCharacter.body.gravity.y = 900;
+    newCharacter.body.gravity.y = 800;
     newCharacter.body.collideWorldBounds = true;
     this.phaser.debug.body("lilPeanut");
     return newCharacter;
@@ -384,7 +384,7 @@ class GameEngine {
         if (
           this.checkIfOnTopTotal(level.lilPeanut.obj, key.data) &&
           this.checkIfOnTopTotal(level.bigMack.obj, key.data) &&
-          key.data.body.y >= key.maxY
+          key.data.body.y >= key.y
         ) {
           /*key.data.body.y >= key.maxY &&
           key.data.body.x <
@@ -395,7 +395,7 @@ class GameEngine {
           this.elevatorUp(key, level.map.chains);
         } else {
           if (
-            key.data.body.y <= key.y &&
+            key.data.body.y <= key.minY &&
             !this.checkIfOnTopTotal(level.lilPeanut.obj, key.data) &&
             !this.checkIfOnTopTotal(level.bigMack.obj, key.data)
           )
@@ -406,6 +406,29 @@ class GameEngine {
         }
       } else {
         //CHEGA UMA COLISAO EM CIMA PARA SUBIR
+        if (
+          (this.checkIfOnTopTotal(level.lilPeanut.obj, key.data) ||
+            this.checkIfOnTopTotal(level.bigMack.obj, key.data)) &&
+          key.data.body.y >= key.y
+        ) {
+          /*key.data.body.y >= key.maxY &&
+          key.data.body.x <
+            level.lilPeanut.obj.body.x + level.lilPeanut.obj.body.width &&
+          key.data.body.x + key.data.body.width > level.lilPeanut.obj.body.x &&
+          key.data.body.y >=
+            level.lilPeanut.obj.body.y + level.lilPeanut.obj.body.height */
+          this.elevatorUp(key, level.map.chains);
+        } else {
+          if (
+            key.data.body.y <= key.minY &&
+            !this.checkIfOnTopTotal(level.lilPeanut.obj, key.data) &&
+            !this.checkIfOnTopTotal(level.bigMack.obj, key.data)
+          )
+            this.elevatorDown(key, level.map.chains);
+          else {
+            key.data.body.velocity.y = 0;
+          }
+        }
       }
     });
   }
@@ -418,46 +441,74 @@ class GameEngine {
     this.collisionWithBounds(level);
     //CHECK NOS ELEVADORES
     this.checkElevatorStatus(level);
+    if (!level.animation) {
+      //LILPEANUT
+      level.lilPeanut.obj.body.velocity.x = 0;
+      if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.RIGHT)) {
+        level.lilPeanut.doWalkRightAnimation();
+      } else if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.LEFT)) {
+        level.lilPeanut.doWalkLeftAnimation();
+      } else {
+        level.lilPeanut.restAnimation();
+      }
+      //  Allow the player to jump if they are touching the ground.
+      if (
+        this.phaser.input.keyboard.isDown(Phaser.KeyCode.UP) &&
+        level.lilPeanut.obj.body.touching.down
+      ) {
+        level.lilPeanut.jump();
+      }
 
-    //LILPEANUT
-    level.lilPeanut.obj.body.velocity.x = 0;
-    if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.RIGHT)) {
-      level.lilPeanut.doWalkRightAnimation();
-    } else if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.LEFT)) {
-      level.lilPeanut.doWalkLeftAnimation();
-    } else {
-      level.lilPeanut.restAnimation();
-    }
-    //  Allow the player to jump if they are touching the ground.
-    if (
-      this.phaser.input.keyboard.isDown(Phaser.KeyCode.UP) &&
-      level.lilPeanut.obj.body.touching.down
-    ) {
-      level.lilPeanut.jump();
-    }
+      //BIGMACK
+      level.bigMack.obj.body.velocity.x = 0;
+      if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.D)) {
+        level.bigMack.doWalkRightAnimation();
+      } else if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.A)) {
+        level.bigMack.doWalkLeftAnimation();
+      } else {
+        level.bigMack.restAnimation();
+      }
+      //  Allow the player to jump if they are touching the ground.
+      if (
+        this.phaser.input.keyboard.isDown(Phaser.KeyCode.W) &&
+        level.bigMack.obj.body.touching.down
+      ) {
+        level.bigMack.jump();
+      }
 
-    //BIGMACK
-    level.bigMack.obj.body.velocity.x = 0;
-    if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.D)) {
-      level.bigMack.doWalkRightAnimation();
-    } else if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.A)) {
-      level.bigMack.doWalkLeftAnimation();
-    } else {
-      level.bigMack.restAnimation();
-    }
-    //  Allow the player to jump if they are touching the ground.
-    if (
-      this.phaser.input.keyboard.isDown(Phaser.KeyCode.W) &&
-      level.bigMack.obj.body.touching.down
-    ) {
-      level.bigMack.jump();
-    }
+      //VERIFICA FIM DO JOGO
+      //CASO OS DOIS ESTEJAM CADA UM NA SUA PORTA
+      if (level.checkCompleted()) {
+        level.animation = "COMPLETED";
+      }
 
-    //VERIFICA FIM DO JOGO
-    //CASO OS DOIS ESTEJAM CADA UM NA SUA PORTA
-    if (level.checkCompleted()) {
+      //TIMER UPDATE
+      level.timer.updateTimer();
+    } else if (level.animation === "COMPLETED") {
+      const offsetXLil = 30;
+      const offsetXBig = 60;
+
+      level.lilPeanut.endAnimation(
+        level,
+        level.map.lilPeanutDoor.data.x +
+          level.map.lilPeanutDoor.data.width / 2 -
+          offsetXLil,
+        level.map.lilPeanutDoor.data.y +
+          level.map.lilPeanutDoor.data.height -
+          level.lilPeanut.obj.body.height
+      );
+      level.bigMack.endAnimation(
+        level,
+        level.map.bigMackDoor.data.x +
+          level.map.bigMackDoor.data.width / 2 -
+          offsetXBig,
+        level.map.bigMackDoor.data.y +
+          level.map.bigMackDoor.data.height -
+          level.bigMack.obj.body.height
+      );
       console.log("nextLevel");
-      //TODO: NEXT LEVEL
+      //TODO: SHOW MENU DE LEVEL COMPLETE
+      //TODO: Velocidade a baixo de 0.05 começar a animaçao
     }
 
     //COLOCA SERRAS EM MOVIMENTO
@@ -473,9 +524,6 @@ class GameEngine {
 
     //CHECKA OVERLAP NOS OBJETOS QUE AINDA FORAM APANHADOS
     this.checkCollected(level);
-
-    //TIMER UPDATE
-    level.timer.updateTimer();
   }
 
   gameover(level) {
@@ -532,7 +580,7 @@ class GameEngine {
   }
 }
 
-class Map {
+class MapLevel {
   constructor() {
     this.bounds = null;
     this.immovableObjects = [];
@@ -548,24 +596,30 @@ class Map {
     this.coll;
   }
 
-  addElevator(x, y, map, num, maxX, maxY) {
+  addElevator(x, y, num, maxX, minY) {
+    console.log(minY);
+    console.log(y);
+
     const elevator = game.phaser.add.sprite(x, y, "elevator");
     game.phaser.physics.arcade.enable(elevator);
     elevator.body.gravity.y = 0;
     elevator.enableBody = true;
     elevator.body.immovable = true;
-    const newElevator = new Elevator(x, y, elevator, num, maxX, maxY);
+    const newElevator = new Elevator(x, y, elevator, num, maxX, minY);
     elevator.scale.setTo(10, 2.5);
     elevator.smoothed = false;
     this.elevators.push(newElevator);
   }
 
-  addChain(x, y, chains) {
+  addChain(x, y, chains, visible) {
+    console.log(visible);
+
     const chain = game.phaser.add.sprite(x, y, "chain");
     const newChain = new Chain(x, y, chain);
     chain.scale.setTo(1.5, 1.2);
     chain.smoothed = false;
     chains.push(newChain);
+    chain.visible = visible;
   }
 
   addBigBox(x, y) {
@@ -728,7 +782,7 @@ class Map {
 
 class Level {
   constructor() {
-    this.map = new Map();
+    this.map = new MapLevel();
     this.bigMack = null;
     this.lilPeanut = null;
     this.bounds = null;
@@ -760,33 +814,11 @@ class Level {
     board.smoothed = false;
     board.fixedToCamera = true;
     board = game.phaser.add.button(x + offSetX, y, "menuBoard", () => {
-      //var menuInGame = new menuInGame();
       game.phaser.paused = true;
-      //menuInGame.draw();
     });
     board.scale.setTo(scale, scale);
     board.smoothed = false;
     board.fixedToCamera = true;
-  }
-
-  debug() {
-    game.phaser.debug.body(this.lilPeanut.obj, "rgba(255, 255, 0, 0.1)");
-    game.phaser.debug.body(this.map.elevators[0].data, "rgba(0, 255, 0, 0.5)");
-    game.phaser.debug.body(this.map.smallBox[0].data, "rgba(255, 255, 0, 0.1)");
-    game.phaser.debug.body(this.map.bigBox[0].data, "rgba(255, 255, 0, 0.1)");
-    game.phaser.debug.body(this.lilPeanut.obj, "rgba(255, 255, 0, 0.1)");
-    game.phaser.debug.body(this.bigMack.obj, "rgba(255, 255, 0, 0.6)");
-    game.phaser.debug.body(this.map.buttons[0].data, "rgba(255, 255, 0, 0.6)");
-    game.phaser.debug.body(
-      this.map.eletricSaw[0].data,
-      "rgba(255, 255, 0, 0.6)"
-    );
-  }
-}
-
-class Level1 extends Level {
-  constructor() {
-    super();
   }
 
   checkCompleted() {
@@ -814,6 +846,35 @@ class Level1 extends Level {
     return false;
   }
 
+  initializeCharacters(game, xBigMack, yBigMack, xLil, yLil) {
+    //character creation
+    var lilPeanutObj = game.placeCharacter(xLil, yLil, "lilPeanut");
+    this.lilPeanut = new lilPeanut(lilPeanutObj);
+
+    var bigMackObj = game.placeCharacter(xBigMack, yBigMack, "bigMack");
+    this.bigMack = new bigMack(bigMackObj);
+  }
+
+  debug() {
+    game.phaser.debug.body(this.lilPeanut.obj, "rgba(255, 255, 0, 0.1)");
+    game.phaser.debug.body(this.map.elevators[0].data, "rgba(0, 255, 0, 0.5)");
+    game.phaser.debug.body(this.map.smallBox[0].data, "rgba(255, 255, 0, 0.1)");
+    game.phaser.debug.body(this.map.bigBox[0].data, "rgba(255, 255, 0, 0.1)");
+    game.phaser.debug.body(this.lilPeanut.obj, "rgba(255, 255, 0, 0.1)");
+    game.phaser.debug.body(this.bigMack.obj, "rgba(255, 255, 0, 0.6)");
+    game.phaser.debug.body(this.map.buttons[0].data, "rgba(255, 255, 0, 0.6)");
+    game.phaser.debug.body(
+      this.map.eletricSaw[0].data,
+      "rgba(255, 255, 0, 0.6)"
+    );
+  }
+}
+
+class Level1 extends Level {
+  constructor() {
+    super();
+  }
+
   drawMap(game) {
     var nEletricSaw = 0;
     var bounds = game.phaser.add.group();
@@ -833,7 +894,6 @@ class Level1 extends Level {
 
     var background = game.phaser.add.sprite(0, 0, "backgroundLevel");
     background.scale.setTo(0.5, 0.5);
-    //game.addTorch(50, 50, this.map);
 
     //TOCHAS
     this.map.addTorchInverted(
@@ -845,17 +905,13 @@ class Level1 extends Level {
 
     //ELEVADOR
     //MAIOR INDICE MAIOR y
-    for (var i = 0; i < 19; i++) {
-      this.map.addChain(500, 550 - 19 * (18 - i), this.map.chains);
+    for (var i = 0; i < 10; i++) {
+      this.map.addChain(500, 550 - 19 * (18 - i), this.map.chains, true);
     }
-    this.map.addElevator(
-      430,
-      561,
-      this.map,
-      2,
-      null,
-      game.phaser.world.height - 216
-    );
+    for (var i = 10; i < 19; i++) {
+      this.map.addChain(500, 550 - 19 * (18 - i), this.map.chains, false);
+    }
+    this.map.addElevator(430, game.phaser.world.height - 216, 1, null, 561);
 
     //BOXES
     this.map.addBigBox(300, 250);
@@ -893,23 +949,6 @@ class Level1 extends Level {
     this.map.addCollectableBigMack(180, 490);
     this.map.addCollectableBigMack(460, 380);
   }
-
-  initializeCharacters(game) {
-    //character creation
-    var lilPeanutObj = game.placeCharacter(
-      60,
-      game.phaser.world.height - 175,
-      "lilPeanut"
-    );
-    this.lilPeanut = new lilPeanut(lilPeanutObj);
-
-    var bigMackObj = game.placeCharacter(
-      30,
-      game.phaser.world.height - 200,
-      "bigMack"
-    );
-    this.bigMack = new bigMack(bigMackObj);
-  }
 }
 
 class Character {
@@ -943,7 +982,7 @@ class bigMack extends Character {
   }
 
   jump() {
-    this.obj.body.velocity.y = -400;
+    this.obj.body.velocity.y = -380;
   }
 
   restAnimation() {
@@ -953,13 +992,17 @@ class bigMack extends Character {
       this.obj.play("restLeft");
     }
   }
+
+  endAnimation(level, x, y) {
+    game.phaser.physics.arcade.moveToXY(this.obj, x, y, 10, 300);
+  }
 }
 
 class lilPeanut extends Character {
   constructor(charObj) {
     super(charObj);
     this.boxAnim = false;
-    charObj.body.setSize(13, 26, 10, 5);
+    charObj.body.setSize(11, 26, 10, 5);
     charObj.frame = 3;
     charObj.animations.add("walkLeft", [0, 1, 2], 10, true);
     charObj.animations.add("walkRight", [3, 4, 5], 10, true);
@@ -1000,7 +1043,7 @@ class lilPeanut extends Character {
 
   jump() {
     this.obj.play("jump");
-    this.obj.body.velocity.y = -400;
+    this.obj.body.velocity.y = -380;
   }
 
   doBoxRightAnimation() {
@@ -1013,6 +1056,16 @@ class lilPeanut extends Character {
     } else if (this.lastAnimation == "left") {
       this.obj.play("restLeft");
     }
+  }
+
+  endAnimation(level, x, y) {
+    if (this.obj.body.x <= x) {
+      //ANDA PARA LADO DIREITO
+      this.obj.play("walkRight");
+    } else {
+      this.obj.play("walkLeft");
+    }
+    game.phaser.physics.arcade.moveToXY(this.obj, x, y, 10, 300);
   }
 }
 
@@ -1048,11 +1101,11 @@ class Bounds extends Sprite {
 }
 
 class Elevator extends Sprite {
-  constructor(x, y, data, num, maxX, maxY) {
+  constructor(x, y, data, num, maxX, minY) {
     super(x, y, data);
     this.num = num;
     this.maxX = maxX;
-    this.maxY = maxY;
+    this.minY = minY;
   }
 }
 

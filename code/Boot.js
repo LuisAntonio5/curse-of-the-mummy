@@ -90,6 +90,6 @@ var bootState = {
 
   create: () => {
     game.phaser.physics.startSystem(Phaser.Physics.ARCADE);
-    game.phaser.state.start("Load");
+    game.phaser.state.start("Level1");
   },
 };
