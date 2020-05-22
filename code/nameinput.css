@@ -1,0 +1,12 @@
+.input-field-name {
+  font-family: Impact;
+  font-size: 48px;
+  position: absolute;
+  left: 160px;
+  top: 300px;
+  width: 530px;
+  height: 80px;
+  background: transparent;
+  border: none;
+  outline: none;
+}

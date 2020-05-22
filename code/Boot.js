@@ -75,6 +75,12 @@ var bootState = {
       ["inputBox", "assets/text_sprites/nameinput.png"],
       ["nothing", "assets/nothing.png"],
       ["submitBtn", "assets/submitBtn.png"],
+      //GameOverMenu
+      ["GameOverMenu", "assets/GameOverMenu.png"],
+      ["restartBtn", "assets/BotaoSampleRestart.png"],
+      //PauseMenu
+      ["pauseMenu", "assets/PauseMenu.png"],
+      ["quitBtn", "assets/BotaoSampleQuit.png"],
     ]);
     game.loadSpritesheet([["lilPeanut", "assets/lilPeanutSprite.png"]], 32);
     game.loadSpritesheet([["eletricSaw", "assets/eletricSawSprite.png"]], 32);
@@ -86,10 +92,15 @@ var bootState = {
     );
     game.loadSpritesheet([["bigMack", "assets/bigMackSprite.png"]], 64);
     game.loadFonts();
+    game.phaser.load.script(
+      "gray",
+      "https://cdn.rawgit.com/photonstorm/phaser-ce/master/filters/Gray.js"
+    );
   },
 
   create: () => {
     game.phaser.physics.startSystem(Phaser.Physics.ARCADE);
-    game.phaser.state.start("Level1");
+    //game.dataBaseGet("bernardo");
+    game.phaser.state.start("Load");
   },
 };

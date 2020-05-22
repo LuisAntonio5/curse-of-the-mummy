@@ -4,7 +4,7 @@ var helpState = {
     help = new Help();
     help.addSprites(game);
     help.addButtons(game);
-    help.addText(
+    help.addTexts(
       game,
       "  BIG MACK    LIL PEANUT",
       "JUMP",

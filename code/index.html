@@ -2,7 +2,27 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>Curse of the mummy</title>
+    <link rel="stylesheet" type="text/css" href="nameinput.css" />
+    <!--FIREBASE SHIT-->
+    <script src="https://www.gstatic.com/firebasejs/7.14.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.14.2/firebase-firestore.js"></script>
+    <script>
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyDUxgX0k6CPV85dz5_PYtK4mWNXPzLLCaI",
+        authDomain: "curse-of-the-mummy.firebaseapp.com",
+        databaseURL: "https://curse-of-the-mummy.firebaseio.com",
+        projectId: "curse-of-the-mummy",
+        storageBucket: "curse-of-the-mummy.appspot.com",
+        messagingSenderId: "964161355554",
+        appId: "1:964161355554:web:56a366487a85f8dfe8af7b",
+        measurementId: "G-M5VTQCFXPD",
+      };
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+    </script>
     <script type="text/javascript" src="phaser.js"></script>
     <script type="text/javascript" src="Load.js"></script>
     <script type="text/javascript" src="MainMenu.js"></script>
@@ -13,6 +33,7 @@
     <script type="text/javascript" src="Ranking.js"></script>
     <script type="text/javascript" src="Options.js"></script>
     <script type="text/javascript" src="gameEngine.js"></script>
+    <script type="text/javascript" src="NameInput.js"></script>
   </head>
   <body>
     <script type="text/javascript">
@@ -22,6 +43,7 @@
         game.phaser.state.add("Load", loadState);
         game.phaser.state.add("MainMenu", MainMenuState);
         game.phaser.state.add("LevelSelector", levelSelectorState);
+        game.phaser.state.add("NameInput", nameInputState);
         game.phaser.state.add("Level1", level1);
         game.phaser.state.add("Options", optionsState);
         game.phaser.state.add("Ranking", rankingState);
@@ -29,5 +51,11 @@
         game.phaser.state.start("Boot");
       };
     </script>
+    <input
+      type="text"
+      name="name-input"
+      class="input-field-name"
+      id="name-input"
+    />
   </body>
 </html>

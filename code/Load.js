@@ -4,6 +4,6 @@ var loadState = {
   },
   create: () => {
     //CREATE ALL IMAGES FROM LOAD PAGE
-    game.phaser.state.start("MainMenu");
+    game.phaser.state.start("NameInput");
   },
 };
