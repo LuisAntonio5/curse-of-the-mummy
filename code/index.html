@@ -1,33 +1,35 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8" />
-    <title></title>
-    <script type="text/javascript" src="phaser.js"></script>
-    <script type="text/javascript" src="Load.js"></script>
-    <script type="text/javascript" src="MainMenu.js"></script>
-    <script type="text/javascript" src="Help.js"></script>
-    <script type="text/javascript" src="LevelSelector.js"></script>
-    <script type="text/javascript" src="Level1.js"></script>
-    <script type="text/javascript" src="Boot.js"></script>
-    <script type="text/javascript" src="Ranking.js"></script>
-    <script type="text/javascript" src="Options.js"></script>
-    <script type="text/javascript" src="gameEngine.js"></script>
-  </head>
-  <body>
-    <script type="text/javascript">
-      var game = new GameEngine();
-      window.onload = function () {
-        game.phaser.state.add("Boot", bootState);
-        game.phaser.state.add("Load", loadState);
-        game.phaser.state.add("MainMenu", MainMenuState);
-        game.phaser.state.add("LevelSelector", levelSelectorState);
-        game.phaser.state.add("Level1", level1);
-        game.phaser.state.add("Options", optionsState);
-        game.phaser.state.add("Ranking", rankingState);
-        game.phaser.state.add("Help", helpState);
-        game.phaser.state.start("Boot");
-      };
-    </script>
-  </body>
+	<head>
+		<meta charset="utf-8" />
+		<title></title>
+		<script type="text/javascript" src="phaser.js"></script>
+		<script type="text/javascript" src="Load.js"></script>
+		<script type="text/javascript" src="MainMenu.js"></script>
+		<script type="text/javascript" src="Help.js"></script>
+		<script type="text/javascript" src="LevelSelector.js"></script>
+		<script type="text/javascript" src="Level1.js"></script>
+		<script type="text/javascript" src="Level2.js"></script>
+		<script type="text/javascript" src="Boot.js"></script>
+		<script type="text/javascript" src="Ranking.js"></script>
+		<script type="text/javascript" src="Options.js"></script>
+		<script type="text/javascript" src="gameEngine.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+			var game = new GameEngine();
+			window.onload = function () {
+				game.phaser.state.add("Boot", bootState);
+				game.phaser.state.add("Load", loadState);
+				game.phaser.state.add("MainMenu", MainMenuState);
+				game.phaser.state.add("LevelSelector", levelSelectorState);
+				game.phaser.state.add("Level1", level1);
+				game.phaser.state.add("Level2", level2);
+				game.phaser.state.add("Options", optionsState);
+				game.phaser.state.add("Ranking", rankingState);
+				game.phaser.state.add("Help", helpState);
+				game.phaser.state.start("Boot");
+			};
+		</script>
+	</body>
 </html>
