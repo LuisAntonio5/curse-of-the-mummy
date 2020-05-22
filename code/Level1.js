@@ -10,6 +10,7 @@ var level1 = {
       60,
       game.phaser.world.height - 175
     );
+    //game.currentLevel.initializeCharacters(game, 350, 50, 350, 75);
   },
   update: () => {
     game.levelUpdate(game.currentLevel);
