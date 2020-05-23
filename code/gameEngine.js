@@ -1,9 +1,9 @@
-var canvasWidth = 800;
-var canvasHeight = 600;
 const debug = false;
 //"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files
 class GameEngine {
   constructor() {
+    var canvasWidth = 800;
+    var canvasHeight = 600;
     this.sprites = {};
     this.player = null;
     this.currentLevel = null;
@@ -121,6 +121,7 @@ class GameEngine {
     //BIG BOXES COM ELEVADORES E CHARACTERS E SMALL BOXES
     level.map.bigBox.map((key) => {
       //BIG BOX COM LILPEANUT
+
       this.phaser.physics.arcade.collide(
         key.data,
         level.lilPeanut.obj,
@@ -133,44 +134,60 @@ class GameEngine {
       );
 
       //BIG BOX COM SMALL BOX e COM BIGMACK
-      this.phaser.physics.arcade.collide(
-        key.data,
-        level.bigMack.obj,
-        this.boxcollision,
-        (box, bigMack) => {
-          if (
-            !(
-              box.body.x + 6 < bigMack.body.x + bigMack.body.width &&
-              box.body.x + box.body.width > bigMack.body.x + 6
-            )
-          ) {
-            box.body.moves = true;
-          }
-          //se a box nao tiver a tocar noutra
-          for (var i = 0; i < level.map.smallBox.length; i++) {
+      if (
+        this.phaser.physics.arcade.collide(
+          key.data,
+          level.bigMack.obj,
+          this.boxcollision,
+          (box, bigMack) => {
             if (
-              this.phaser.physics.arcade.collide(
-                box,
-                level.map.smallBox[i].data
+              !(
+                box.body.x + 6 < bigMack.body.x + bigMack.body.width &&
+                box.body.x + box.body.width > bigMack.body.x + 6
               )
             ) {
-              if (level.map.smallBox[i].data.x < box.body.x) {
-                box.body.x += 1;
-                bigMack.body.x += 5;
-                bigMack.body.velocity.x = 0;
-              } else {
-                box.body.x -= 1;
-                bigMack.body.x -= 5;
-                bigMack.body.velocity.x = 0;
-              }
-              return false;
-            } else {
-              return true;
+              box.body.moves = true;
             }
+            //se a box nao tiver a tocar noutra
+            for (var i = 0; i < level.map.smallBox.length; i++) {
+              if (
+                this.phaser.physics.arcade.collide(
+                  box,
+                  level.map.smallBox[i].data
+                )
+              ) {
+                if (level.map.smallBox[i].data.x < box.body.x) {
+                  box.body.x += 1;
+                  bigMack.body.x += 5;
+                  bigMack.body.velocity.x = 0;
+                } else {
+                  box.body.x -= 1;
+                  bigMack.body.x -= 5;
+                  bigMack.body.velocity.x = 0;
+                }
+                return false;
+              } else {
+                return true;
+              }
+            }
+          },
+          this
+        )
+      ) {
+        if (
+          level.bigMack.boxAnim == false &&
+          !this.checkIfOnTopPartial(level.bigMack.obj, key.data)
+        ) {
+          level.bigMack.boxAnim = true;
+          if (level.bigMack.obj.body.velocity.x > 0)
+            level.bigMack.doBoxRightAnimation();
+          else {
+            level.bigMack.doBoxLeftAnimation();
           }
-        },
-        this
-      );
+        }
+      } else {
+        level.bigMack.boxAnim = false;
+      }
       //BIG BOX COM ELEVADOR
       for (var i = 0; i < level.map.elevators.length; i++) {
         this.phaser.physics.arcade.collide(
@@ -238,7 +255,7 @@ class GameEngine {
           if (level.lilPeanut.obj.body.velocity.x > 0)
             level.lilPeanut.doBoxRightAnimation();
           else {
-            //ESQUERDA BOX TODO
+            level.lilPeanut.doBoxLeftAnimation();
           }
         }
       } else {
@@ -261,6 +278,30 @@ class GameEngine {
       this.phaser.physics.arcade.collide(
         level.bigMack.obj,
         level.map.elevators[i].data
+      );
+    }
+
+    //LILPENAUT E BIGMACK COM PLATAFORMAS MÓVEIS
+    for (var i = 0; i < level.map.platforms.length; i++) {
+      this.phaser.physics.arcade.collide(
+        level.lilPeanut.obj,
+        level.map.platforms[i].data
+      );
+      this.phaser.physics.arcade.collide(
+        level.bigMack.obj,
+        level.map.platforms[i].data
+      );
+    }
+
+    //LILPENAUT E BIGMACK COM SLIDING DOORS
+    for (var i = 0; i < level.map.slidingDoors.length; i++) {
+      this.phaser.physics.arcade.collide(
+        level.lilPeanut.obj,
+        level.map.slidingDoors[i].data
+      );
+      this.phaser.physics.arcade.collide(
+        level.bigMack.obj,
+        level.map.slidingDoors[i].data
       );
     }
 
@@ -294,28 +335,6 @@ class GameEngine {
           level.map.buttons[i].buttonUnpressed();
         }
       }
-      /* if (
-        this.phaser.physics.arcade.collide(
-          level.lilPeanut.obj,
-          level.map.buttons[i].data
-        )
-      ) {
-        level.map.buttons[i].on(level.lilPeanut.obj);
-        buttonsCheck = true;
-      } else {
-        level.map.buttons[i].on(level.lilPeanut.obj);
-      }
-      if (
-        this.phaser.physics.arcade.collide(
-          level.bigMack.obj,
-          level.map.buttons[i].data
-        ) &&
-        !buttonsCheck
-      ) {
-        level.map.buttons[i].on(level.bigMack.obj);
-      } else if (!buttonsCheck) {
-        level.map.buttons[i].on(level.bigMack.obj);
-      }*/
     }
 
     //LILPEANUT E BIGMACK COM SERRA
@@ -349,7 +368,7 @@ class GameEngine {
       }
       for (var k = 0; k < level.map.bigBox.length; k++) {
         this.phaser.physics.arcade.collide(
-          level.map.smallBox[k].data,
+          level.map.bigBox[k].data,
           level.map.buttons[i].data
         );
       }
@@ -357,37 +376,15 @@ class GameEngine {
   }
 
   collisionWithBounds(level) {
-    var collision = false;
+    let countN = 0;
     level.map.bigBox.map((key) => {
       this.phaser.physics.arcade.collide(key.data, level.bounds);
     });
     level.map.smallBox.map((key) => {
       this.phaser.physics.arcade.collide(key.data, level.bounds);
     });
-    //level.map.buttons.map((key) => {
-    //  this.phaser.physics.arcade.collide(key.data, level.bounds);
-    //});
     this.phaser.physics.arcade.collide(level.lilPeanut.obj, level.bounds);
     this.phaser.physics.arcade.collide(level.bigMack.obj, level.bounds);
-  }
-
-  elevatorUp(elevator, chains) {
-    //elevator.data.body.gravity.y = 800;
-    elevator.data.body.velocity.y = -50;
-    chains.map((key, index) => {
-      if (elevator.data.body.y < key.data.y) {
-        key.data.visible = false;
-      }
-    });
-  }
-
-  elevatorDown(elevator, chains) {
-    elevator.data.body.velocity.y = 50;
-    chains.map((key) => {
-      if (elevator.data.body.y >= key.y && key.data.visible === false) {
-        key.data.visible = true;
-      }
-    });
   }
 
   checkIfOnTopTotal(obj1, obj2) {
@@ -443,14 +440,14 @@ class GameEngine {
           key.data.body.x + key.data.body.width > level.lilPeanut.obj.body.x &&
           key.data.body.y >=
             level.lilPeanut.obj.body.y + level.lilPeanut.obj.body.height */
-          this.elevatorUp(key, level.map.chains);
+          key.elevatorUp(key, level.map.chains);
         } else {
           if (
             key.data.body.y <= key.minY &&
             !this.checkIfOnTopTotal(level.lilPeanut.obj, key.data) &&
             !this.checkIfOnTopTotal(level.bigMack.obj, key.data)
           )
-            this.elevatorDown(key, level.map.chains);
+            key.elevatorDown(key, level.map.chains);
           else {
             key.data.body.velocity.y = 0;
           }
@@ -468,14 +465,14 @@ class GameEngine {
           key.data.body.x + key.data.body.width > level.lilPeanut.obj.body.x &&
           key.data.body.y >=
             level.lilPeanut.obj.body.y + level.lilPeanut.obj.body.height */
-          this.elevatorUp(key, level.map.chains);
+          key.elevatorUp(key, level.map.chains);
         } else {
           if (
             key.data.body.y <= key.minY &&
             !this.checkIfOnTopTotal(level.lilPeanut.obj, key.data) &&
             !this.checkIfOnTopTotal(level.bigMack.obj, key.data)
           )
-            this.elevatorDown(key, level.map.chains);
+            key.elevatorDown(key, level.map.chains);
           else {
             key.data.body.velocity.y = 0;
           }
@@ -495,51 +492,117 @@ class GameEngine {
     sprite.animations.play("gameoverMenu");
   }
 
-  levelUpdate(level) {
-    //VARIAVEIS
+  checkPlatformStatus(level) {
+    level.map.platforms.map((key) => {
+      if (key.num == 2) {
+        //CHECKA 2 colisoes para subir
+        if (
+          this.checkIfOnTopPartial(level.lilPeanut.obj, key.data) &&
+          this.checkIfOnTopPartial(level.bigMack.obj, key.data)
+        ) {
+          key.platformDown(key, level.map.chains);
+          //key.press();
+        } else {
+          if (key.data.body.y >= key.minY) {
+            key.platformUp(key, level.map.chains);
+            //key.unpress();
+          } else {
+            key.data.body.velocity.y = 0;
+          }
+        }
+      } else {
+        //APENAS BIG MACK
+        if (this.checkIfOnTopPartial(level.bigMack.obj, key.data)) {
+          key.platformDown(key, level.map.chains);
+          key.press();
+        } else {
+          if (key.data.body.y >= key.minY) {
+            key.platformUp(key, level.map.chains);
+            //key.unpress();
+          } else {
+            key.data.body.velocity.y = 0;
+          }
+          level.map.buttons.map((button) => {
+            if (
+              button.actionObj.constructor.name == "PlataformaMovel" &&
+              button.data.frame === 0
+            ) {
+              key.unpress();
+            }
+          });
+        }
+      }
+    });
+  }
 
+  levelUpdate(level) {
     if (!level.animation) {
       //ANIMA OS OBJECTOS TODOS
       this.animateAllObjects(level);
-
       //COLISOES
       this.collisionObjects(level);
       this.collisionWithBounds(level);
+
       //CHECK NOS ELEVADORES
       this.checkElevatorStatus(level);
-      if (!level.animation) {
-        //LILPEANUT
-        level.lilPeanut.obj.body.velocity.x = 0;
-        if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.RIGHT)) {
-          level.lilPeanut.doWalkRightAnimation();
-        } else if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.LEFT)) {
-          level.lilPeanut.doWalkLeftAnimation();
-        } else {
-          level.lilPeanut.restAnimation();
-        }
-        //  Allow the player to jump if they are touching the ground.
-        if (
-          this.phaser.input.keyboard.isDown(Phaser.KeyCode.UP) &&
-          level.lilPeanut.obj.body.touching.down
-        ) {
-          level.lilPeanut.jump();
-        }
+      this.checkPlatformStatus(level);
 
-        //BIGMACK
-        level.bigMack.obj.body.velocity.x = 0;
-        if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.D)) {
-          level.bigMack.doWalkRightAnimation();
-        } else if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.A)) {
-          level.bigMack.doWalkLeftAnimation();
+      if (!level.animation) {
+        if (!level.cutscene) {
+          //LILPEANUT
+          level.lilPeanut.obj.body.velocity.x = 0;
+          if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.RIGHT)) {
+            level.lilPeanut.doWalkRightAnimation();
+          } else if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.LEFT)) {
+            level.lilPeanut.doWalkLeftAnimation();
+          } else {
+            level.lilPeanut.restAnimation();
+          }
+
+          if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.DOWN)) {
+            const difLil = 5;
+            level.lilPeanut.obj.body.setSize(11, 26 - difLil, 10, 5 + difLil);
+            level.lilPeanut.crouch = true;
+          } else {
+            level.lilPeanut.obj.body.setSize(11, 26, 10, 5);
+            level.lilPeanut.crouch = false;
+          }
+          //  Allow the player to jump if they are touching the ground.
+          if (
+            this.phaser.input.keyboard.isDown(Phaser.KeyCode.UP) &&
+            level.lilPeanut.obj.body.touching.down
+          ) {
+            level.lilPeanut.jump();
+          }
+
+          //BIGMACK
+          level.bigMack.obj.body.velocity.x = 0;
+          if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.D)) {
+            level.bigMack.doWalkRightAnimation();
+          } else if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.A)) {
+            level.bigMack.doWalkLeftAnimation();
+          } else {
+            level.bigMack.restAnimation();
+          }
+
+          if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.S)) {
+            const difBig = 13;
+            level.bigMack.obj.body.setSize(16, 42 - difBig, 24, 13 + difBig);
+            level.bigMack.crouch = true;
+          } else {
+            level.bigMack.obj.body.setSize(16, 42, 24, 13);
+            level.bigMack.crouch = false;
+          }
+          //  Allow the player to jump if they are touching the ground.
+          if (
+            this.phaser.input.keyboard.isDown(Phaser.KeyCode.W) &&
+            level.bigMack.obj.body.touching.down
+          ) {
+            level.bigMack.jump();
+          }
         } else {
-          level.bigMack.restAnimation();
-        }
-        //  Allow the player to jump if they are touching the ground.
-        if (
-          this.phaser.input.keyboard.isDown(Phaser.KeyCode.W) &&
-          level.bigMack.obj.body.touching.down
-        ) {
-          level.bigMack.jump();
+          //HANDLE DE CUTSCENES
+          level.cutscene.handleCutscene(level);
         }
 
         //VERIFICA FIM DO JOGO
@@ -560,46 +623,51 @@ class GameEngine {
         this.checkCollected(level);
       }
     } else if (level.animation === "COMPLETED") {
+      const offset = 0.5;
       const offsetXLil = 30;
       const offsetXBig = 60;
-
-      //ANIMA OS OBJECTOS TODOS
-      this.animateAllObjects(level);
+      const bigMackDoorX =
+        level.map.bigMackDoor.data.x +
+        level.map.bigMackDoor.data.width / 2 -
+        offsetXBig;
+      const bigMackDoorY =
+        level.map.bigMackDoor.data.y +
+        level.map.bigMackDoor.data.height -
+        level.bigMack.obj.body.height;
+      const lilPeanutDoorX =
+        level.map.lilPeanutDoor.data.x +
+        level.map.lilPeanutDoor.data.width / 2 -
+        offsetXLil;
+      const lilPeanutDoorY =
+        level.map.lilPeanutDoor.data.y +
+        level.map.lilPeanutDoor.data.height -
+        level.lilPeanut.obj.body.height;
       //COLOCA SERRAS EM MOVIMENTO
       level.map.eletricSaw.map((key) => {
         key.moveSaw();
       });
-      level.bigMack.endAnimation(
-        level,
-        level.map.bigMackDoor.data.x +
-          level.map.bigMackDoor.data.width / 2 -
-          offsetXBig,
-        level.map.bigMackDoor.data.y +
-          level.map.bigMackDoor.data.height -
-          level.bigMack.obj.body.height
-      );
-      level.lilPeanut.endAnimation(
-        level,
-        level.map.lilPeanutDoor.data.x +
-          level.map.lilPeanutDoor.data.width / 2 -
-          offsetXLil,
-        level.map.lilPeanutDoor.data.y +
-          level.map.lilPeanutDoor.data.height -
-          level.lilPeanut.obj.body.height
-      );
+
+      level.bigMack.endAnimation(level, bigMackDoorX, bigMackDoorY);
+      level.lilPeanut.endAnimation(level, lilPeanutDoorX, lilPeanutDoorY);
 
       if (
-        level.bigMack.obj.body.velocity.x < 0.5 &&
-        level.lilPeanut.obj.body.velocity.x < 0.5
+        level.bigMack.obj.body.velocity.x < offset &&
+        level.lilPeanut.obj.body.velocity.x < offset
       ) {
+        level.bigMack.doTurnAnimation();
         level.lilPeanut.doTurnAnimation();
 
         level.animation = "end";
       }
 
+      //TIMER UPDATE
+      level.timer.updateTimer();
       //TODO: SHOW MENU DE LEVEL COMPLETE
       //TODO: Velocidade a baixo de 0.05 começar a animaçao
     }
+    this.collisionWithBounds(level);
+    //ANIMA OS OBJECTOS TODOS
+    this.animateAllObjects(level);
 
     if (debug) {
       level.debug();
@@ -610,8 +678,8 @@ class GameEngine {
     level.animation = "GAMEOVER";
     const xLil = 80;
     const yLil = 240;
-    const xBig = 80;
-    const yBig = 240;
+    const xBig = 35;
+    const yBig = 170;
     const scaleLil = 5;
     const scaleBig = 4;
     //APAGAR OS MENUS DAS BOARDS
@@ -690,6 +758,7 @@ class GameEngine {
 class MapLevel {
   constructor() {
     this.bounds = null;
+    this.boundsTest = [];
     this.immovableObjects = [];
     this.elevators = [];
     this.chains = [];
@@ -702,6 +771,8 @@ class MapLevel {
     this.collectables = [];
     this.platformsSprite = null;
     this.background = null;
+    this.platforms = [];
+    this.slidingDoors = [];
   }
 
   addElevator(x, y, num, maxX, minY) {
@@ -886,10 +957,73 @@ class MapLevel {
       platform.body.immovable = true;
     }
   }
+
+  addEletricSawVertical(x, y, maxX, maxY, velocity) {
+    const gravity = 0;
+    const scale = 3.5;
+    const eletricSaw = game.phaser.add.sprite(x, y, "eletricSaw");
+    game.phaser.physics.arcade.enable(eletricSaw);
+    eletricSaw.body.gravity.y = gravity;
+    eletricSaw.enableBody = true;
+    eletricSaw.body.immovable = true;
+    const newEletricSaw = new EletricSawVertical(
+      x + 5,
+      y,
+      eletricSaw,
+      maxX,
+      maxY,
+      velocity
+    );
+    eletricSaw.scale.setTo(scale, scale);
+    eletricSaw.body.setCircle(10, 5, 5);
+    eletricSaw.smoothed = false;
+    this.eletricSaw.push(newEletricSaw);
+  }
+
+  addPlataformaMovel(x, y, num, maxX, minY, actionObj) {
+    const platform = game.phaser.add.sprite(x, y, "elevator");
+    game.phaser.physics.arcade.enable(platform);
+    platform.body.gravity.y = 0;
+    platform.enableBody = true;
+    platform.body.immovable = true;
+    const newElevator = new PlataformaMovel(
+      x,
+      y,
+      platform,
+      num,
+      maxX,
+      minY,
+      actionObj
+    );
+    platform.scale.setTo(5, 2.5);
+    platform.smoothed = false;
+    this.platforms.push(newElevator);
+  }
+
+  addSlidingDoor(x, y, maxX, maxY, sizeX, sizeY, velocidade, inverted, chains) {
+    const slidingDoor = game.phaser.add.sprite(x, y, "slidingDoor");
+    game.phaser.physics.arcade.enable(slidingDoor);
+    slidingDoor.body.gravity.y = 0;
+    slidingDoor.enableBody = true;
+    slidingDoor.body.immovable = true;
+    const newElevator = new SlidingDoor(
+      x,
+      y,
+      slidingDoor,
+      maxX,
+      maxY,
+      velocidade,
+      inverted,
+      chains
+    );
+    slidingDoor.scale.setTo(sizeX, sizeY);
+    slidingDoor.smoothed = false;
+    this.slidingDoors.push(newElevator);
+  }
 }
 
 class Level {
-  constructor() {
+  constructor(numCut, numHelpers, coordsHelpers) {
     this.map = new MapLevel();
     this.bigMack = null;
     this.lilPeanut = null;
@@ -898,53 +1032,53 @@ class Level {
     this.nLilPeanutCollected = 0;
     this.nBigMackCollected = 0;
     this.menuBoards = [];
+    this.doorChains = [];
+    this.cutscene = null;
+    //ADICIONAR AQUI A CONDIÇAO PARA MOSTRAR CUTSCENE
+    console.log(numCut, numHelpers);
+
+    if (numHelpers + numCut != 0) {
+      this.cutscene = new Cutscene(numCut, numHelpers, coordsHelpers);
+    }
+  }
+
+  addGrayFilter(lista) {
+    var gray = game.phaser.add.filter("Gray");
+    if (Array.isArray(this.map[lista])) {
+      this.map[lista].map((key) => {
+        if (key.data.body) {
+          key.data.body.moves = false;
+        }
+        key.data.filters = [gray];
+      });
+    } else {
+      this.map[lista].filters = [gray];
+    }
   }
 
   stop(sprite) {
     var gray = game.phaser.add.filter("Gray");
-    this.map.elevators.map((key) => {
-      key.data.body.moves = false;
-      key.data.filters = [gray];
-    });
-    this.map.smallBox.map((key) => {
-      key.data.body.moves = false;
-      key.data.filters = [gray];
-    });
-    this.map.bigBox.map((key) => {
-      key.data.body.moves = false;
-      key.data.filters = [gray];
-    });
-    this.map.eletricSaw.map((key) => {
-      key.data.body.moves = false;
-      key.data.animations.stop(null, null);
-      key.data.frame = 0;
-      key.data.filters = [gray];
-    });
-    this.map.collectables.map((key) => {
-      key.data.body.moves = false;
-      key.data.filters = [gray];
-    });
-    this.map.buttons.map((key) => {
-      key.data.body.moves = false;
-      key.data.filters = [gray];
-    });
-
-    this.map.immovableObjects.map((key) => {
-      key.data.filters = [gray];
-    });
-    this.bigMack.obj.body.moves = false;
-    this.lilPeanut.obj.body.moves = false;
-
-    this.map.platformsSprite.filters = [gray];
-    this.map.background.filters = [gray];
-    this.map.lilPeanutDoor.data.filters = [gray];
-    this.map.bigMackDoor.data.filters = [gray];
+    this.addGrayFilter("elevators");
+    this.addGrayFilter("smallBox");
+    this.addGrayFilter("bigBox");
+    this.addGrayFilter("eletricSaw");
+    this.addGrayFilter("collectables");
+    this.addGrayFilter("buttons");
+    this.addGrayFilter("immovableObjects");
+    this.addGrayFilter("platformsSprite");
+    this.addGrayFilter("background");
+    this.addGrayFilter("lilPeanutDoor");
+    this.addGrayFilter("bigMackDoor");
+    this.addGrayFilter("platforms");
+    this.addGrayFilter("slidingDoors");
 
     if (sprite === "lilpeanut") {
       this.bigMack.obj.filters = [gray];
     } else {
       this.lilPeanut.obj.filters = [gray];
     }
+    this.bigMack.obj.body.moves = false;
+    this.lilPeanut.obj.body.moves = false;
   }
 
   addCollectableBoards(x, y) {
@@ -964,9 +1098,7 @@ class Level {
     const scale = 2;
     const offSetX = 100;
     var pauseMenu = new PauseMenu();
-    pauseMenu.addSprites();
-    pauseMenu.addButtons();
-    pauseMenu.hideContent();
+    game.pauseMenu = pauseMenu;
     var board = game.phaser.add.button(x, y, "restartBoard", () => {
       game.phaser.state.start(game.phaser.state.current);
     });
@@ -975,12 +1107,18 @@ class Level {
     board.smoothed = false;
     board.fixedToCamera = true;
     board = game.phaser.add.button(x + offSetX, y, "menuBoard", () => {
+      var date = new Date();
       if (game.phaser.paused == true) {
         pauseMenu.hideContent(game);
         game.phaser.paused = false;
+        game.currentLevel.timer.startTime = date.getTime();
       } else {
         game.phaser.paused = true;
         pauseMenu.showContent(game);
+        var currentTime = date.getTime();
+        this.timer.timerAux += Math.round(
+          (currentTime - this.timer.startTime) / 1000
+        );
       }
     });
     board.scale.setTo(scale, scale);
@@ -1039,8 +1177,8 @@ class Level {
 }
 
 class Level1 extends Level {
-  constructor() {
-    super();
+  constructor(num, numHelpers, coordsHelpers) {
+    super(num, numHelpers, coordsHelpers);
   }
 
   drawMap(game) {
@@ -1079,7 +1217,7 @@ class Level1 extends Level {
     for (var i = 10; i < 19; i++) {
       this.map.addChain(500, 550 - 19 * (18 - i), this.map.chains, false);
     }
-    this.map.addElevator(430, game.phaser.world.height - 216, 1, null, 561);
+    this.map.addElevator(430, game.phaser.world.height - 216, 1, null, 562);
 
     //BOXES
     this.map.addBigBox(300, 250);
@@ -1119,38 +1257,397 @@ class Level1 extends Level {
   }
 }
 
+class Level3 extends Level {
+  constructor(num, numHelpers, coordsHelpers) {
+    super(num, numHelpers, coordsHelpers);
+  }
+
+  drawMap(game) {
+    var levelData = {
+      bounds: [
+        //[x, y, comprimento, vertical]
+        //pardes, teto e chao
+        [0, 562, 800, false],
+        [0, 54, 800, false],
+        [16, 0, 600, true],
+        [782, 0, 600, true],
+        //plataforma de cima
+        [0, 198, 600, false],
+        [0, 212, 600, false],
+        [596, 200, 15, true],
+        //plataforma de baixo
+        [225, 384, 600, false],
+        [225, 399, 600, false],
+        [225, 385, 15, true],
+        //mini plataforma
+        [0, 430, 80, false],
+        [0, 445, 80, false],
+        [76, 430, 15, true],
+      ],
+      tochas: [
+        //[x, y, inverted]
+        [725, 100, true],
+        [-8, 300, false],
+      ],
+      caixas: [
+        //[x, y, grande]
+        [450, 270, true],
+      ],
+      portas_deslizantes: [
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+          visible_chains: [0, 0, 269, 215, 19, true],
+          invisible_chains: [0, 5, 269, 215, 19, false],
+          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
+          porta: [260, 216, 260, 274, 2, 1.7, 50, true],
+        },
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+          visible_chains: [0, 7, 630, 60, 19, true],
+          invisible_chains: [7, 14, 630, 60, 19, false],
+          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
+          porta: [621, 200, 621, 320, 2, 1, 103, true],
+        },
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+          visible_chains: [0, 0, 630, 60, 19, true],
+          invisible_chains: [0, 0, 630, 60, 19, false],
+          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
+          porta: [120, -50, 120, 37, 2, 2.5, 80, true],
+        },
+      ],
+
+      plataformas: [
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+          visible_chains: [0, 19, 90, 208, 19, true],
+          //[x, y, id, maxX, maxY]
+          platform: [57, 550, 1, null, 500],
+        },
+      ],
+      serras: [
+        //[x, y, maxX, maxY, move_speed, vertical]
+        [340, 500, 345, 570, 100, true],
+      ],
+      botoes: [
+        //[x, y, numero_item, tipo_item]
+        [250, 511, 0, "serra"],
+        [300, 333, 0, "plataforma"],
+      ],
+      coletaveis_peanut: [
+        [40, 150],
+        [25, 510],
+        [390, 270],
+      ],
+      coletaveis_big: [
+        [75, 150],
+        [25, 475],
+        [700, 120],
+      ],
+      //[x, y, nome]
+      sprite_plataformas: [0, 0, "level1"],
+      //[x, y]
+      porta_pequena: [250, 132],
+      porta_grande: [340, 82],
+      quadro_coletaveis: [30, -2],
+      quadro_menu_restart: [580, -2],
+      //[x, y, sprite_name, x scale, y scale]
+      background: [0, 0, "backgroundLevel", 0.5, 0.5],
+    };
+
+    var nEletricSaw = 0;
+    var nPlataforma = 0;
+    var bounds = game.phaser.add.group();
+    bounds.enableBody = true;
+
+    // DRAW BOUNDS
+    levelData.bounds.map((bound_coords) => {
+      this.map.drawBound(
+        bound_coords[0],
+        bound_coords[1],
+        bound_coords[2],
+        bounds,
+        bound_coords[3]
+      );
+    });
+
+    // var background = game.phaser.add.sprite(
+    //   levelData.background[0],
+    //   levelData.background[1],
+    //   levelData.background[2]
+    // );
+    // background.scale.setTo(levelData.background[3], levelData.background[4]);
+    // this.map.background = background;
+    //TOCHAS
+    levelData.tochas.map((tochas_coords) => {
+      if (tochas_coords[2])
+        this.map.addTorchInverted(tochas_coords[0], tochas_coords[1], this.map);
+      else this.map.addTorch(tochas_coords[0], tochas_coords[1], this.map);
+    });
+
+    //PORTAS
+    levelData.portas_deslizantes.map((data) => {
+      var chains = [];
+      for (var i = data.visible_chains[0]; i < data.visible_chains[1]; i++) {
+        this.map.addChain(
+          data.visible_chains[2],
+          data.visible_chains[3] + data.visible_chains[4] * i,
+          chains,
+          data.visible_chains[5]
+        );
+      }
+      for (
+        var i = data.invisible_chains[0];
+        i < data.invisible_chains[1];
+        i++
+      ) {
+        this.map.addChain(
+          data.invisible_chains[2],
+          data.invisible_chains[3] + data.invisible_chains[4] * i,
+          chains,
+          data.invisible_chains[5]
+        );
+      }
+      this.map.addSlidingDoor(
+        data.porta[0],
+        data.porta[1],
+        data.porta[2],
+        data.porta[3],
+        data.porta[4],
+        data.porta[5],
+        data.porta[6],
+        data.porta[7],
+        chains
+      );
+    });
+
+    //PLATAFORMA
+    levelData.plataformas.map((plataformas_data) => {
+      for (
+        var i = plataformas_data.visible_chains[0];
+        i < plataformas_data.visible_chains[1];
+        i++
+      ) {
+        this.map.addChain(
+          plataformas_data.visible_chains[2],
+          plataformas_data.visible_chains[3] +
+            plataformas_data.visible_chains[4] * i,
+          this.map.chains,
+          plataformas_data.visible_chains[5]
+        );
+      }
+      this.map.addPlataformaMovel(
+        plataformas_data.platform[0],
+        plataformas_data.platform[1],
+        plataformas_data.platform[2],
+        plataformas_data.platform[3],
+        plataformas_data.platform[4],
+        this.map.slidingDoors
+      );
+      nPlataforma++;
+    });
+
+    //BOXES
+    levelData.caixas.map((caixa) => {
+      if (caixa[2]) {
+        this.map.addBigBox(caixa[0], caixa[1]);
+      } else {
+        this.map.addSmallBox(caixa[0], caixa[1]);
+      }
+    });
+
+    // //ELETRIC SAW
+    levelData.serras.map((serras_coords) => {
+      if (serras_coords[5])
+        this.map.addEletricSawVertical(
+          serras_coords[0],
+          serras_coords[1],
+          serras_coords[2],
+          serras_coords[3],
+          serras_coords[4]
+        );
+      else
+        this.map.addEletricSaw(
+          serras_coords[0],
+          serras_coords[1],
+          serras_coords[2],
+          serras_coords[3],
+          serras_coords[4]
+        );
+      nEletricSaw++;
+    });
+
+    //BOTOES
+    levelData.botoes.map((botoes_coords) => {
+      if (botoes_coords[3] == "serra") {
+        this.map.addButton(
+          botoes_coords[0],
+          botoes_coords[1],
+          this.map.eletricSaw[botoes_coords[2]]
+        );
+      } else if (botoes_coords[3] == "plataforma") {
+        this.map.addButton(
+          botoes_coords[0],
+          botoes_coords[1],
+          this.map.platforms[botoes_coords[2]]
+        );
+      }
+    });
+
+    //PLATAFORMAS
+    // this.map.platformsSprite = game.phaser.add.sprite(
+    //   levelData.sprite_plataformas[0],
+    //   levelData.sprite_plataformas[1],
+    //   levelData.sprite_plataformas[2]
+    // );
+
+    //Adicionar os limites do mapa para as colisoes
+    this.bounds = bounds;
+
+    //PORTAS FINAIS
+    this.map.addLilDoor(levelData.porta_pequena[0], levelData.porta_pequena[1]);
+    this.map.addBigDoor(levelData.porta_grande[0], levelData.porta_grande[1]);
+
+    //CIRA TIMER
+    this.timer.createTimer();
+
+    //BOARD PARA COLECTAVEIS
+    this.addCollectableBoards(
+      levelData.quadro_coletaveis[0],
+      levelData.quadro_coletaveis[1]
+    );
+
+    //BOARD PARA RESTART E MENU
+    this.addMenuBoards(
+      levelData.quadro_menu_restart[0],
+      levelData.quadro_menu_restart[1]
+    );
+
+    //COLLECTAVEIS
+    levelData.coletaveis_peanut.map((coletavel) => {
+      this.map.addCollectableLilPeanut(coletavel[0], coletavel[1]);
+    });
+
+    levelData.coletaveis_big.map((coletavel) => {
+      this.map.addCollectableBigMack(coletavel[0], coletavel[1]);
+    });
+  }
+}
+
 class Character {
   constructor(charObj) {
     this.obj = charObj;
     this.lastAnimation = null;
   }
+
+  endAnimation(level, x, y) {
+    if (this.obj.body.x <= x) {
+      //ANDA PARA LADO DIREITO
+      this.obj.play("walkRight");
+    } else {
+      this.obj.play("walkLeft");
+    }
+    game.phaser.physics.arcade.moveToXY(this.obj, x, y, 10, 300);
+  }
 }
 
 class bigMack extends Character {
   constructor(charObj) {
+    let animWalkingEnd = [24, 25, 26];
+    for (let i = 0; i < 2; i++) {
+      animWalkingEnd = animWalkingEnd.concat(animWalkingEnd);
+    }
     super(charObj);
-    charObj.body.setSize(16, 42, 22, 13);
-    charObj.animations.add("walkLeftBig", [5, 6, 7, 8, 9], 11, false);
+    charObj.body.setSize(16, 42, 24, 13);
+    charObj.animations.add("walkLeft", [5, 6, 7, 8, 9], 11, false);
     charObj.animations.add("walkRight", [0, 1, 2, 3, 4], 11, false);
 
-    charObj.animations.add("restRight", [0, 3], 4, true);
-    charObj.animations.add("restLeft", [10, 11], 5, true);
+    charObj.animations.add("restRight", [10, 11], 4, true);
+    charObj.animations.add("restLeft", [12, 13], 4, true);
+    charObj.animations.add("restCrouchLeft", [46, 47], 4, true);
+    charObj.animations.add("restCrouchRight", [43, 44], 4, true);
+
+    charObj.animations.add("boxRight", [14, 15], 10, false);
+    charObj.animations.add("boxLeft", [21, 20], 10, false);
+    charObj.animations.add("walkBoxRight", [15, 16, 17], 10, true);
+    charObj.animations.add("walkBoxLeft", [20, 19, 18], 10, true);
+    charObj.animations.add("walkCrouchLeft", [46, 47, 48], 10, true);
+    charObj.animations.add("walkCrouchRight", [43, 44, 45], 10, true);
+
+    charObj.animations.add(
+      "endAnimationLeft",
+      [28, 27, 24].concat(animWalkingEnd).concat([29, 30, 31, 32, 33, 34]),
+      10,
+      false
+    );
+
+    charObj.animations.add(
+      "endAnimationRight",
+      [22, 23, 24].concat(animWalkingEnd).concat([29, 30, 31, 32, 33, 34]),
+      10,
+      false
+    );
+    1;
+
+    let anim = charObj.animations.add(
+      "gameover",
+      [35, 36, 37, 37, 37, 36, 38, 39, 40],
+      8,
+      false
+    );
+    anim.onComplete.add(game.gameOverMenu, this);
+
+    charObj.animations.add("gameoverMenu", [41, 42], 6, true);
   }
 
   doWalkLeftAnimation() {
-    console.log("aaa");
-
     this.obj.body.velocity.x = -200;
-    this.obj.play("walkLeftBig");
+    if (this.boxAnim == false) {
+      if (this.crouch) {
+        this.obj.play("walkCrouchLeft");
+      } else {
+        this.obj.play("walkLeft");
+      }
+    } else {
+      this.obj.play("walkBoxLeft");
+    }
     this.lastAnimation = "left";
   }
 
-  doWalkRightAnimation() {
-    console.log("bbbddddd");
+  doTurnAnimation() {
+    this.obj.body.velocity.x = 0;
+    this.obj.body.velocity.y = 0;
+    if (this.lastAnimation == "right" || this.lastAnimation == null) {
+      this.obj.play("endAnimationRight");
+    } else if (this.lastAnimation == "left") {
+      this.obj.play("endAnimationLeft");
+    }
+  }
 
+  doWalkRightAnimation() {
     this.obj.body.velocity.x = 200;
-    this.obj.play("walkRight");
+    if (this.boxAnim == false) {
+      if (this.crouch) {
+        this.obj.play("walkCrouchRight");
+      } else {
+        this.obj.play("walkRight");
+      }
+    } else {
+      if (this.crouch) {
+        this.obj.play("walkCrouchRight");
+      } else {
+        this.obj.play("walkBoxRight");
+      }
+    }
     this.lastAnimation = "right";
+  }
+
+  doBoxRightAnimation() {
+    this.obj.play("boxRight");
+  }
+
+  doBoxLeftAnimation() {
+    this.obj.play("boxRight");
   }
 
   stopAnimation() {
@@ -1163,14 +1660,18 @@ class bigMack extends Character {
 
   restAnimation() {
     if (this.lastAnimation == "right" || this.lastAnimation == null) {
-      this.obj.play("restRight");
+      if (this.crouch) {
+        this.obj.play("restCrouchRight");
+      } else {
+        this.obj.play("restRight");
+      }
     } else if (this.lastAnimation == "left") {
-      this.obj.play("restLeft");
+      if (this.crouch) {
+        this.obj.play("restCrouchLeft");
+      } else {
+        this.obj.play("restLeft");
+      }
     }
-  }
-
-  endAnimation(level, x, y) {
-    game.phaser.physics.arcade.moveToXY(this.obj, x, y, 10, 200);
   }
 }
 
@@ -1189,10 +1690,15 @@ class lilPeanut extends Character {
     charObj.animations.add("jump", [7], 1, true);
     charObj.animations.add("restRight", [8, 9], 5, true);
     charObj.animations.add("restLeft", [10, 11], 5, true);
+    charObj.animations.add("restCrouchLeft", [39, 40], 4, true);
+    charObj.animations.add("restCrouchRight", [7, 42], 4, true);
     charObj.animations.add("boxRight", [12, 13], 10, false);
     charObj.animations.add("boxLeft", [15, 16], 10, false);
     charObj.animations.add("walkBoxRight", [13, 14], 10, true);
     charObj.animations.add("walkBoxLeft", [16, 17], 10, true);
+    charObj.animations.add("walkCrouchLeft", [39, 40, 41], 10, true);
+    charObj.animations.add("walkCrouchRight", [7, 42, 43], 10, true);
+    //charObj.animations.add("walkCrouchLeft", [16, 17], 10, true);
     let anim = charObj.animations.add(
       "endAnimationLeft",
       [23, 24, 20].concat(animWalkingEnd).concat([25, 26, 27, 28, 29, 30, 31]),
@@ -1216,14 +1722,17 @@ class lilPeanut extends Character {
       false
     );
     anim.onComplete.add(game.gameOverMenu, this);
-
     charObj.animations.add("gameoverMenu", [38, 37], 6, true);
   }
 
   doWalkLeftAnimation() {
     this.obj.body.velocity.x = -200;
     if (this.boxAnim == false) {
-      this.obj.play("walkLeft");
+      if (this.crouch) {
+        this.obj.play("walkCrouchLeft");
+      } else {
+        this.obj.play("walkLeft");
+      }
     } else {
       this.obj.play("walkBoxLeft");
     }
@@ -1233,7 +1742,11 @@ class lilPeanut extends Character {
   doWalkRightAnimation() {
     this.obj.body.velocity.x = 200;
     if (this.boxAnim == false) {
-      this.obj.play("walkRight");
+      if (this.crouch) {
+        this.obj.play("walkCrouchRight");
+      } else {
+        this.obj.play("walkRight");
+      }
     } else {
       this.obj.play("walkBoxRight");
     }
@@ -1249,6 +1762,10 @@ class lilPeanut extends Character {
     this.obj.play("boxRight");
   }
 
+  doBoxLeftAnimation() {
+    this.obj.play("boxLeft");
+  }
+
   doTurnAnimation() {
     this.obj.body.velocity.x = 0;
     this.obj.body.velocity.y = 0;
@@ -1261,20 +1778,18 @@ class lilPeanut extends Character {
 
   restAnimation() {
     if (this.lastAnimation == "right" || this.lastAnimation == null) {
-      this.obj.play("restRight");
+      if (this.crouch) {
+        this.obj.play("restCrouchRight");
+      } else {
+        this.obj.play("restRight");
+      }
     } else if (this.lastAnimation == "left") {
-      this.obj.play("restLeft");
+      if (this.crouch) {
+        this.obj.play("restCrouchLeft");
+      } else {
+        this.obj.play("restLeft");
+      }
     }
-  }
-
-  endAnimation(level, x, y) {
-    if (this.obj.body.x <= x) {
-      //ANDA PARA LADO DIREITO
-      this.obj.play("walkRight");
-    } else {
-      this.obj.play("walkLeft");
-    }
-    game.phaser.physics.arcade.moveToXY(this.obj, x, y, 10, 300);
   }
 }
 
@@ -1315,6 +1830,89 @@ class Elevator extends Sprite {
     this.num = num;
     this.maxX = maxX;
     this.minY = minY;
+  }
+
+  elevatorUp(elevator, chains) {
+    //elevator.data.body.gravity.y = 800;
+    elevator.data.body.velocity.y = -50;
+    chains.map((key, index) => {
+      if (elevator.data.body.y < key.data.y) {
+        key.data.visible = false;
+      }
+    });
+  }
+
+  elevatorDown(elevator, chains) {
+    elevator.data.body.velocity.y = 50;
+    chains.map((key) => {
+      if (elevator.data.body.y >= key.y && key.data.visible === false) {
+        key.data.visible = true;
+      }
+    });
+  }
+}
+
+class PlataformaMovel extends Sprite {
+  constructor(x, y, data, num, maxX, minY, actionObj) {
+    super(x, y, data);
+    this.num = num;
+    this.maxX = maxX;
+    this.minY = minY;
+    this.actionObj = actionObj;
+  }
+
+  platformUp(platform, chains) {
+    platform.data.body.velocity.y = -50;
+    chains.map((key, index) => {
+      if (platform.data.body.y < key.data.y) {
+        key.data.visible = false;
+      }
+    });
+  }
+
+  platformDown(platform, chains) {
+    platform.data.body.velocity.y = 50;
+    chains.map((key) => {
+      if (platform.data.body.y >= key.y && key.data.visible === false) {
+        key.data.visible = true;
+      }
+    });
+  }
+
+  press() {
+    this.actionObj.map((door) => {
+      if (door.inverted) {
+        if (door.data.body.y > door.y) {
+          door.up(door, door.chains);
+        } else {
+          door.data.body.velocity.y = 0;
+        }
+      } else {
+        if (door.data.body.y > door.y) {
+          door.down(door, door.chains);
+        } else {
+          door.data.body.velocity.y = 0;
+        }
+      }
+    });
+  }
+
+  unpress() {
+    this.actionObj.map((door) => {
+      if (door.inverted) {
+        if (Math.round(door.data.body.y) < door.maxY) {
+          door.down(door, door.chains);
+        } else {
+          door.data.body.velocity.y = 0;
+        }
+      } else {
+        if (Math.round(door.data.body.y) < door.maxY) {
+          door.up(door, door.chains);
+        } else {
+          door.data.body.velocity.y = 0;
+        }
+      }
+    });
   }
 }
 
@@ -1372,16 +1970,56 @@ class EletricSaw extends Sprite {
   }
 
   moveSaw(x, y) {
+    if (this.data.body.x >= this.maxX) {
+      this.data.body.velocity.x = -this.velocity;
+    } else if (this.data.body.x <= this.x) {
+      this.data.body.velocity.x = this.velocity;
+    }
+  }
+}
+
+class EletricSawVertical extends Sprite {
+  constructor(x, y, data, maxX, maxY, velocity) {
+    super(x, y, data);
+    this.maxX = maxX;
+    this.maxY = maxY;
+    this.velocity = velocity;
+    this.stop = false;
+    data.animations.add("rotate", [0, 1, 2], 8, true);
+  }
+
+  doAnimation() {
+    this.data.play("rotate");
+  }
+
+  press() {
+    this.pressed = true;
+    this.data.body.moves = true;
+  }
+
+  unpress() {
+    this.pressed = false;
+    this.data.body.moves = true;
+  }
+
+  moveSaw(x, y) {
     if (this.maxX == this.x) {
-      if (this.data.body.y >= this.maxY) {
-        this.data.body.velocity.y = -this.velocity;
-      } else if (this.data.body.y <= this.y) {
-        this.data.body.velocity.y = this.velocity;
+      if (this.pressed) {
+        if (this.data.body.y < this.maxY) {
+          this.data.body.velocity.y = this.velocity;
+        } else if (this.data.body.y >= this.maxY) {
+          this.data.body.velocity.y = 0;
+        }
+      } else {
+        if (this.data.body.y > this.y) {
+          this.data.body.velocity.y = -this.velocity;
+        } else if (this.data.body.y <= this.y) {
+          this.data.body.velocity.y = 0;
+        }
       }
     }
     if (this.maxY == this.y) {
       //MOVIMENTO NA HORIZNTAL
-
       if (this.data.body.x >= this.maxX) {
         this.data.body.velocity.x = -this.velocity;
       } else if (this.data.body.x <= this.x) {
@@ -1402,13 +2040,23 @@ class Button extends Sprite {
       //PARA A SAW
       this.data.frame = 1;
       this.actionObj.press();
+    } else if (this.actionObj.constructor.name === "EletricSawVertical") {
+      this.data.frame = 1;
+      this.actionObj.press();
+    } else if (this.actionObj.constructor.name === "PlataformaMovel") {
+      this.data.frame = 1;
+      this.actionObj.press();
     }
-
-    //if(typeof(this.actionObj))
   }
 
   buttonUnpressed() {
     if (this.actionObj.constructor.name === "EletricSaw") {
+      this.data.frame = 0;
+      this.actionObj.unpress();
+    } else if (this.actionObj.constructor.name === "EletricSawVertical") {
+      this.data.frame = 0;
+      this.actionObj.unpress();
+    } else if (this.actionObj.constructor.name === "PlataformaMovel") {
       this.data.frame = 0;
       this.actionObj.unpress();
     }
@@ -1433,6 +2081,7 @@ class Collectable extends Sprite {
 
 class Timer {
   constructor() {
+    this.timerAux = 0;
     this.slot1 = {};
     this.slot2 = {};
     this.slot3 = {};
@@ -1479,25 +2128,66 @@ class Timer {
   }
 
   updateTimer() {
-    var date = new Date();
-    var currentTime = date.getTime();
-    var timerValue = Math.round((currentTime - this.startTime) / 1000);
-    var minutes = String(Math.floor(timerValue / 60));
-    var seconds = String(timerValue % 60);
-    if (parseInt(seconds) > 9) {
-      this.updateDigit(seconds[0], this.slot3);
-      this.updateDigit(seconds[1], this.slot4);
-    } else {
-      this.updateDigit("0", this.slot3);
-      this.updateDigit(seconds[0], this.slot4);
+    if (!game.currentLevel.cutscene) {
+      var date = new Date();
+      var currentTime = date.getTime();
+      var timerValue =
+        Math.round((currentTime - this.startTime) / 1000) + this.timerAux;
+      var minutes = String(Math.floor(timerValue / 60));
+      var seconds = String(timerValue % 60);
+      if (parseInt(seconds) > 9) {
+        this.updateDigit(seconds[0], this.slot3);
+        this.updateDigit(seconds[1], this.slot4);
+      } else {
+        this.updateDigit("0", this.slot3);
+        this.updateDigit(seconds[0], this.slot4);
+      }
+      if (parseInt(minutes) > 9) {
+        this.updateDigit(minutes[0], this.slot1);
+        this.updateDigit(minutes[1], this.slot2);
+      } else {
+        this.updateDigit("0", this.slot1);
+        this.updateDigit(minutes[0], this.slot2);
+      }
     }
-    if (parseInt(minutes) > 9) {
-      this.updateDigit(minutes[0], this.slot1);
-      this.updateDigit(minutes[1], this.slot2);
+  }
+}
+
+class SlidingDoor extends Sprite {
+  constructor(x, y, data, maxX, maxY, velocidade, inverted, chains) {
+    super(x, y, data);
+    this.maxX = maxX;
+    this.maxY = maxY;
+    this.velocidade = velocidade;
+    this.inverted = inverted;
+    this.chains = chains;
+  }
+
+  up(platform, chains) {
+    if (Math.round(platform.data.body.y) >= this.y) {
+      platform.data.body.velocity.y = -this.velocidade;
     } else {
-      this.updateDigit("0", this.slot1);
-      this.updateDigit(minutes[0], this.slot2);
+      platform.data.body.velocity.y = 0;
     }
+    chains.map((key, index) => {
+      if (platform.data.body.y < key.data.y) {
+        key.data.visible = false;
+      }
+    });
+  }
+
+  down(platform, chains) {
+    if (Math.round(platform.data.body.y) <= this.maxY) {
+      platform.data.body.velocity.y = this.velocidade;
+    } else {
+      platform.data.body.velocity.y = 0;
+    }
+
+    chains.map((key) => {
+      if (platform.data.body.y >= key.y && key.data.visible === false) {
+        key.data.visible = true;
+      }
+    });
   }
 }
 
@@ -2103,6 +2793,7 @@ class NameInput extends Menu {
     if (inputFieldValue.value != "") {
       game.dataBaseGet(inputFieldValue.value);
       inputFieldValue.style.display = "none";
+      inputFieldValue.disabled = true;
       this.toMainMenu();
     } else {
       alert("Please enter a name");
@@ -2160,10 +2851,108 @@ class PauseMenu extends Menu {
     this.addButton(240, 340, "backBtn", () => {
       this.hideContent(game);
       game.phaser.paused = false;
+      //AQUI
+      var date = new Date();
+      game.currentLevel.timer.startTime = date.getTime();
     }).scale.setTo(2.5, 2.5);
   }
 
   addSprites(game) {
     this.addSprite(210, 180, "pauseMenu").scale.setTo(0.5, 0.5);
+  }
+}
+
+class Cutscene {
+  constructor(numScenes, numHelpers, coordsHelpers) {
+    console.log(numHelpers);
+    console.log(coordsHelpers);
+
+    this.currentIndex = 0;
+    this.numCutScenes = numScenes;
+    this.numHelpers = numHelpers;
+    this.coordsHelpers = coordsHelpers;
+    this.spacebarSprite = null;
+  }
+
+  nextCutscene = (key) => {
+    const offSetXBig = -10;
+    const offSetYBig = -70;
+    const offSetXLil = -10;
+    const offSetYLil = -70;
+    const xBig =
+      game.currentLevel.bigMack.obj.body.x +
+      game.currentLevel.bigMack.obj.body.width +
+      offSetXBig;
+    const yBig = game.currentLevel.bigMack.obj.body.y + offSetYBig;
+    const xLil =
+      game.currentLevel.lilPeanut.obj.body.x +
+      game.currentLevel.lilPeanut.obj.body.width +
+      offSetXLil;
+    const yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
+    this.currentIndex += 1;
+    this.currentScene.kill();
+    this.currentScene.destroy();
+    //TODO: METER AQUI O NOME DO NIVEL DINAMICO
+    let nameCutScene = "cut-level1-" + this.currentIndex.toString();
+    if (this.numCutScenes >= this.currentIndex) {
+      if (this.currentIndex % 2 == 0) {
+        var newScene = game.phaser.add.sprite(xBig, yBig, nameCutScene);
+      } else {
+        var newScene = game.phaser.add.sprite(xLil, yLil, nameCutScene);
+      }
+      this.currentScene = newScene;
+    } else if (this.numHelpers + this.numCutScenes >= this.currentIndex) {
+      var index = this.currentIndex - this.numCutScenes - 1;
+      const x = this.coordsHelpers[index][0];
+      const y = this.coordsHelpers[index][1];
+      var newScene = game.phaser.add.sprite(x, y, nameCutScene);
+      this.currentScene = newScene;
+    } else {
+      game.currentLevel.cutscene = null;
+      key.onDown.removeAll();
+      var date = new Date();
+      game.currentLevel.timer.startTime = date.getTime();
+      game.currentLevel.timer.timerAux = 0;
+      this.spacebarSprite.destroy();
+      this.spacebarSprite.kill();
+    }
+  };
+
+  handleCutscene(level) {
+    const startCurrent = 0;
+    if (this.currentIndex === startCurrent) {
+      this.currentIndex += 1;
+      this.startCutscene(level);
+    }
+  }
+
+  startCutscene(level) {
+    //NAO HA AINDA NENHUMA
+    //METER ISTO PARA TODOS
+    const offSetXLil = -10;
+    const offSetYLil = -70;
+    const xLil =
+      game.currentLevel.lilPeanut.obj.body.x +
+      game.currentLevel.lilPeanut.obj.body.width +
+      offSetXLil;
+    const yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
+    const scale = 2.5;
+    const spacebarX = 110;
+    const spacebarY = 480;
+    let nameCutScene = "cut-level1-" + this.currentIndex.toString();
+    console.log(nameCutScene);
+    var newScene = game.phaser.add.sprite(xLil, yLil, nameCutScene);
+    this.currentScene = newScene;
+    level.bigMack.restAnimation();
+    level.lilPeanut.restAnimation();
+    let keySPACE = game.phaser.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
+    keySPACE.onDown.add(this.nextCutscene, this);
+    this.spacebarSprite = game.phaser.add.sprite(
+      spacebarX,
+      spacebarY,
+      "spacebar"
+    );
+    this.spacebarSprite.scale.setTo(scale, scale);
+    this.spacebarSprite.smoothed = false;
   }
 }

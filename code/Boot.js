@@ -81,6 +81,21 @@ var bootState = {
       //PauseMenu
       ["pauseMenu", "assets/PauseMenu.png"],
       ["quitBtn", "assets/BotaoSampleQuit.png"],
+      //CUTSCENES
+      ["cut-level1-1", "assets/Cutscenes/Level1/1.png"],
+      ["cut-level1-2", "assets/Cutscenes/Level1/2.png"],
+      ["cut-level1-3", "assets/Cutscenes/Level1/3.png"],
+      ["cut-level1-4", "assets/Cutscenes/Level1/4.png"],
+      ["cut-level1-5", "assets/Cutscenes/Level1/5.png"],
+      ["cut-level1-6", "assets/Cutscenes/Level1/6.png"],
+      ["cut-level1-7", "assets/Cutscenes/Level1/7.png"],
+      ["cut-level1-8", "assets/Cutscenes/Level1/8.png"],
+      ["cut-level1-9", "assets/Cutscenes/Level1/9.png"],
+      ["cut-level1-10", "assets/Cutscenes/Level1/10.png"],
+      ["cut-level1-11", "assets/Cutscenes/Level1/11.png"],
+      ["spacebar", "assets/Cutscenes/Level1/spacebar.png"],
+      //LEVEL3
+      ["slidingDoor", "assets/slidingdoor.png"],
     ]);
     game.loadSpritesheet([["lilPeanut", "assets/lilPeanutSprite.png"]], 32);
     game.loadSpritesheet([["eletricSaw", "assets/eletricSawSprite.png"]], 32);
@@ -101,6 +116,6 @@ var bootState = {
   create: () => {
     game.phaser.physics.startSystem(Phaser.Physics.ARCADE);
     //game.dataBaseGet("bernardo");
-    game.phaser.state.start("Load");
+    game.phaser.state.start("Level3");
   },
 };
