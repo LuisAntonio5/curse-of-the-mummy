@@ -1,7 +1,7 @@
-var level2 = {
+var level3 = {
 	preload: () => {},
 	create: () => {
-		game.currentLevel = new Level2();
+		game.currentLevel = new Level3();
 		game.currentLevel.drawMap(game);
 		game.currentLevel.initializeCharacters(
 			game,
