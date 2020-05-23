@@ -15,7 +15,7 @@ class GameEngine {
   dataBaseSet(data) {
     // This function sets the info given by data to the object in the database
     //corresponding to the game.player instance. It assumes game.player exists
-    game.player.docRef.set(data).catch((err) => {
+    game.player.docRef.set(data, { merge: true }).catch((err) => {
       console.log("error", err);
     });
   }
@@ -25,7 +25,6 @@ class GameEngine {
     //corresponding to the name in the databse or default values should
     //that name not yet exist, creating a new object
     var docRef = db.collection("players").doc(name);
-    console.log(name);
 
     var doc = docRef
       .get()
@@ -37,11 +36,22 @@ class GameEngine {
             doc.data().soundEffectsVolume,
             doc.data().gameMusicVolume,
             doc.data().menuMusicVolume,
-            doc.data().score,
+            doc.data().level1,
+            doc.data().level2,
+            doc.data().level3,
+            doc.data().level4,
+            doc.data().totalScore,
             docRef
           );
         } else {
           //Player does not exist
+          var levelDefault = {
+            collectablesBig: 0,
+            collectablesPeanut: 0,
+            score: 0,
+            time: 0,
+            cutscenesCheck: false,
+          };
           docRef
             .set({
               name: name,
@@ -49,9 +59,27 @@ class GameEngine {
               soundEffectsVolume: 5,
               gameMusicVolume: 5,
               menuMusicVolume: 5,
+              level1: levelDefault,
+              level2: levelDefault,
+              level3: levelDefault,
+              level4: levelDefault,
+              totalScore: 0,
             })
             .then(() => {
-              game.player = new Player(name, 5, 5, 5, 0, docRef);
+              //DEFAULT
+
+              game.player = new Player(
+                name,
+                5,
+                5,
+                5,
+                levelDefault,
+                levelDefault,
+                levelDefault,
+                levelDefault,
+                0,
+                docRef
+              );
             })
             .catch((err) => {
               console.log("error setting document", err);
@@ -64,11 +92,7 @@ class GameEngine {
   }
 
   loadFonts() {
-    this.phaser.load.bitmapFont(
-      "myfont",
-      "assets/font/font.png",
-      "assets/font/font.fnt"
-    );
+    this.phaser.load.bitmapFont("myfont", "assets/font/font.png", "assets/font/font.fnt");
   }
 
   loadImages(list) {
@@ -150,12 +174,7 @@ class GameEngine {
             }
             //se a box nao tiver a tocar noutra
             for (var i = 0; i < level.map.smallBox.length; i++) {
-              if (
-                this.phaser.physics.arcade.collide(
-                  box,
-                  level.map.smallBox[i].data
-                )
-              ) {
+              if (this.phaser.physics.arcade.collide(box, level.map.smallBox[i].data)) {
                 if (level.map.smallBox[i].data.x < box.body.x) {
                   box.body.x += 1;
                   bigMack.body.x += 5;
@@ -179,8 +198,7 @@ class GameEngine {
           !this.checkIfOnTopPartial(level.bigMack.obj, key.data)
         ) {
           level.bigMack.boxAnim = true;
-          if (level.bigMack.obj.body.velocity.x > 0)
-            level.bigMack.doBoxRightAnimation();
+          if (level.bigMack.obj.body.velocity.x > 0) level.bigMack.doBoxRightAnimation();
           else {
             level.bigMack.doBoxLeftAnimation();
           }
@@ -190,10 +208,7 @@ class GameEngine {
       }
       //BIG BOX COM ELEVADOR
       for (var i = 0; i < level.map.elevators.length; i++) {
-        this.phaser.physics.arcade.collide(
-          key.data,
-          level.map.elevators[i].data
-        );
+        this.phaser.physics.arcade.collide(key.data, level.map.elevators[i].data);
       }
     });
 
@@ -223,12 +238,7 @@ class GameEngine {
           (box, lilPeanut) => {
             //se a box nao tiver a tocar noutra
             for (var i = 0; i < level.map.bigBox.length; i++) {
-              if (
-                this.phaser.physics.arcade.collide(
-                  box,
-                  level.map.bigBox[i].data
-                )
-              ) {
+              if (this.phaser.physics.arcade.collide(box, level.map.bigBox[i].data)) {
                 if (level.map.bigBox[i].data.x < box.body.x) {
                   box.body.x += 1;
                   lilPeanut.body.x += 5;
@@ -252,8 +262,7 @@ class GameEngine {
           !this.checkIfOnTopPartial(level.lilPeanut.obj, key.data)
         ) {
           level.lilPeanut.boxAnim = true;
-          if (level.lilPeanut.obj.body.velocity.x > 0)
-            level.lilPeanut.doBoxRightAnimation();
+          if (level.lilPeanut.obj.body.velocity.x > 0) level.lilPeanut.doBoxRightAnimation();
           else {
             level.lilPeanut.doBoxLeftAnimation();
           }
@@ -263,64 +272,34 @@ class GameEngine {
       }
       //SMALL BOX COM ELEVADOR
       for (var i = 0; i < level.map.elevators.length; i++) {
-        this.phaser.physics.arcade.collide(
-          key.data,
-          level.map.elevators[i].data
-        );
+        this.phaser.physics.arcade.collide(key.data, level.map.elevators[i].data);
       }
     });
     //LILPENAUT E BIGMACK COM ELEVADORES
     for (var i = 0; i < level.map.elevators.length; i++) {
-      this.phaser.physics.arcade.collide(
-        level.lilPeanut.obj,
-        level.map.elevators[i].data
-      );
-      this.phaser.physics.arcade.collide(
-        level.bigMack.obj,
-        level.map.elevators[i].data
-      );
+      this.phaser.physics.arcade.collide(level.lilPeanut.obj, level.map.elevators[i].data);
+      this.phaser.physics.arcade.collide(level.bigMack.obj, level.map.elevators[i].data);
     }
 
     //LILPENAUT E BIGMACK COM PLATAFORMAS MÓVEIS
     for (var i = 0; i < level.map.platforms.length; i++) {
-      this.phaser.physics.arcade.collide(
-        level.lilPeanut.obj,
-        level.map.platforms[i].data
-      );
-      this.phaser.physics.arcade.collide(
-        level.bigMack.obj,
-        level.map.platforms[i].data
-      );
+      this.phaser.physics.arcade.collide(level.lilPeanut.obj, level.map.platforms[i].data);
+      this.phaser.physics.arcade.collide(level.bigMack.obj, level.map.platforms[i].data);
     }
 
     //LILPENAUT E BIGMACK COM SLIDING DOORS
     for (var i = 0; i < level.map.slidingDoors.length; i++) {
-      this.phaser.physics.arcade.collide(
-        level.lilPeanut.obj,
-        level.map.slidingDoors[i].data
-      );
-      this.phaser.physics.arcade.collide(
-        level.bigMack.obj,
-        level.map.slidingDoors[i].data
-      );
+      this.phaser.physics.arcade.collide(level.lilPeanut.obj, level.map.slidingDoors[i].data);
+      this.phaser.physics.arcade.collide(level.bigMack.obj, level.map.slidingDoors[i].data);
     }
 
     //LILPEANUT E BIGMACK COM BOTOES
     const objPressed = {};
     for (var i = 0; i < level.map.buttons.length; i++) {
-      this.phaser.physics.arcade.collide(
-        level.lilPeanut.obj,
-        level.map.buttons[i].data
-      );
-      this.phaser.physics.arcade.collide(
-        level.bigMack.obj,
-        level.map.buttons[i].data
-      );
+      this.phaser.physics.arcade.collide(level.lilPeanut.obj, level.map.buttons[i].data);
+      this.phaser.physics.arcade.collide(level.bigMack.obj, level.map.buttons[i].data);
       if (
-        this.checkIfOnTopPartial(
-          level.lilPeanut.obj,
-          level.map.buttons[i].data
-        ) ||
+        this.checkIfOnTopPartial(level.lilPeanut.obj, level.map.buttons[i].data) ||
         this.checkIfOnTopPartial(level.bigMack.obj, level.map.buttons[i].data)
       ) {
         if (!objPressed[level.map.buttons[i].actionObj]) {
@@ -339,21 +318,38 @@ class GameEngine {
 
     //LILPEANUT E BIGMACK COM SERRA
     for (var i = 0; i < level.map.eletricSaw.length; i++) {
-      if (
-        this.phaser.physics.arcade.collide(
-          level.lilPeanut.obj,
-          level.map.eletricSaw[i].data
-        )
-      ) {
+      if (this.phaser.physics.arcade.collide(level.lilPeanut.obj, level.map.eletricSaw[i].data)) {
         this.gameover(level, "lilpeanut");
       }
 
-      if (
-        this.phaser.physics.arcade.collide(
-          level.bigMack.obj,
-          level.map.eletricSaw[i].data
-        )
-      ) {
+      if (this.phaser.physics.arcade.collide(level.bigMack.obj, level.map.eletricSaw[i].data)) {
+        this.gameover(level, "bigmack");
+      }
+    }
+
+    //LILPEANUT E BIGMACK COM LAVA
+    for (var i = 0; i < level.map.lavaBlocks.length; i++) {
+      if (this.phaser.physics.arcade.collide(level.lilPeanut.obj, level.map.lavaBlocks[i].data)) {
+        if (
+          this.checkIfOnTopPartial(level.lilPeanut.obj, level.map.lavaBlocks[i].data) ||
+          this.checkIfOnTopPartial(level.bigMack.obj, level.map.lavaBlocks[i].data)
+        ) {
+          this.gameover(level, "lilpeanut");
+        }
+      }
+      if (this.phaser.physics.arcade.collide(level.bigMack.obj, level.map.lavaBlocks[i].data)) {
+        if (this.checkIfOnTopPartial(level.bigMack.obj, level.map.lavaBlocks[i].data)) {
+          this.gameover(level, "bigmack");
+        }
+      }
+    }
+
+    //LILPEANUT E BIGMACK COM SPIKES
+    for (var i = 0; i < level.map.spikes.length; i++) {
+      if (this.phaser.physics.arcade.collide(level.lilPeanut.obj, level.map.spikes[i].data)) {
+        this.gameover(level, "lilpeanut");
+      }
+      if (this.phaser.physics.arcade.collide(level.bigMack.obj, level.map.spikes[i].data)) {
         this.gameover(level, "bigmack");
       }
     }
@@ -361,16 +357,10 @@ class GameEngine {
     //BOXES COM BOTOES
     for (var i = 0; i < level.map.buttons.length; i++) {
       for (var k = 0; k < level.map.smallBox.length; k++) {
-        this.phaser.physics.arcade.collide(
-          level.map.smallBox[k].data,
-          level.map.buttons[i].data
-        );
+        this.phaser.physics.arcade.collide(level.map.smallBox[k].data, level.map.buttons[i].data);
       }
       for (var k = 0; k < level.map.bigBox.length; k++) {
-        this.phaser.physics.arcade.collide(
-          level.map.bigBox[k].data,
-          level.map.buttons[i].data
-        );
+        this.phaser.physics.arcade.collide(level.map.bigBox[k].data, level.map.buttons[i].data);
       }
     }
   }
@@ -394,11 +384,8 @@ class GameEngine {
       Math.round(obj1.body.x) >= Math.round(obj2.body.x) &&
       Math.round(obj1.body.x) + Math.round(obj1.body.width) <=
         Math.round(obj2.body.x) + Math.round(obj2.body.width) &&
-      Math.abs(
-        Math.round(obj1.body.y) +
-          Math.round(obj1.body.height) -
-          Math.round(obj2.body.y)
-      ) <= offset
+      Math.abs(Math.round(obj1.body.y) + Math.round(obj1.body.height) - Math.round(obj2.body.y)) <=
+        offset
     ) {
       return true;
     } else {
@@ -409,15 +396,10 @@ class GameEngine {
   checkIfOnTopPartial(obj1, obj2) {
     const offset = 5;
     if (
-      Math.round(obj1.body.x) + Math.round(obj1.body.width) >=
-        Math.round(obj2.body.x) &&
-      Math.round(obj1.body.x) <=
-        Math.round(obj2.body.x) + Math.round(obj2.body.width) &&
-      Math.abs(
-        Math.round(obj1.body.y) +
-          Math.round(obj1.body.height) -
-          Math.round(obj2.body.y)
-      ) <= offset
+      Math.round(obj1.body.x) + Math.round(obj1.body.width) >= Math.round(obj2.body.x) &&
+      Math.round(obj1.body.x) <= Math.round(obj2.body.x) + Math.round(obj2.body.width) &&
+      Math.abs(Math.round(obj1.body.y) + Math.round(obj1.body.height) - Math.round(obj2.body.y)) <=
+        offset
     ) {
       return true;
     } else {
@@ -526,14 +508,23 @@ class GameEngine {
             key.data.body.velocity.y = 0;
           }
           level.map.buttons.map((button) => {
-            if (
-              button.actionObj.constructor.name == "PlataformaMovel" &&
-              button.data.frame === 0
-            ) {
+            if (button.actionObj.constructor.name == "PlataformaMovel" && button.data.frame === 0) {
               key.unpress();
             }
           });
         }
+      }
+    });
+  }
+
+  checkLevers(level) {
+    level.map.levers.map((key) => {
+      console.log(key);
+
+      if (key.data.frame == 0) {
+        key.actionObj.down(key.actionObj, key.actionObj.chains);
+      } else {
+        key.actionObj.up(key.actionObj, key.actionObj.chains);
       }
     });
   }
@@ -596,6 +587,44 @@ class GameEngine {
             level.bigMack.obj.body.setSize(16, 42, 24, 13);
             level.bigMack.crouch = false;
           }
+          if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.E)) {
+            //CHECK SE HA OVERLAP COM ALGUMA LEVER
+            level.map.levers.map((key) => {
+              this.phaser.physics.arcade.overlap(
+                level.bigMack.obj,
+                key.data,
+                (player, lever) => {
+                  //SE EXISTIR OVERLAP
+                  if (key.data.frame == 0) {
+                    key.data.frame = 1;
+                    //SET TIMER
+                    setTimeout(key.resetLever, key.timeToReset);
+                  }
+                },
+                null,
+                this
+              );
+            });
+          }
+          if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.SHIFT)) {
+            //CHECK SE HA OVERLAP COM ALGUMA LEVER
+            level.map.levers.map((key) => {
+              this.phaser.physics.arcade.overlap(
+                level.lilPeanut.obj,
+                key.data,
+                (player, lever) => {
+                  //SE EXISTIR OVERLAP
+                  if (key.data.frame == 0) {
+                    key.data.frame = 1;
+                    //SET TIMER
+                    setTimeout(key.resetLever, key.timeToReset);
+                  }
+                },
+                null,
+                this
+              );
+            });
+          }
           //  Allow the player to jump if they are touching the ground.
           if (
             this.phaser.input.keyboard.isDown(Phaser.KeyCode.W) &&
@@ -622,6 +651,9 @@ class GameEngine {
           key.moveSaw();
         });
 
+        //CHECKA ALAVANCAS
+        this.checkLevers(level);
+
         //CHECKA OVERLAP NOS OBJETOS QUE AINDA FORAM APANHADOS
         this.checkCollected(level);
       }
@@ -630,17 +662,13 @@ class GameEngine {
       const offsetXLil = 30;
       const offsetXBig = 60;
       const bigMackDoorX =
-        level.map.bigMackDoor.data.x +
-        level.map.bigMackDoor.data.width / 2 -
-        offsetXBig;
+        level.map.bigMackDoor.data.x + level.map.bigMackDoor.data.width / 2 - offsetXBig;
       const bigMackDoorY =
         level.map.bigMackDoor.data.y +
         level.map.bigMackDoor.data.height -
         level.bigMack.obj.body.height;
       const lilPeanutDoorX =
-        level.map.lilPeanutDoor.data.x +
-        level.map.lilPeanutDoor.data.width / 2 -
-        offsetXLil;
+        level.map.lilPeanutDoor.data.x + level.map.lilPeanutDoor.data.width / 2 - offsetXLil;
       const lilPeanutDoorY =
         level.map.lilPeanutDoor.data.y +
         level.map.lilPeanutDoor.data.height -
@@ -776,46 +804,97 @@ class MapLevel {
     this.background = null;
     this.platforms = [];
     this.slidingDoors = [];
+    this.lavaBlocks = [];
+    this.spikes = [];
+    this.levers = [];
+  }
+
+  addSpriteMap(x, y, scaleX, scaleY, spriteName) {
+    const newObj = game.phaser.add.sprite(x, y, spriteName);
+    newObj.scale.setTo(scaleX, scaleY);
+    newObj.smoothed = false;
+    return newObj;
+  }
+
+  addPhysicsToSprite(obj, gravity) {
+    game.phaser.physics.arcade.enable(obj);
+    obj.body.gravity.y = gravity;
+    obj.enableBody = true;
   }
 
   addElevator(x, y, num, maxX, minY) {
-    console.log(minY);
-    console.log(y);
-
-    const elevator = game.phaser.add.sprite(x, y, "elevator");
-    game.phaser.physics.arcade.enable(elevator);
-    elevator.body.gravity.y = 0;
-    elevator.enableBody = true;
+    const scaleX = 10;
+    const scaleY = 2.5;
+    const gravity = 0;
+    const elevator = this.addSpriteMap(x, y, scaleX, scaleY, "elevator");
+    this.addPhysicsToSprite(elevator, gravity);
     elevator.body.immovable = true;
     const newElevator = new Elevator(x, y, elevator, num, maxX, minY);
-    elevator.scale.setTo(10, 2.5);
-    elevator.smoothed = false;
     this.elevators.push(newElevator);
   }
 
   addChain(x, y, chains, visible) {
-    console.log(visible);
-
-    const chain = game.phaser.add.sprite(x, y, "chain");
-    const newChain = new Chain(x, y, chain);
-    chain.scale.setTo(1.5, 1.2);
-    chain.smoothed = false;
-    chains.push(newChain);
+    const scaleX = 1.5;
+    const scaleY = 1.2;
+    const chain = this.addSpriteMap(x, y, scaleX, scaleY, "chain");
     chain.visible = visible;
+    const newChain = new Chain(x, y, chain);
+    chains.push(newChain);
   }
 
   addBigBox(x, y) {
     const gravity = 600;
     const scale = 3.5;
-    const box = game.phaser.add.sprite(x, y, "bigBox");
+    const box = this.addSpriteMap(x, y, scale, scale, "bigBox");
     game.phaser.physics.arcade.enable(box);
-    box.body.gravity.y = gravity;
-    box.enableBody = true;
+    this.addPhysicsToSprite(box, gravity);
     box.body.immovable = false;
     const newBox = new BigBox(x, y, box);
-    box.scale.setTo(scale, scale);
-    box.smoothed = false;
     this.bigBox.push(newBox);
+  }
+
+  addLava(x, y) {
+    const scaleX = 4;
+    const scaleY = 2.38;
+    const gravity = 0;
+    const newLava = this.addSpriteMap(x, y, scaleX, scaleY, "lava");
+    this.addPhysicsToSprite(newLava, gravity);
+    newLava.body.moves = false;
+    newLava.body.setSize(8 * scaleX, 3 * scaleY, 0, 17);
+    const newLavaObj = new Lava(x, y, newLava);
+    this.lavaBlocks.push(newLavaObj);
+  }
+
+  addSpike(x, y) {
+    const scaleX = 2;
+    const scaleY = 3.5;
+    const gravity = 0;
+    const sizeX = 25;
+    const sizeY = 14;
+    const offsetX = 2;
+    const offsetY = 6;
+    const newSpike = this.addSpriteMap(x, y, scaleX, scaleY, "spikes");
+    this.addPhysicsToSprite(newSpike, gravity);
+    newSpike.body.moves = false;
+    newSpike.body.setSize(sizeX, sizeY, offsetX, offsetY);
+    const newSpikeObj = new Spike(x, y, newSpike);
+    this.spikes.push(newSpikeObj);
+  }
+
+  addLever(x, y, timeToReset, actionObjIndex) {
+    const scaleX = 3;
+    const scaleY = 3;
+    const gravity = 0;
+    const sizeX = 9;
+    const sizeY = 19;
+    const offsetX = 12;
+    const offsetY = 4;
+    const newLever = this.addSpriteMap(x, y, scaleX, scaleY, "lever");
+    this.addPhysicsToSprite(newLever, gravity);
+    newLever.body.moves = false;
+    newLever.body.setSize(sizeX, sizeY, offsetX, offsetY);
+    const newLeverObj = new Lever(x, y, newLever, timeToReset, actionObjIndex);
+    this.levers.push(newLeverObj);
   }
 
   addSmallBox(x, y) {
@@ -868,14 +947,7 @@ class MapLevel {
     eletricSaw.body.gravity.y = gravity;
     eletricSaw.enableBody = true;
     eletricSaw.body.immovable = true;
-    const newEletricSaw = new EletricSaw(
-      x + 5,
-      y,
-      eletricSaw,
-      maxX,
-      maxY,
-      velocity
-    );
+    const newEletricSaw = new EletricSaw(x + 5, y, eletricSaw, maxX, maxY, velocity);
     eletricSaw.scale.setTo(scale, scale);
     eletricSaw.body.setCircle(10, 5, 5);
     eletricSaw.smoothed = false;
@@ -969,14 +1041,7 @@ class MapLevel {
     eletricSaw.body.gravity.y = gravity;
     eletricSaw.enableBody = true;
     eletricSaw.body.immovable = true;
-    const newEletricSaw = new EletricSawVertical(
-      x + 5,
-      y,
-      eletricSaw,
-      maxX,
-      maxY,
-      velocity
-    );
+    const newEletricSaw = new EletricSawVertical(x + 5, y, eletricSaw, maxX, maxY, velocity);
     eletricSaw.scale.setTo(scale, scale);
     eletricSaw.body.setCircle(10, 5, 5);
     eletricSaw.smoothed = false;
@@ -989,15 +1054,7 @@ class MapLevel {
     platform.body.gravity.y = 0;
     platform.enableBody = true;
     platform.body.immovable = true;
-    const newElevator = new PlataformaMovel(
-      x,
-      y,
-      platform,
-      num,
-      maxX,
-      minY,
-      actionObj
-    );
+    const newElevator = new PlataformaMovel(x, y, platform, num, maxX, minY, actionObj);
     platform.scale.setTo(5, 2.5);
     platform.smoothed = false;
     this.platforms.push(newElevator);
@@ -1074,6 +1131,7 @@ class Level {
     this.addGrayFilter("bigMackDoor");
     this.addGrayFilter("platforms");
     this.addGrayFilter("slidingDoors");
+    this.addGrayFilter("lavaBlocks");
 
     if (sprite === "lilpeanut") {
       this.bigMack.obj.filters = [gray];
@@ -1119,9 +1177,7 @@ class Level {
         game.phaser.paused = true;
         pauseMenu.showContent(game);
         var currentTime = date.getTime();
-        this.timer.timerAux += Math.round(
-          (currentTime - this.timer.startTime) / 1000
-        );
+        this.timer.timerAux += Math.round((currentTime - this.timer.startTime) / 1000);
       }
     });
     board.scale.setTo(scale, scale);
@@ -1133,20 +1189,10 @@ class Level {
   checkCompleted() {
     let lilPeanutCheck = false;
     let bigMackCheck = false;
-    if (
-      game.phaser.physics.arcade.overlap(
-        this.lilPeanut.obj,
-        this.map.lilPeanutDoor.data
-      )
-    ) {
+    if (game.phaser.physics.arcade.overlap(this.lilPeanut.obj, this.map.lilPeanutDoor.data)) {
       lilPeanutCheck = true;
     }
-    if (
-      game.phaser.physics.arcade.overlap(
-        this.bigMack.obj,
-        this.map.bigMackDoor.data
-      )
-    ) {
+    if (game.phaser.physics.arcade.overlap(this.bigMack.obj, this.map.bigMackDoor.data)) {
       bigMackCheck = true;
     }
     if (lilPeanutCheck && bigMackCheck) {
@@ -1166,16 +1212,16 @@ class Level {
 
   debug() {
     game.phaser.debug.body(this.lilPeanut.obj, "rgba(255, 255, 0, 0.1)");
-    game.phaser.debug.body(this.map.elevators[0].data, "rgba(0, 255, 0, 0.5)");
-    game.phaser.debug.body(this.map.smallBox[0].data, "rgba(255, 255, 0, 0.1)");
-    game.phaser.debug.body(this.map.bigBox[0].data, "rgba(255, 255, 0, 0.1)");
-    game.phaser.debug.body(this.lilPeanut.obj, "rgba(255, 255, 0, 0.1)");
-    game.phaser.debug.body(this.bigMack.obj, "rgba(255, 255, 0, 0.6)");
-    game.phaser.debug.body(this.map.buttons[0].data, "rgba(255, 255, 0, 0.6)");
-    game.phaser.debug.body(
-      this.map.eletricSaw[0].data,
-      "rgba(255, 255, 0, 0.6)"
-    );
+    //game.phaser.debug.body(this.map.elevators[0].data, "rgba(0, 255, 0, 0.5)");
+    //game.phaser.debug.body(this.map.smallBox[0].data, "rgba(255, 255, 0, 0.1)");
+    // game.phaser.debug.body(this.map.bigBox[0].data, "rgba(255, 255, 0, 0.1)");
+    // game.phaser.debug.body(this.lilPeanut.obj, "rgba(255, 255, 0, 0.1)");
+    // game.phaser.debug.body(this.bigMack.obj, "rgba(255, 255, 0, 0.6)");
+    // game.phaser.debug.body(this.map.buttons[0].data, "rgba(255, 255, 0, 0.6)");
+    // game.phaser.debug.body(this.map.eletricSaw[0].data, "rgba(255, 255, 0, 0.6)");
+    game.phaser.debug.body(this.map.lavaBlocks[0].data, "rgba(255, 255, 0, 0.6)");
+    //game.phaser.debug.body(this.map.spikes[0].data, "rgba(255, 255, 0, 0.6)");
+    game.phaser.debug.body(this.map.levers[0].data, "rgba(255, 255, 0, 0.6)");
   }
 }
 
@@ -1261,81 +1307,350 @@ class Level1 extends Level {
 }
 
 class Level2 extends Level {
-  constructor() {
-    super();
+  constructor(num, numHelpers, coordsHelpers) {
+    super(num, numHelpers, coordsHelpers);
   }
-
-  drawMap(game) {
+  drawMap() {
     var nEletricSaw = 0;
+    var nPlataforma = 0;
+    var levelData = {
+      bounds: [
+        //[x, y, comprimento, vertical]
+        //pardes, teto e chao
+        [0, 562, 800, false],
+        [120, 198, 190, false],
+        [120, 212, 190, false],
+        [420, game.phaser.world.height - 402, 72, false],
+        //plataforma de cima
+        [420, game.phaser.world.height - 388, 72, false],
+        [620, 198, 50, false],
+        [620, 212, 50, false],
+        //plataforma de baixo
+        [740, 198, 50, false],
+        [740, 212, 50, false],
+        [0, 384, 375, false],
+        //mini plataforma
+        [425, 399, 375, false],
+        [425, 384, 375, false],
+        [0, 399, 375, false],
+        [260, 55, 100, true],
+        [245, 55, 100, true],
+        [0, 54, 800, false],
+        [16, 0, 600, true],
+        [782, 0, 600, true],
+      ],
+      tochas: [
+        //[x, y, inverted]
+        [725, 290, true],
+        [-8, 50, false],
+      ],
+      caixas: [],
+      portas_deslizantes: [
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+          visible_chains: [0, 4, 627, 217, 19, true],
+          invisible_chains: [0, 0, 269, 215, 19, false],
+          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
+          porta: [617, 217, 617, 286, 2, 1.5, 50, true],
+        },
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+          visible_chains: [0, 0, 630, 60, 19, true],
+          invisible_chains: [0, 0, 630, 60, 19, false],
+          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
+          porta: [10, 198, 110, 198, 10, 0.31, 50, true],
+        },
+      ],
+
+      plataformas: [],
+      serras: [
+        //[x, y, maxX, maxY, move_speed, vertical]
+        [300, 505, 500, 505, 200, false],
+      ],
+      botoes: [
+        //[x, y, numero_item, tipo_item]
+        [90, 333, 0, "slidingDoor"],
+        [710, 147, 1, "slidingDoor"],
+      ],
+      coletaveis_peanut: [
+        [740, 250],
+        [475, 70],
+        [750, 510],
+      ],
+      coletaveis_big: [
+        [390, 300],
+        [720, 510],
+        [560, 300],
+      ],
+      lava: [
+        [300, 160],
+        [492, 160],
+      ],
+      //[x, y, nome]
+      sprite_plataformas: [0, 0, "level2"],
+      //[x, y]
+      porta_pequena: [150, 496],
+      porta_grande: [20, 446],
+      quadro_coletaveis: [30, -2],
+      quadro_menu_restart: [580, -2],
+      //[x, y, sprite_name, x scale, y scale]
+      background: [0, 0, "backgroundLevel", 0.5, 0.5],
+    };
+
     var bounds = game.phaser.add.group();
     bounds.enableBody = true;
-
-    //PASSR TUDO PARA A FUNÇAO DRAW BOUND
-    this.map.drawBound(0, game.phaser.world.height - 38, 800, bounds);
-    this.map.drawBound(0, game.phaser.world.height - 402, 300, bounds);
-    this.map.drawBound(0, game.phaser.world.height - 388, 300, bounds);
-    this.map.drawBound(460, game.phaser.world.height - 402, 50, bounds);
-    this.map.drawBound(460, game.phaser.world.height - 388, 50, bounds);
-    this.map.drawBound(620, game.phaser.world.height - 402, 50, bounds);
-    this.map.drawBound(620, game.phaser.world.height - 388, 50, bounds);
-    this.map.drawBound(740, game.phaser.world.height - 402, 50, bounds);
-    this.map.drawBound(740, game.phaser.world.height - 388, 50, bounds);
-    this.map.drawBound(0, game.phaser.world.height - 216, 375, bounds);
-    this.map.drawBound(425, game.phaser.world.height - 201, 375, bounds);
-    this.map.drawBound(425, game.phaser.world.height - 216, 375, bounds);
-    this.map.drawBound(0, game.phaser.world.height - 201, 375, bounds);
-    this.map.drawBound(0, game.phaser.world.height - 388, 280, bounds);
-    this.map.drawBound(620, game.phaser.world.height - 388, 190, bounds, 1);
-    this.map.drawBound(635, game.phaser.world.height - 388, 190, bounds, 1);
-    this.map.drawBound(260, 55, 80, bounds, 1);
-    this.map.drawBound(0, 54, 800, bounds);
-    this.map.drawBound(16, 0, 600, bounds, 1);
-    this.map.drawBound(game.phaser.world.width - 18, 0, 600, bounds, 1);
-
-    // var background = game.phaser.add.sprite(0, 0, "backgroundLevel");
-    // background.scale.setTo(0.5, 0.5);
-    // this.map.background = background;
-    //TOCHAS
-    this.map.addTorchInverted(
-      game.phaser.world.width - 75,
-      game.phaser.world.height - 300,
-      this.map
-    );
-    this.map.addTorch(-8, 100, this.map);
-
-    //ELETRIC SAW
-    this.map.addEletricSaw(300, 505, 500, 505, 200);
-    //BOTOES
-    this.map.addButton(90, 333, this);
-    this.map.addButton(710, 147, this);
-    //PLATAFORMAS
-    // this.map.platformsSprite = game.phaser.add.sprite(0, 0, "level1");
-
-    //Adicionar os limites do mapa para as colisoes
     this.bounds = bounds;
 
+    // DRAW BOUNDS
+    levelData.bounds.map((bound_coords) => {
+      this.map.drawBound(
+        bound_coords[0],
+        bound_coords[1],
+        bound_coords[2],
+        bounds,
+        bound_coords[3]
+      );
+    });
+
+    var background = game.phaser.add.sprite(
+      levelData.background[0],
+      levelData.background[1],
+      levelData.background[2]
+    );
+    background.scale.setTo(levelData.background[3], levelData.background[4]);
+    this.map.background = background;
+    //TOCHAS
+    levelData.tochas.map((tochas_coords) => {
+      if (tochas_coords[2]) this.map.addTorchInverted(tochas_coords[0], tochas_coords[1], this.map);
+      else this.map.addTorch(tochas_coords[0], tochas_coords[1], this.map);
+    });
+
+    //PORTAS
+    levelData.portas_deslizantes.map((data) => {
+      var chains = [];
+      for (var i = data.visible_chains[0]; i < data.visible_chains[1]; i++) {
+        this.map.addChain(
+          data.visible_chains[2],
+          data.visible_chains[3] + data.visible_chains[4] * i,
+          chains,
+          data.visible_chains[5]
+        );
+      }
+      for (var i = data.invisible_chains[0]; i < data.invisible_chains[1]; i++) {
+        this.map.addChain(
+          data.invisible_chains[2],
+          data.invisible_chains[3] + data.invisible_chains[4] * i,
+          chains,
+          data.invisible_chains[5]
+        );
+      }
+      this.map.addSlidingDoor(
+        data.porta[0],
+        data.porta[1],
+        data.porta[2],
+        data.porta[3],
+        data.porta[4],
+        data.porta[5],
+        data.porta[6],
+        data.porta[7],
+        chains
+      );
+    });
+
+    //PLATAFORMA
+    levelData.plataformas.map((plataformas_data) => {
+      for (
+        var i = plataformas_data.visible_chains[0];
+        i < plataformas_data.visible_chains[1];
+        i++
+      ) {
+        this.map.addChain(
+          plataformas_data.visible_chains[2],
+          plataformas_data.visible_chains[3] + plataformas_data.visible_chains[4] * i,
+          this.map.chains,
+          plataformas_data.visible_chains[5]
+        );
+      }
+      this.map.addPlataformaMovel(
+        plataformas_data.platform[0],
+        plataformas_data.platform[1],
+        plataformas_data.platform[2],
+        plataformas_data.platform[3],
+        plataformas_data.platform[4],
+        this.map.slidingDoors
+      );
+      nPlataforma++;
+    });
+
+    //BOXES
+    levelData.caixas.map((caixa) => {
+      if (caixa[2]) {
+        this.map.addBigBox(caixa[0], caixa[1]);
+      } else {
+        this.map.addSmallBox(caixa[0], caixa[1]);
+      }
+    });
+
+    // //ELETRIC SAW
+    levelData.serras.map((serras_coords) => {
+      if (serras_coords[5])
+        this.map.addEletricSawVertical(
+          serras_coords[0],
+          serras_coords[1],
+          serras_coords[2],
+          serras_coords[3],
+          serras_coords[4]
+        );
+      else
+        this.map.addEletricSaw(
+          serras_coords[0],
+          serras_coords[1],
+          serras_coords[2],
+          serras_coords[3],
+          serras_coords[4]
+        );
+      nEletricSaw++;
+    });
+
+    //BOTOES
+    levelData.botoes.map((botoes_coords) => {
+      if (botoes_coords[3] == "serra") {
+        this.map.addButton(
+          botoes_coords[0],
+          botoes_coords[1],
+          this.map.eletricSaw[botoes_coords[2]]
+        );
+      } else if (botoes_coords[3] == "plataforma") {
+        this.map.addButton(
+          botoes_coords[0],
+          botoes_coords[1],
+          this.map.platforms[botoes_coords[2]]
+        );
+      } else if (botoes_coords[3] == "slidingDoor") {
+        this.map.addButton(
+          botoes_coords[0],
+          botoes_coords[1],
+          this.map.slidingDoors[botoes_coords[2]]
+        );
+      }
+    });
+
+    //SPIKES
+    this.map.addSpike(310, 320);
+    this.map.addSpike(430, 320);
+
+    //PLATAFORMAS;
+    this.map.platformsSprite = game.phaser.add.sprite(
+      levelData.sprite_plataformas[0],
+      levelData.sprite_plataformas[1],
+      levelData.sprite_plataformas[2]
+    );
+
+    //LAVA
+    levelData.lava.map((lava_coords) => {
+      this.map.addLava(lava_coords[0], lava_coords[1]);
+    });
+
     //PORTAS FINAIS
-    this.map.addLilDoor(150, 496);
-    this.map.addBigDoor(20, 446);
+    this.map.addLilDoor(levelData.porta_pequena[0], levelData.porta_pequena[1]);
+    this.map.addBigDoor(levelData.porta_grande[0], levelData.porta_grande[1]);
 
     //CIRA TIMER
     this.timer.createTimer();
 
     //BOARD PARA COLECTAVEIS
-    this.addCollectableBoards(30, -2);
-
-    //COLLECTAVEIS
-    this.map.addCollectableLilPeanut(740, 250);
-    this.map.addCollectableBigMack(390, 300);
-    this.map.addCollectableLilPeanut(475, 70);
-    this.map.addCollectableBigMack(720, 510);
-    this.map.addCollectableLilPeanut(750, 510);
-    this.map.addCollectableBigMack(560, 300);
+    this.addCollectableBoards(levelData.quadro_coletaveis[0], levelData.quadro_coletaveis[1]);
 
     //BOARD PARA RESTART E MENU
-    this.addMenuBoards(580, -2);
+    this.addMenuBoards(levelData.quadro_menu_restart[0], levelData.quadro_menu_restart[1]);
+
+    //COLLECTAVEIS
+    levelData.coletaveis_peanut.map((coletavel) => {
+      this.map.addCollectableLilPeanut(coletavel[0], coletavel[1]);
+    });
+
+    levelData.coletaveis_big.map((coletavel) => {
+      this.map.addCollectableBigMack(coletavel[0], coletavel[1]);
+    });
   }
 }
+// drawMap(game) {
+//   var nEletricSaw = 0;
+//   var bounds = game.phaser.add.group();
+//   bounds.enableBody = true;
+
+//   //PASSR TUDO PARA A FUNÇAO DRAW BOUND
+//   this.map.drawBound(0, game.phaser.world.height - 38, 800, bounds);
+//   this.map.drawBound(0, game.phaser.world.height - 402, 300, bounds);
+//   this.map.drawBound(0, game.phaser.world.height - 388, 300, bounds);
+//   this.map.drawBound(420, game.phaser.world.height - 402, 72, bounds);
+//   this.map.drawBound(420, game.phaser.world.height - 388, 72, bounds);
+//   this.map.drawBound(620, game.phaser.world.height - 402, 50, bounds);
+//   this.map.drawBound(620, game.phaser.world.height - 388, 50, bounds);
+//   this.map.drawBound(740, game.phaser.world.height - 402, 50, bounds);
+//   this.map.drawBound(740, game.phaser.world.height - 388, 50, bounds);
+//   this.map.drawBound(0, game.phaser.world.height - 216, 375, bounds);
+//   this.map.drawBound(425, game.phaser.world.height - 201, 375, bounds);
+//   this.map.drawBound(425, game.phaser.world.height - 216, 375, bounds);
+//   this.map.drawBound(0, game.phaser.world.height - 201, 375, bounds);
+//   this.map.drawBound(0, game.phaser.world.height - 388, 280, bounds);
+//   this.map.drawBound(620, game.phaser.world.height - 388, 190, bounds, 1);
+//   this.map.drawBound(635, game.phaser.world.height - 388, 190, bounds, 1);
+//   this.map.drawBound(260, 55, 100, bounds, 1);
+//   this.map.drawBound(245, 55, 100, bounds, 1);
+//   this.map.drawBound(0, 54, 800, bounds);
+//   this.map.drawBound(16, 0, 600, bounds, 1);
+//   this.map.drawBound(game.phaser.world.width - 18, 0, 600, bounds, 1);
+
+//   var background = game.phaser.add.sprite(0, 0, "backgroundLevel");
+//   background.scale.setTo(0.5, 0.5);
+//   this.map.background = background;
+//   //TOCHAS
+//   this.map.addTorchInverted(
+//     game.phaser.world.width - 75,
+//     game.phaser.world.height - 300,
+//     this.map
+//   );
+//   this.map.addTorch(-8, 100, this.map);
+
+//   //ELETRIC SAW
+//   this.map.addEletricSaw(300, 505, 500, 505, 200);
+//   //BOTOES
+//   this.map.addButton(90, 333, this);
+//   this.map.addButton(710, 147, this);
+//   //LAVA
+//   this.map.addLava(300, 160);
+//   this.map.addLava(492, 160);
+//   //SPIKES
+//   this.map.addSpike(310, 320);
+//   this.map.addSpike(430, 320);
+//   //PLATAFORMAS
+//   this.map.platformsSprite = game.phaser.add.sprite(0, 0, "level2");
+
+//   //Adicionar os limites do mapa para as colisoes
+//   this.bounds = bounds;
+
+//   //PORTAS FINAIS
+//   this.map.addLilDoor(150, 496);
+//   this.map.addBigDoor(20, 446);
+
+//   //CIRA TIMER
+//   this.timer.createTimer();
+
+//   //BOARD PARA COLECTAVEIS
+//   this.addCollectableBoards(30, -2);
+
+//   //COLLECTAVEIS
+//   this.map.addCollectableLilPeanut(740, 250);
+//   this.map.addCollectableBigMack(390, 300);
+//   this.map.addCollectableLilPeanut(475, 70);
+//   this.map.addCollectableBigMack(720, 510);
+//   this.map.addCollectableLilPeanut(750, 510);
+//   this.map.addCollectableBigMack(560, 300);
+
+//   //BOARD PARA RESTART E MENU
+//   this.addMenuBoards(580, -2);
+// }
 
 class Level3 extends Level {
   constructor(num, numHelpers, coordsHelpers) {
@@ -1425,7 +1740,7 @@ class Level3 extends Level {
         [700, 120],
       ],
       //[x, y, nome]
-      sprite_plataformas: [0, 0, "level1"],
+      sprite_plataformas: [0, 0, "level3"],
       //[x, y]
       porta_pequena: [250, 132],
       porta_grande: [340, 82],
@@ -1451,17 +1766,16 @@ class Level3 extends Level {
       );
     });
 
-    // var background = game.phaser.add.sprite(
-    //   levelData.background[0],
-    //   levelData.background[1],
-    //   levelData.background[2]
-    // );
-    // background.scale.setTo(levelData.background[3], levelData.background[4]);
-    // this.map.background = background;
+    var background = game.phaser.add.sprite(
+      levelData.background[0],
+      levelData.background[1],
+      levelData.background[2]
+    );
+    background.scale.setTo(levelData.background[3], levelData.background[4]);
+    this.map.background = background;
     //TOCHAS
     levelData.tochas.map((tochas_coords) => {
-      if (tochas_coords[2])
-        this.map.addTorchInverted(tochas_coords[0], tochas_coords[1], this.map);
+      if (tochas_coords[2]) this.map.addTorchInverted(tochas_coords[0], tochas_coords[1], this.map);
       else this.map.addTorch(tochas_coords[0], tochas_coords[1], this.map);
     });
 
@@ -1476,11 +1790,7 @@ class Level3 extends Level {
           data.visible_chains[5]
         );
       }
-      for (
-        var i = data.invisible_chains[0];
-        i < data.invisible_chains[1];
-        i++
-      ) {
+      for (var i = data.invisible_chains[0]; i < data.invisible_chains[1]; i++) {
         this.map.addChain(
           data.invisible_chains[2],
           data.invisible_chains[3] + data.invisible_chains[4] * i,
@@ -1510,8 +1820,7 @@ class Level3 extends Level {
       ) {
         this.map.addChain(
           plataformas_data.visible_chains[2],
-          plataformas_data.visible_chains[3] +
-            plataformas_data.visible_chains[4] * i,
+          plataformas_data.visible_chains[3] + plataformas_data.visible_chains[4] * i,
           this.map.chains,
           plataformas_data.visible_chains[5]
         );
@@ -1575,11 +1884,11 @@ class Level3 extends Level {
     });
 
     //PLATAFORMAS
-    // this.map.platformsSprite = game.phaser.add.sprite(
-    //   levelData.sprite_plataformas[0],
-    //   levelData.sprite_plataformas[1],
-    //   levelData.sprite_plataformas[2]
-    // );
+    this.map.platformsSprite = game.phaser.add.sprite(
+      levelData.sprite_plataformas[0],
+      levelData.sprite_plataformas[1],
+      levelData.sprite_plataformas[2]
+    );
 
     //Adicionar os limites do mapa para as colisoes
     this.bounds = bounds;
@@ -1592,16 +1901,311 @@ class Level3 extends Level {
     this.timer.createTimer();
 
     //BOARD PARA COLECTAVEIS
-    this.addCollectableBoards(
-      levelData.quadro_coletaveis[0],
-      levelData.quadro_coletaveis[1]
-    );
+    this.addCollectableBoards(levelData.quadro_coletaveis[0], levelData.quadro_coletaveis[1]);
 
     //BOARD PARA RESTART E MENU
-    this.addMenuBoards(
-      levelData.quadro_menu_restart[0],
-      levelData.quadro_menu_restart[1]
+    this.addMenuBoards(levelData.quadro_menu_restart[0], levelData.quadro_menu_restart[1]);
+
+    //COLLECTAVEIS
+    levelData.coletaveis_peanut.map((coletavel) => {
+      this.map.addCollectableLilPeanut(coletavel[0], coletavel[1]);
+    });
+
+    levelData.coletaveis_big.map((coletavel) => {
+      this.map.addCollectableBigMack(coletavel[0], coletavel[1]);
+    });
+  }
+}
+
+class Level4 extends Level {
+  constructor(num, numHelpers, coordsHelpers) {
+    super(num, numHelpers, coordsHelpers);
+  }
+
+  drawMap(game) {
+    var levelData = {
+      bounds: [
+        //[x, y, comprimento, vertical]
+        //pardes, teto e chao
+
+        [0, 562, 70, false],
+        [200, 562, 400, false],
+        [730, 562, 100, false],
+
+        [0, 54, 800, false],
+        [16, 0, 600, true],
+        [782, 0, 600, true],
+        //plataforma de cima esquerda
+        [0, 198, 300, false],
+        [0, 212, 300, false],
+        [296, 200, 15, true],
+        //plataforma de cima direita
+        [500, 198, 300, false],
+        [500, 212, 300, false],
+        [500, 200, 15, true],
+        //plataforma de baixo esquerda
+        [0, 384, 300, false],
+        [0, 399, 300, false],
+        [296, 385, 15, true],
+        //plataforma de baixo direita
+        [500, 384, 300, false],
+        [500, 399, 300, false],
+        [500, 385, 15, true],
+      ],
+      tochas: [
+        //[x, y, inverted]
+        [725, 50, true],
+        [-8, 250, false],
+        [-8, 50, false],
+        [725, 250, true],
+      ],
+      caixas: [
+        //[x, y, grande]
+      ],
+      portas_deslizantes: [
+        //ESTATICAS
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+          visible_chains: [0, 0, 269, 215, 19, true],
+          invisible_chains: [0, 0, 269, 215, 19, false],
+          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
+          porta: [620, 58, 260, 274, 2, 1.5, 50, true],
+        },
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+          visible_chains: [0, 0, 269, 215, 19, true],
+          invisible_chains: [0, 0, 269, 215, 19, false],
+          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
+          porta: [150, 58, 260, 274, 2, 1.25, 50, true],
+        },
+        //DINAMICAS
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+
+          visible_chains: [0, 4, 584, 215, 19, true],
+          invisible_chains: [0, 0, 0, 0, 0, false],
+          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
+          porta: [575, 210, 575, 290, 2, 1.45, 50, true],
+        },
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+          visible_chains: [0, 4, 179, 215, 19, true],
+          invisible_chains: [0, 0, 0, 0, 0, false],
+          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
+          porta: [170, 210, 170, 290, 2, 1.45, 50, true],
+        },
+      ],
+      plataformas: [],
+      serras: [
+        //[x, y, maxX, maxY, move_speed, vertical]
+      ],
+      botoes: [
+        //[x, y, numero_item, tipo_item]
+      ],
+      coletaveis_peanut: [
+        [530, 300],
+        [655, 450],
+        [230, 120],
+      ],
+      coletaveis_big: [
+        [230, 300],
+        [125, 450],
+        [530, 120],
+      ],
+      lava: [
+        [72, 524],
+        [602, 524],
+      ],
+      lever: [
+        [40, 100, 3, 2],
+        [670, 110, 3, 3],
+      ],
+      //[x, y, nome]
+      sprite_plataformas: [0, 0, "level4"],
+      //[x, y]
+      porta_pequena: [70, 316],
+      porta_grande: [630, 267],
+      quadro_coletaveis: [30, -2],
+      quadro_menu_restart: [580, -2],
+      //[x, y, sprite_name, x scale, y scale]
+      background: [0, 0, "backgroundLevel", 0.5, 0.5],
+    };
+
+    var nEletricSaw = 0;
+    var nPlataforma = 0;
+    var bounds = game.phaser.add.group();
+    bounds.enableBody = true;
+
+    // DRAW BOUNDS
+    levelData.bounds.map((bound_coords) => {
+      this.map.drawBound(
+        bound_coords[0],
+        bound_coords[1],
+        bound_coords[2],
+        bounds,
+        bound_coords[3]
+      );
+    });
+
+    var background = game.phaser.add.sprite(
+      levelData.background[0],
+      levelData.background[1],
+      levelData.background[2]
     );
+    background.scale.setTo(levelData.background[3], levelData.background[4]);
+    this.map.background = background;
+    //TOCHAS
+    levelData.tochas.map((tochas_coords) => {
+      if (tochas_coords[2]) this.map.addTorchInverted(tochas_coords[0], tochas_coords[1], this.map);
+      else this.map.addTorch(tochas_coords[0], tochas_coords[1], this.map);
+    });
+
+    //PORTAS
+    levelData.portas_deslizantes.map((data) => {
+      var chains = [];
+      for (var i = data.visible_chains[0]; i < data.visible_chains[1]; i++) {
+        this.map.addChain(
+          data.visible_chains[2],
+          data.visible_chains[3] + data.visible_chains[4] * i,
+          chains,
+          data.visible_chains[5]
+        );
+      }
+      for (var i = data.invisible_chains[0]; i < data.invisible_chains[1]; i++) {
+        this.map.addChain(
+          data.invisible_chains[2],
+          data.invisible_chains[3] + data.invisible_chains[4] * i,
+          chains,
+          data.invisible_chains[5]
+        );
+      }
+      this.map.addSlidingDoor(
+        data.porta[0],
+        data.porta[1],
+        data.porta[2],
+        data.porta[3],
+        data.porta[4],
+        data.porta[5],
+        data.porta[6],
+        data.porta[7],
+        chains
+      );
+    });
+
+    //ELEVADOR
+    //MAIOR INDICE MAIOR y
+    for (var i = 0; i < 6; i++) {
+      this.map.addChain(390, 400 - 19 * (18 - i), this.map.chains, true);
+    }
+    for (var i = 6; i < 27; i++) {
+      this.map.addChain(390, 400 - 19 * (18 - i), this.map.chains, false);
+    }
+    this.map.addElevator(320, 198, 2, null, 562);
+
+    //PLATAFORMA
+    levelData.plataformas.map((plataformas_data) => {
+      for (
+        var i = plataformas_data.visible_chains[0];
+        i < plataformas_data.visible_chains[1];
+        i++
+      ) {
+        this.map.addChain(
+          plataformas_data.visible_chains[2],
+          plataformas_data.visible_chains[3] + plataformas_data.visible_chains[4] * i,
+          this.map.chains,
+          plataformas_data.visible_chains[5]
+        );
+      }
+      this.map.addPlataformaMovel(
+        plataformas_data.platform[0],
+        plataformas_data.platform[1],
+        plataformas_data.platform[2],
+        plataformas_data.platform[3],
+        plataformas_data.platform[4],
+        this.map.slidingDoors
+      );
+      nPlataforma++;
+    });
+
+    //BOXES
+    levelData.caixas.map((caixa) => {
+      if (caixa[2]) {
+        this.map.addBigBox(caixa[0], caixa[1]);
+      } else {
+        this.map.addSmallBox(caixa[0], caixa[1]);
+      }
+    });
+
+    // //ELETRIC SAW
+    levelData.serras.map((serras_coords) => {
+      if (serras_coords[5])
+        this.map.addEletricSawVertical(
+          serras_coords[0],
+          serras_coords[1],
+          serras_coords[2],
+          serras_coords[3],
+          serras_coords[4]
+        );
+      else
+        this.map.addEletricSaw(
+          serras_coords[0],
+          serras_coords[1],
+          serras_coords[2],
+          serras_coords[3],
+          serras_coords[4]
+        );
+      nEletricSaw++;
+    });
+
+    //BOTOES
+    levelData.botoes.map((botoes_coords) => {
+      if (botoes_coords[3] == "serra") {
+        this.map.addButton(
+          botoes_coords[0],
+          botoes_coords[1],
+          this.map.eletricSaw[botoes_coords[2]]
+        );
+      } else if (botoes_coords[3] == "plataforma") {
+        this.map.addButton(
+          botoes_coords[0],
+          botoes_coords[1],
+          this.map.platforms[botoes_coords[2]]
+        );
+      }
+    });
+
+    //LAVA
+    levelData.lava.map((lava_coords) => {
+      this.map.addLava(lava_coords[0], lava_coords[1]);
+    });
+
+    //LEVERS
+    levelData.lever.map((lever_coords) => {
+      this.map.addLever(lever_coords[0], lever_coords[1], lever_coords[2], lever_coords[3]);
+    });
+
+    //PLATAFORMAS
+    this.map.platformsSprite = game.phaser.add.sprite(
+      levelData.sprite_plataformas[0],
+      levelData.sprite_plataformas[1],
+      levelData.sprite_plataformas[2]
+    );
+
+    //Adicionar os limites do mapa para as colisoes
+    this.bounds = bounds;
+
+    //PORTAS FINAIS
+    this.map.addLilDoor(levelData.porta_pequena[0], levelData.porta_pequena[1]);
+    this.map.addBigDoor(levelData.porta_grande[0], levelData.porta_grande[1]);
+
+    //CIRA TIMER
+    this.timer.createTimer();
+
+    //BOARD PARA COLECTAVEIS
+    this.addCollectableBoards(levelData.quadro_coletaveis[0], levelData.quadro_coletaveis[1]);
+
+    //BOARD PARA RESTART E MENU
+    this.addMenuBoards(levelData.quadro_menu_restart[0], levelData.quadro_menu_restart[1]);
 
     //COLLECTAVEIS
     levelData.coletaveis_peanut.map((coletavel) => {
@@ -1670,12 +2274,7 @@ class bigMack extends Character {
     );
     1;
 
-    let anim = charObj.animations.add(
-      "gameover",
-      [35, 36, 37, 37, 37, 36, 38, 39, 40],
-      8,
-      false
-    );
+    let anim = charObj.animations.add("gameover", [35, 36, 37, 37, 37, 36, 38, 39, 40], 8, false);
     anim.onComplete.add(game.gameOverMenu, this);
 
     charObj.animations.add("gameoverMenu", [41, 42], 6, true);
@@ -1796,12 +2395,7 @@ class lilPeanut extends Character {
     );
     anim.onComplete.add(game.levelCompletedMenu, this);
     //charObj.animations.add("crouch", [16, 17], 10, true);
-    anim = charObj.animations.add(
-      "gameover",
-      [32, 33, 34, 34, 34, 33, 35, 36, 37],
-      8,
-      false
-    );
+    anim = charObj.animations.add("gameover", [32, 33, 34, 34, 34, 33, 35, 36, 37], 8, false);
     anim.onComplete.add(game.gameOverMenu, this);
     charObj.animations.add("gameoverMenu", [38, 37], 6, true);
   }
@@ -1900,6 +2494,35 @@ class Torch extends Sprite {
 }
 
 class Bounds extends Sprite {
+  constructor(x, y, data) {
+    super(x, y, data);
+  }
+}
+
+class Lava extends Sprite {
+  constructor(x, y, data) {
+    super(x, y, data);
+    this.data.animations.add("animation", [0, 1, 2], 5, true);
+    this.data.play("animation");
+  }
+}
+
+class Lever extends Sprite {
+  constructor(x, y, data, timeToReset, actionObjIndex) {
+    super(x, y, data);
+    this.timeToReset = timeToReset * 1000;
+    console.log(game.currentLevel.map.slidingDoors[actionObjIndex]);
+    console.log(game.currentLevel.map.slidingDoors);
+
+    this.actionObj = game.currentLevel.map.slidingDoors[actionObjIndex];
+  }
+
+  resetLever = () => {
+    this.data.frame = 0;
+  };
+}
+
+class Spike extends Sprite {
   constructor(x, y, data) {
     super(x, y, data);
   }
@@ -2127,6 +2750,14 @@ class Button extends Sprite {
     } else if (this.actionObj.constructor.name === "PlataformaMovel") {
       this.data.frame = 1;
       this.actionObj.press();
+    } else if (this.actionObj.constructor.name === "SlidingDoor") {
+      this.data.frame = 1;
+
+      if (this.actionObj.x == this.actionObj.maxX) {
+        this.actionObj.up(this.actionObj, this.actionObj.chains);
+      } else if (this.actionObj.y == this.actionObj.maxY) {
+        this.actionObj.right(this.actionObj);
+      }
     }
   }
 
@@ -2140,6 +2771,14 @@ class Button extends Sprite {
     } else if (this.actionObj.constructor.name === "PlataformaMovel") {
       this.data.frame = 0;
       this.actionObj.unpress();
+    } else if (this.actionObj.constructor.name === "SlidingDoor") {
+      this.data.frame = 0;
+
+      if (this.actionObj.x == this.actionObj.maxX) {
+        this.actionObj.down(this.actionObj, this.actionObj.chains);
+      } else if (this.actionObj.y == this.actionObj.maxY) {
+        this.actionObj.left(this.actionObj);
+      }
     }
   }
 }
@@ -2186,11 +2825,7 @@ class Timer {
     this.startTime = date.getTime();
     for (let i = 1; i <= nSlots; i++) {
       for (let k = 0; k < nNums; k++) {
-        this["slot" + String(i)][k] = game.phaser.add.sprite(
-          xCoords[i - 1],
-          yCoord,
-          String(k)
-        );
+        this["slot" + String(i)][k] = game.phaser.add.sprite(xCoords[i - 1], yCoord, String(k));
         this["slot" + String(i)][k].visible = false;
         this["slot" + String(i)][k].scale.setTo(scale, scale);
         this["slot" + String(i)][k].smoothed = false;
@@ -2212,8 +2847,7 @@ class Timer {
     if (!game.currentLevel.cutscene) {
       var date = new Date();
       var currentTime = date.getTime();
-      var timerValue =
-        Math.round((currentTime - this.startTime) / 1000) + this.timerAux;
+      var timerValue = Math.round((currentTime - this.startTime) / 1000) + this.timerAux;
       var minutes = String(Math.floor(timerValue / 60));
       var seconds = String(timerValue % 60);
       if (parseInt(seconds) > 9) {
@@ -2242,6 +2876,22 @@ class SlidingDoor extends Sprite {
     this.velocidade = velocidade;
     this.inverted = inverted;
     this.chains = chains;
+  }
+
+  right(platform) {
+    if (Math.round(platform.data.body.x) < this.maxX) {
+      platform.data.body.velocity.x = this.velocidade;
+    } else {
+      platform.data.body.velocity.x = 0;
+    }
+  }
+
+  left(platform) {
+    if (Math.round(platform.data.body.x) > this.x) {
+      platform.data.body.velocity.x = -this.velocidade;
+    } else {
+      platform.data.body.velocity.x = 0;
+    }
   }
 
   up(platform, chains) {
@@ -2349,16 +2999,7 @@ class Menu {
   }
 
   addButton(x, y, name, callToAction) {
-    var button = game.phaser.add.button(
-      x,
-      y,
-      name,
-      callToAction,
-      this,
-      0,
-      0,
-      0
-    );
+    var button = game.phaser.add.button(x, y, name, callToAction, this, 0, 0, 0);
     button.smoothed = false;
     this.buttons.push(button);
     return button;
@@ -2398,8 +3039,6 @@ class Options extends Menu {
   exitOptions() {
     //Update DB
     var data = {
-      name: game.player.name,
-      score: game.player.score,
       soundEffectsVolume: game.player.soundEffectsVolume,
       gameMusicVolume: game.player.gameMusicVolume,
       menuMusicVolume: game.player.menuMusicVolume,
@@ -2461,17 +3100,9 @@ class Options extends Menu {
         147
       );
     } else if (this.y == 300) {
-      this.this.setVolume(
-        this.this.GameMusicFilledSoundBars,
-        this.this.gameMusicVolume - 1,
-        297
-      );
+      this.this.setVolume(this.this.GameMusicFilledSoundBars, this.this.gameMusicVolume - 1, 297);
     } else if (this.y == 450) {
-      this.this.setVolume(
-        this.this.MenuMusicFilledSoundBars,
-        this.this.menuMusicVolume - 1,
-        447
-      );
+      this.this.setVolume(this.this.MenuMusicFilledSoundBars, this.this.menuMusicVolume - 1, 447);
     }
   }
   increaseVolume() {
@@ -2482,17 +3113,9 @@ class Options extends Menu {
         147
       );
     } else if (this.y == 300) {
-      this.this.setVolume(
-        this.this.GameMusicFilledSoundBars,
-        this.this.gameMusicVolume + 1,
-        297
-      );
+      this.this.setVolume(this.this.GameMusicFilledSoundBars, this.this.gameMusicVolume + 1, 297);
     } else if (this.y == 450) {
-      this.this.setVolume(
-        this.this.MenuMusicFilledSoundBars,
-        this.this.menuMusicVolume + 1,
-        447
-      );
+      this.this.setVolume(this.this.MenuMusicFilledSoundBars, this.this.menuMusicVolume + 1, 447);
     }
   }
 
@@ -2515,31 +3138,13 @@ class Options extends Menu {
   }
 
   addButtons(game) {
-    this.addButton(210, 150, "SoundLess", this.decreaseVolume).scale.setTo(
-      1.5,
-      1.5
-    );
-    this.addButton(210, 300, "SoundLess", this.decreaseVolume).scale.setTo(
-      1.5,
-      1.5
-    );
-    this.addButton(210, 450, "SoundLess", this.decreaseVolume).scale.setTo(
-      1.5,
-      1.5
-    );
+    this.addButton(210, 150, "SoundLess", this.decreaseVolume).scale.setTo(1.5, 1.5);
+    this.addButton(210, 300, "SoundLess", this.decreaseVolume).scale.setTo(1.5, 1.5);
+    this.addButton(210, 450, "SoundLess", this.decreaseVolume).scale.setTo(1.5, 1.5);
 
-    this.addButton(605, 150, "SoundPlus", this.increaseVolume).scale.setTo(
-      1.5,
-      1.5
-    );
-    this.addButton(605, 300, "SoundPlus", this.increaseVolume).scale.setTo(
-      1.5,
-      1.5
-    );
-    this.addButton(605, 450, "SoundPlus", this.increaseVolume).scale.setTo(
-      1.5,
-      1.5
-    );
+    this.addButton(605, 150, "SoundPlus", this.increaseVolume).scale.setTo(1.5, 1.5);
+    this.addButton(605, 300, "SoundPlus", this.increaseVolume).scale.setTo(1.5, 1.5);
+    this.addButton(605, 450, "SoundPlus", this.increaseVolume).scale.setTo(1.5, 1.5);
 
     this.addButton(680, 150, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
     this.addButton(680, 300, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
@@ -2549,77 +3154,43 @@ class Options extends Menu {
     this.addButton(50, 30, "backBtn", this.exitOptions).scale.setTo(2.8, 2.8);
 
     for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(
-        285 + 30 * i,
-        147,
-        "SoundBarEmpty",
-        this.changeVolume
-      );
+      var bar = this.addButton(285 + 30 * i, 147, "SoundBarEmpty", this.changeVolume);
       bar.scale.setTo(2.5, 2.2);
       this.SoundEffectsEmptySoundBars.push(bar);
     }
 
     for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(
-        285 + 30 * i,
-        147,
-        "SoundBarFilled",
-        this.changeVolume
-      );
+      var bar = this.addButton(285 + 30 * i, 147, "SoundBarFilled", this.changeVolume);
       bar.scale.setTo(2.6, 2.2);
 
       this.SoundEffectsFilledSoundBars.push(bar);
     }
 
     for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(
-        285 + 30 * i,
-        297,
-        "SoundBarEmpty",
-        this.changeVolume
-      );
+      var bar = this.addButton(285 + 30 * i, 297, "SoundBarEmpty", this.changeVolume);
       bar.scale.setTo(2.5, 2.2);
       this.GameMusicEmptySoundBars.push(bar);
     }
 
     for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(
-        285 + 30 * i,
-        297,
-        "SoundBarFilled",
-        this.changeVolume
-      );
+      var bar = this.addButton(285 + 30 * i, 297, "SoundBarFilled", this.changeVolume);
       bar.scale.setTo(2.6, 2.2);
       this.GameMusicFilledSoundBars.push(bar);
     }
 
     for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(
-        285 + 30 * i,
-        447,
-        "SoundBarEmpty",
-        this.changeVolume
-      );
+      var bar = this.addButton(285 + 30 * i, 447, "SoundBarEmpty", this.changeVolume);
       bar.scale.setTo(2.5, 2.2);
       this.MenuMusicEmptySoundBars.push(bar);
     }
 
     for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(
-        285 + 30 * i,
-        447,
-        "SoundBarFilled",
-        this.changeVolume
-      );
+      var bar = this.addButton(285 + 30 * i, 447, "SoundBarFilled", this.changeVolume);
       bar.scale.setTo(2.6, 2.2);
       this.MenuMusicFilledSoundBars.push(bar);
     }
 
-    this.setVolume(
-      this.SoundEffectsFilledSoundBars,
-      this.soundEffectsVolume,
-      147
-    );
+    this.setVolume(this.SoundEffectsFilledSoundBars, this.soundEffectsVolume, 147);
     this.setVolume(this.GameMusicFilledSoundBars, this.gameMusicVolume, 297);
     this.setVolume(this.MenuMusicFilledSoundBars, this.menuMusicVolume, 447);
   }
@@ -2638,19 +3209,10 @@ class MainMenu extends Menu {
   }
 
   addButtons(game) {
-    this.addButton(330, 200, "startBtn", this.toLevelSelector).scale.setTo(
-      2.8,
-      2.8
-    );
-    this.addButton(330, 270, "optionsBtn", this.toOptions).scale.setTo(
-      2.8,
-      2.8
-    );
+    this.addButton(330, 200, "startBtn", this.toLevelSelector).scale.setTo(2.8, 2.8);
+    this.addButton(330, 270, "optionsBtn", this.toOptions).scale.setTo(2.8, 2.8);
     this.addButton(330, 340, "helpBtn", this.toHelp).scale.setTo(2.8, 2.8);
-    this.addButton(330, 410, "rankingBtn", this.toRanking).scale.setTo(
-      2.8,
-      2.8
-    );
+    this.addButton(330, 410, "rankingBtn", this.toRanking).scale.setTo(2.8, 2.8);
   }
 }
 class Ranking extends Menu {
@@ -2660,45 +3222,15 @@ class Ranking extends Menu {
   }
 
   addText(game) {
-    var t1 = game.phaser.add.bitmapText(
-      50,
-      150,
-      "myfont",
-      "1-                      PTS",
-      32
-    );
+    var t1 = game.phaser.add.bitmapText(50, 150, "myfont", "1-                      PTS", 32);
     this.rankings.push(t1);
-    var t2 = game.phaser.add.bitmapText(
-      50,
-      220,
-      "myfont",
-      "2-                      PTS",
-      32
-    );
+    var t2 = game.phaser.add.bitmapText(50, 220, "myfont", "2-                      PTS", 32);
     this.rankings.push(t2);
-    var t3 = game.phaser.add.bitmapText(
-      50,
-      290,
-      "myfont",
-      "3-                      PTS",
-      32
-    );
+    var t3 = game.phaser.add.bitmapText(50, 290, "myfont", "3-                      PTS", 32);
     this.rankings.push(t3);
-    var t4 = game.phaser.add.bitmapText(
-      50,
-      360,
-      "myfont",
-      "4-                      PTS",
-      32
-    );
+    var t4 = game.phaser.add.bitmapText(50, 360, "myfont", "4-                      PTS", 32);
     this.rankings.push(t4);
-    var t5 = game.phaser.add.bitmapText(
-      50,
-      430,
-      "myfont",
-      "5-                      PTS",
-      32
-    );
+    var t5 = game.phaser.add.bitmapText(50, 430, "myfont", "5-                      PTS", 32);
     this.rankings.push(t5);
     this.loadRankings();
   }
@@ -2793,29 +3325,64 @@ class LevelSelector extends Menu {
     super();
   }
 
-  addText(game, t1) {
-    t1 = game.phaser.add.bitmapText(550, 150, "myfont", t1, 24);
-  }
-
-  addSprites(game) {
+  addSprites() {
     this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
-    this.addSprite(25, -160, "levelsInline").scale.setTo(0.6, 0.6);
-    this.addSprite(100, 150, "pyramidLevelSelector");
+    this.addSprite(20, -155, "levelsInline").scale.setTo(0.6, 0.6);
+    this.addSprite(65, 170, "pyramidLevelSelector").scale.setTo(0.7, 0.7);
+    //lvl1
+    this.addSprite(260, 380, "collectableBigMack").scale.setTo(3, 3);
+    this.addSprite(260, 400, "collectableLilPeanut").scale.setTo(3, 3);
+    //lvl2
+    this.addSprite(600, 380, "collectableBigMack").scale.setTo(3, 3);
+    this.addSprite(600, 400, "collectableLilPeanut").scale.setTo(3, 3);
+    //lvl3
+    this.addSprite(260, 235, "collectableBigMack").scale.setTo(3, 3);
+    this.addSprite(260, 255, "collectableLilPeanut").scale.setTo(3, 3);
+    //lvl4
+    this.addSprite(600, 235, "collectableBigMack").scale.setTo(3, 3);
+    this.addSprite(600, 255, "collectableLilPeanut").scale.setTo(3, 3);
+  }
+  // TO-DO: DEPOIS DE REESTRUTURAR BD, METER OS COLECTAVEIS, SCORE E TIMERS DINAMICOS
+  addTexts() {
+    this.addBitmapText(
+      530,
+      35,
+      "TOTAL SCORE:\n  " + "1500" + " PTS",
+      //String(game.player.score)
+      24
+    );
+    //lvl1
+    this.addBitmapText(310, 380, String(1) + " / 3", 16);
+    this.addBitmapText(310, 400, String(1) + " / 3", 16);
+    this.addBitmapText(260, 423, "TIME:" + String(1000), 16);
+    this.addBitmapText(260, 440, "SCORE:" + String(163), 16);
+    //lvl2
+    this.addBitmapText(650, 380, String(1) + " / 3", 16);
+    this.addBitmapText(650, 400, String(1) + " / 3", 16);
+    this.addBitmapText(600, 423, "TIME:" + String(1000), 16);
+    this.addBitmapText(600, 440, "SCORE:" + String(163), 16);
+    //lvl3
+    this.addBitmapText(310, 235, String(1) + " / 3", 16);
+    this.addBitmapText(310, 255, String(1) + " / 3", 16);
+    this.addBitmapText(260, 278, "TIME:" + String(1000), 16);
+    this.addBitmapText(260, 295, "SCORE:" + String(163), 16);
+    //lvl4
+    this.addBitmapText(650, 235, String(1) + " / 3", 16);
+    this.addBitmapText(650, 255, String(1) + " / 3", 16);
+    this.addBitmapText(600, 278, "TIME:" + String(1000), 16);
+    this.addBitmapText(600, 295, "SCORE:" + String(163), 16);
   }
 
-  addButtons(game) {
-    this.addButton(50, 30, "backBtn", this.toMainMenu).scale.setTo(2.8, 2.8);
-    this.addButton(130, 380, "bottomleftcolor", this.toStart).scale.setTo(
-      0.7,
-      0.7
-    );
-    this.addButton(320, 380, "bottommidcolor", () => {
+  addButtons() {
+    this.addButton(40, 30, "backBtn", this.toMainMenu).scale.setTo(2.8, 2.8);
+    this.addButton(85, 375, "lvl1", this.toStart).scale.setTo(0.65, 0.65);
+    this.addButton(425, 375, "lvl1", () => {
       this.toLevel(2);
-    }).scale.setTo(0.7, 0.7);
-    this.addButton(530, 380, "bottomrightbw").scale.setTo(0.7, 0.7);
-    this.addButton(265, 285, "midleftbw").scale.setTo(0.7, 0.7);
-    this.addButton(440, 285, "midrightbw").scale.setTo(0.7, 0.7);
-    this.addButton(330, 185, "topbw").scale.setTo(0.7, 0.7);
+    }).scale.setTo(0.65, 0.65);
+    this.addButton(85, 230, "lvl1", this.toStart).scale.setTo(0.65, 0.65);
+    this.addButton(425, 230, "lvl1", () => {
+      this.toLevel(2);
+    }).scale.setTo(0.65, 0.65);
   }
 }
 
@@ -2831,7 +3398,7 @@ class GameOverMenu extends Menu {
     }).scale.setTo(2.5, 2.5);
     this.addButton(361, 270, "restartBtn", () => {
       game.phaser.paused = false;
-      game.phaser.state.start("Level1");
+      game.phaser.state.start(game.phaser.state.current);
     }).scale.setTo(2.5, 2.5);
   }
 
@@ -2894,14 +3461,22 @@ class Player {
     soundEffectsVolume,
     gameMusicVolume,
     menuMusicVolume,
-    score,
+    level1,
+    level2,
+    level3,
+    level4,
+    totalScore,
     docRef
   ) {
     this.name = name;
     this.soundEffectsVolume = soundEffectsVolume;
     this.gameMusicVolume = gameMusicVolume;
     this.menuMusicVolume = menuMusicVolume;
-    this.score = score;
+    this.level1 = level1;
+    this.level2 = level2;
+    this.level3 = level3;
+    this.level4 = level4;
+    this.totalScore = totalScore;
     this.docRef = docRef;
   }
 }
@@ -2955,24 +3530,9 @@ class LevelCompletedMenu extends Menu {
   }
 
   addTexts() {
-    this.addBitmapText(
-      385,
-      252,
-      String(game.currentLevel.nLilPeanutCollected) + " / 3",
-      20
-    );
-    this.addBitmapText(
-      385,
-      292,
-      String(game.currentLevel.nLilPeanutCollected) + " / 3",
-      20
-    );
-    this.addBitmapText(
-      305,
-      332,
-      "TIME:" + String(game.currentLevel.timer.minutes),
-      20
-    );
+    this.addBitmapText(385, 252, String(game.currentLevel.nLilPeanutCollected) + " / 3", 20);
+    this.addBitmapText(385, 292, String(game.currentLevel.nLilPeanutCollected) + " / 3", 20);
+    this.addBitmapText(305, 332, "TIME:" + String(game.currentLevel.timer.minutes), 20);
     this.addBitmapText(305, 372, "SCORE:" + String(123), 20);
   }
 
@@ -3012,9 +3572,7 @@ class Cutscene {
     const offSetXLil = -10;
     const offSetYLil = -70;
     const xBig =
-      game.currentLevel.bigMack.obj.body.x +
-      game.currentLevel.bigMack.obj.body.width +
-      offSetXBig;
+      game.currentLevel.bigMack.obj.body.x + game.currentLevel.bigMack.obj.body.width + offSetXBig;
     const yBig = game.currentLevel.bigMack.obj.body.y + offSetYBig;
     const xLil =
       game.currentLevel.lilPeanut.obj.body.x +
@@ -3079,11 +3637,7 @@ class Cutscene {
     level.lilPeanut.restAnimation();
     let keySPACE = game.phaser.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
     keySPACE.onDown.add(this.nextCutscene, this);
-    this.spacebarSprite = game.phaser.add.sprite(
-      spacebarX,
-      spacebarY,
-      "spacebar"
-    );
+    this.spacebarSprite = game.phaser.add.sprite(spacebarX, spacebarY, "spacebar");
     this.spacebarSprite.scale.setTo(scale, scale);
     this.spacebarSprite.smoothed = false;
   }

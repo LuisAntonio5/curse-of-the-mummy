@@ -1,14 +1,14 @@
-var level2 = {
+var level4 = {
   preload: () => {},
   create: () => {
-    game.currentLevel = new Level2(0, 0, 0);
+    game.currentLevel = new Level4(0, 0, 0);
     game.currentLevel.drawMap(game);
     game.currentLevel.initializeCharacters(
       game,
-      30,
-      game.phaser.world.height - 530,
-      100,
-      game.phaser.world.height - 530
+      450,
+      game.phaser.world.height - 150,
+      250,
+      game.phaser.world.height - 150
     );
     game.pauseMenu.addSprites();
     game.pauseMenu.addButtons();

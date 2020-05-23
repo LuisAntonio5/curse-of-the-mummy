@@ -29,7 +29,6 @@
     <script type="text/javascript" src="Help.js"></script>
     <script type="text/javascript" src="LevelSelector.js"></script>
     <script type="text/javascript" src="Level1.js"></script>
-    ~
     <script type="text/javascript" src="Level2.js"></script>
     <script type="text/javascript" src="Level3.js"></script>
     <script type="text/javascript" src="Boot.js"></script>
@@ -37,6 +36,7 @@
     <script type="text/javascript" src="Options.js"></script>
     <script type="text/javascript" src="gameEngine.js"></script>
     <script type="text/javascript" src="NameInput.js"></script>
+    <script type="text/javascript" src="Level4.js"></script>
   </head>
   <body>
     <script type="text/javascript">
@@ -50,17 +50,13 @@
         game.phaser.state.add("Level1", level1);
         game.phaser.state.add("Level2", level2);
         game.phaser.state.add("Level3", level3);
+        game.phaser.state.add("Level4", level4);
         game.phaser.state.add("Options", optionsState);
         game.phaser.state.add("Ranking", rankingState);
         game.phaser.state.add("Help", helpState);
         game.phaser.state.start("Boot");
       };
     </script>
-    <input
-      type="text"
-      name="name-input"
-      class="input-field-name"
-      id="name-input"
-    />
+    <input type="text" name="name-input" class="input-field-name" id="name-input" />
   </body>
 </html>

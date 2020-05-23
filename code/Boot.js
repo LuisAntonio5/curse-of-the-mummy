@@ -2,6 +2,9 @@ var bootState = {
   preload: () => {
     game.loadImages([
       ["level1", "assets/plats1.png"],
+      ["level2", "assets/plats2.png"],
+      ["level3", "assets/plats3.png"],
+      ["level4", "assets/plats4.png"],
       ["boundsVertical", "assets/boundsVertical.png"],
       ["boundsHorizontal", "assets/boundsHorizontal.png"],
       ["backgroundLevel", "assets/level-background.png"],
@@ -65,12 +68,7 @@ var bootState = {
       //levelSelector
       ["levelsInline", "assets/levels.png"],
       ["pyramidLevelSelector", "assets/pyramidLevelSelector.png"],
-      ["bottomleftcolor", "assets/bottomleftcolor.png"],
-      ["bottommidcolor", "assets/bottommidcolor.png"],
-      ["bottomrightbw", "assets/bottomrightbw.png"],
-      ["midleftbw", "assets/midleftbw.png"],
-      ["midrightbw", "assets/midrightbw.png"],
-      ["topbw", "assets/topbw.png"],
+      ["lvl1", "assets/lvl1.png"],
       //nameInput
       ["inputBox", "assets/text_sprites/nameinput.png"],
       ["nothing", "assets/nothing.png"],
@@ -96,6 +94,8 @@ var bootState = {
       ["spacebar", "assets/Cutscenes/Level1/spacebar.png"],
       //LEVEL3
       ["slidingDoor", "assets/slidingdoor.png"],
+      //LEVEL2
+      ["spikes", "assets/spikes.png"],
       //LevelCompletedMenu
       ["LevelCompletedMenu", "assets/LevelCompletedMenu.png"],
     ]);
@@ -103,10 +103,9 @@ var bootState = {
     game.loadSpritesheet([["eletricSaw", "assets/eletricSawSprite.png"]], 32);
     game.loadSpritesheet([["button", "assets/buttonSprite.png"]], 32);
     game.loadSpritesheet([["torch", "assets/torchSprite.png"]], 32);
-    game.loadSpritesheet(
-      [["torchInverted", "assets/torchInvertedSprite.png"]],
-      32
-    );
+    game.loadSpritesheet([["torchInverted", "assets/torchInvertedSprite.png"]], 32);
+    game.loadSpritesheet([["lava", "assets/lavaSprite.png"]], 32);
+    game.loadSpritesheet([["lever", "assets/lever.png"]], 32);
     game.loadSpritesheet([["bigMack", "assets/bigMackSprite.png"]], 64);
     game.loadFonts();
     game.phaser.load.script(
@@ -118,6 +117,6 @@ var bootState = {
   create: () => {
     game.phaser.physics.startSystem(Phaser.Physics.ARCADE);
     //game.dataBaseGet("bernardo");
-    game.phaser.state.start("Level2");
+    game.phaser.state.start("Load");
   },
 };
