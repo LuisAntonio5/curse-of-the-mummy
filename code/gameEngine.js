@@ -482,7 +482,10 @@ class GameEngine {
   }
 
   levelCompletedMenu(sprite, animation) {
-    console.log("aaa");
+    var levelCompletedMenu = new LevelCompletedMenu();
+    levelCompletedMenu.addSprites();
+    levelCompletedMenu.addButtons();
+    levelCompletedMenu.addTexts();
   }
 
   gameOverMenu(sprite, animation) {
@@ -1257,6 +1260,83 @@ class Level1 extends Level {
   }
 }
 
+class Level2 extends Level {
+  constructor() {
+    super();
+  }
+
+  drawMap(game) {
+    var nEletricSaw = 0;
+    var bounds = game.phaser.add.group();
+    bounds.enableBody = true;
+
+    //PASSR TUDO PARA A FUNÇAO DRAW BOUND
+    this.map.drawBound(0, game.phaser.world.height - 38, 800, bounds);
+    this.map.drawBound(0, game.phaser.world.height - 402, 300, bounds);
+    this.map.drawBound(0, game.phaser.world.height - 388, 300, bounds);
+    this.map.drawBound(460, game.phaser.world.height - 402, 50, bounds);
+    this.map.drawBound(460, game.phaser.world.height - 388, 50, bounds);
+    this.map.drawBound(620, game.phaser.world.height - 402, 50, bounds);
+    this.map.drawBound(620, game.phaser.world.height - 388, 50, bounds);
+    this.map.drawBound(740, game.phaser.world.height - 402, 50, bounds);
+    this.map.drawBound(740, game.phaser.world.height - 388, 50, bounds);
+    this.map.drawBound(0, game.phaser.world.height - 216, 375, bounds);
+    this.map.drawBound(425, game.phaser.world.height - 201, 375, bounds);
+    this.map.drawBound(425, game.phaser.world.height - 216, 375, bounds);
+    this.map.drawBound(0, game.phaser.world.height - 201, 375, bounds);
+    this.map.drawBound(0, game.phaser.world.height - 388, 280, bounds);
+    this.map.drawBound(620, game.phaser.world.height - 388, 190, bounds, 1);
+    this.map.drawBound(635, game.phaser.world.height - 388, 190, bounds, 1);
+    this.map.drawBound(260, 55, 80, bounds, 1);
+    this.map.drawBound(0, 54, 800, bounds);
+    this.map.drawBound(16, 0, 600, bounds, 1);
+    this.map.drawBound(game.phaser.world.width - 18, 0, 600, bounds, 1);
+
+    // var background = game.phaser.add.sprite(0, 0, "backgroundLevel");
+    // background.scale.setTo(0.5, 0.5);
+    // this.map.background = background;
+    //TOCHAS
+    this.map.addTorchInverted(
+      game.phaser.world.width - 75,
+      game.phaser.world.height - 300,
+      this.map
+    );
+    this.map.addTorch(-8, 100, this.map);
+
+    //ELETRIC SAW
+    this.map.addEletricSaw(300, 505, 500, 505, 200);
+    //BOTOES
+    this.map.addButton(90, 333, this);
+    this.map.addButton(710, 147, this);
+    //PLATAFORMAS
+    // this.map.platformsSprite = game.phaser.add.sprite(0, 0, "level1");
+
+    //Adicionar os limites do mapa para as colisoes
+    this.bounds = bounds;
+
+    //PORTAS FINAIS
+    this.map.addLilDoor(150, 496);
+    this.map.addBigDoor(20, 446);
+
+    //CIRA TIMER
+    this.timer.createTimer();
+
+    //BOARD PARA COLECTAVEIS
+    this.addCollectableBoards(30, -2);
+
+    //COLLECTAVEIS
+    this.map.addCollectableLilPeanut(740, 250);
+    this.map.addCollectableBigMack(390, 300);
+    this.map.addCollectableLilPeanut(475, 70);
+    this.map.addCollectableBigMack(720, 510);
+    this.map.addCollectableLilPeanut(750, 510);
+    this.map.addCollectableBigMack(560, 300);
+
+    //BOARD PARA RESTART E MENU
+    this.addMenuBoards(580, -2);
+  }
+}
+
 class Level3 extends Level {
   constructor(num, numHelpers, coordsHelpers) {
     super(num, numHelpers, coordsHelpers);
@@ -1558,6 +1638,7 @@ class bigMack extends Character {
       animWalkingEnd = animWalkingEnd.concat(animWalkingEnd);
     }
     super(charObj);
+    this.boxAnim = false;
     charObj.body.setSize(16, 42, 24, 13);
     charObj.animations.add("walkLeft", [5, 6, 7, 8, 9], 11, false);
     charObj.animations.add("walkRight", [0, 1, 2, 3, 4], 11, false);
@@ -2240,6 +2321,10 @@ class Menu {
     game.phaser.state.start("Level1");
   }
 
+  toLevel(level) {
+    game.phaser.state.start("Level" + level.toString());
+  }
+
   toRanking() {
     game.phaser.state.start("Ranking");
   }
@@ -2724,7 +2809,9 @@ class LevelSelector extends Menu {
       0.7,
       0.7
     );
-    this.addButton(320, 380, "bottommidcolor").scale.setTo(0.7, 0.7);
+    this.addButton(320, 380, "bottommidcolor", () => {
+      this.toLevel(2);
+    }).scale.setTo(0.7, 0.7);
     this.addButton(530, 380, "bottomrightbw").scale.setTo(0.7, 0.7);
     this.addButton(265, 285, "midleftbw").scale.setTo(0.7, 0.7);
     this.addButton(440, 285, "midrightbw").scale.setTo(0.7, 0.7);
@@ -2859,6 +2946,51 @@ class PauseMenu extends Menu {
 
   addSprites(game) {
     this.addSprite(210, 180, "pauseMenu").scale.setTo(0.5, 0.5);
+  }
+}
+
+class LevelCompletedMenu extends Menu {
+  constructor() {
+    super();
+  }
+
+  addTexts() {
+    this.addBitmapText(
+      385,
+      252,
+      String(game.currentLevel.nLilPeanutCollected) + " / 3",
+      20
+    );
+    this.addBitmapText(
+      385,
+      292,
+      String(game.currentLevel.nLilPeanutCollected) + " / 3",
+      20
+    );
+    this.addBitmapText(
+      305,
+      332,
+      "TIME:" + String(game.currentLevel.timer.minutes),
+      20
+    );
+    this.addBitmapText(305, 372, "SCORE:" + String(123), 20);
+  }
+
+  addButtons() {
+    this.addButton(410, 417, "quitBtn", () => {
+      game.phaser.paused = false;
+      this.toMainMenu();
+    }).scale.setTo(2.5, 2.5);
+    this.addButton(230, 415, "backBtn", () => {
+      this.hideContent(game);
+      game.phaser.paused = false;
+    }).scale.setTo(2.5, 2.5);
+  }
+
+  addSprites(game) {
+    this.addSprite(160, 170, "LevelCompletedMenu").scale.setTo(0.6, 0.6);
+    this.addSprite(305, 250, "collectableBigMack").scale.setTo(4, 4);
+    this.addSprite(305, 290, "collectableLilPeanut").scale.setTo(4, 4);
   }
 }
 

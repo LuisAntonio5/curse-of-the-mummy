@@ -96,6 +96,8 @@ var bootState = {
       ["spacebar", "assets/Cutscenes/Level1/spacebar.png"],
       //LEVEL3
       ["slidingDoor", "assets/slidingdoor.png"],
+      //LevelCompletedMenu
+      ["LevelCompletedMenu", "assets/LevelCompletedMenu.png"],
     ]);
     game.loadSpritesheet([["lilPeanut", "assets/lilPeanutSprite.png"]], 32);
     game.loadSpritesheet([["eletricSaw", "assets/eletricSawSprite.png"]], 32);
@@ -116,6 +118,6 @@ var bootState = {
   create: () => {
     game.phaser.physics.startSystem(Phaser.Physics.ARCADE);
     //game.dataBaseGet("bernardo");
-    game.phaser.state.start("Level3");
+    game.phaser.state.start("Level2");
   },
 };
