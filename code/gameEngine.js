@@ -10,6 +10,7 @@ class GameEngine {
     this.phaser = new Phaser.Game(canvasWidth, canvasHeight, Phaser.AUTO, "");
     this.lilPeanut = null;
     this.bigMack = null;
+    this.loaded = null;
   }
 
   dataBaseSet(data) {
@@ -146,16 +147,11 @@ class GameEngine {
     level.map.bigBox.map((key) => {
       //BIG BOX COM LILPEANUT
 
-      this.phaser.physics.arcade.collide(
-        key.data,
-        level.lilPeanut.obj,
-        this.boxcollision,
-        (box, lilPeanut) => {
-          //COLOCAR so ha colisao em cima
-          box.body.moves = false;
-          return true;
-        }
-      );
+      this.phaser.physics.arcade.collide(key.data, level.lilPeanut.obj, this.boxcollision, (box, lilPeanut) => {
+        //COLOCAR so ha colisao em cima
+        box.body.moves = false;
+        return true;
+      });
 
       //BIG BOX COM SMALL BOX e COM BIGMACK
       if (
@@ -166,8 +162,7 @@ class GameEngine {
           (box, bigMack) => {
             if (
               !(
-                box.body.x + 6 < bigMack.body.x + bigMack.body.width &&
-                box.body.x + box.body.width > bigMack.body.x + 6
+                box.body.x + 6 < bigMack.body.x + bigMack.body.width && box.body.x + box.body.width > bigMack.body.x + 6
               )
             ) {
               box.body.moves = true;
@@ -193,10 +188,7 @@ class GameEngine {
           this
         )
       ) {
-        if (
-          level.bigMack.boxAnim == false &&
-          !this.checkIfOnTopPartial(level.bigMack.obj, key.data)
-        ) {
+        if (level.bigMack.boxAnim == false && !this.checkIfOnTopPartial(level.bigMack.obj, key.data)) {
           level.bigMack.boxAnim = true;
           if (level.bigMack.obj.body.velocity.x > 0) level.bigMack.doBoxRightAnimation();
           else {
@@ -216,19 +208,14 @@ class GameEngine {
     level.map.smallBox.map((key) => {
       key.data.body.velocity.x = 0;
       //SMALL BOX COM BIGMACK
-      this.phaser.physics.arcade.collide(
-        key.data,
-        level.bigMack.obj,
-        this.boxcollision,
-        (box, bigMack) => {
-          if (this.checkIfOnTopPartial(bigMack, box)) {
-            return true;
-          }
-          box.kill();
-          level.map.addSmallBox(key.x, key.y);
-          //TODO: TIRAR DO ARRAY
+      this.phaser.physics.arcade.collide(key.data, level.bigMack.obj, this.boxcollision, (box, bigMack) => {
+        if (this.checkIfOnTopPartial(bigMack, box)) {
+          return true;
         }
-      );
+        box.kill();
+        level.map.addSmallBox(key.x, key.y);
+        //TODO: TIRAR DO ARRAY
+      });
       //SMALL BOX COM BIG BOX
       if (
         this.phaser.physics.arcade.collide(
@@ -257,10 +244,7 @@ class GameEngine {
           this
         )
       ) {
-        if (
-          level.lilPeanut.boxAnim == false &&
-          !this.checkIfOnTopPartial(level.lilPeanut.obj, key.data)
-        ) {
+        if (level.lilPeanut.boxAnim == false && !this.checkIfOnTopPartial(level.lilPeanut.obj, key.data)) {
           level.lilPeanut.boxAnim = true;
           if (level.lilPeanut.obj.body.velocity.x > 0) level.lilPeanut.doBoxRightAnimation();
           else {
@@ -382,10 +366,8 @@ class GameEngine {
     const offset = 5;
     if (
       Math.round(obj1.body.x) >= Math.round(obj2.body.x) &&
-      Math.round(obj1.body.x) + Math.round(obj1.body.width) <=
-        Math.round(obj2.body.x) + Math.round(obj2.body.width) &&
-      Math.abs(Math.round(obj1.body.y) + Math.round(obj1.body.height) - Math.round(obj2.body.y)) <=
-        offset
+      Math.round(obj1.body.x) + Math.round(obj1.body.width) <= Math.round(obj2.body.x) + Math.round(obj2.body.width) &&
+      Math.abs(Math.round(obj1.body.y) + Math.round(obj1.body.height) - Math.round(obj2.body.y)) <= offset
     ) {
       return true;
     } else {
@@ -398,8 +380,7 @@ class GameEngine {
     if (
       Math.round(obj1.body.x) + Math.round(obj1.body.width) >= Math.round(obj2.body.x) &&
       Math.round(obj1.body.x) <= Math.round(obj2.body.x) + Math.round(obj2.body.width) &&
-      Math.abs(Math.round(obj1.body.y) + Math.round(obj1.body.height) - Math.round(obj2.body.y)) <=
-        offset
+      Math.abs(Math.round(obj1.body.y) + Math.round(obj1.body.height) - Math.round(obj2.body.y)) <= offset
     ) {
       return true;
     } else {
@@ -529,6 +510,15 @@ class GameEngine {
     });
   }
 
+  loadUpdate() {
+    if (game.loaded == null) {
+      let keySPACE = game.phaser.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
+      keySPACE.onDown.add(() => {
+        game.phaser.state.start("NameInput");
+      }, this);
+    }
+  }
+
   levelUpdate(level) {
     if (!level.animation) {
       //ANIMA OS OBJECTOS TODOS
@@ -562,10 +552,7 @@ class GameEngine {
             level.lilPeanut.crouch = false;
           }
           //  Allow the player to jump if they are touching the ground.
-          if (
-            this.phaser.input.keyboard.isDown(Phaser.KeyCode.UP) &&
-            level.lilPeanut.obj.body.touching.down
-          ) {
+          if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.UP) && level.lilPeanut.obj.body.touching.down) {
             level.lilPeanut.jump();
           }
 
@@ -626,10 +613,7 @@ class GameEngine {
             });
           }
           //  Allow the player to jump if they are touching the ground.
-          if (
-            this.phaser.input.keyboard.isDown(Phaser.KeyCode.W) &&
-            level.bigMack.obj.body.touching.down
-          ) {
+          if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.W) && level.bigMack.obj.body.touching.down) {
             level.bigMack.jump();
           }
         } else {
@@ -661,18 +645,12 @@ class GameEngine {
       const offset = 0.5;
       const offsetXLil = 30;
       const offsetXBig = 60;
-      const bigMackDoorX =
-        level.map.bigMackDoor.data.x + level.map.bigMackDoor.data.width / 2 - offsetXBig;
+      const bigMackDoorX = level.map.bigMackDoor.data.x + level.map.bigMackDoor.data.width / 2 - offsetXBig;
       const bigMackDoorY =
-        level.map.bigMackDoor.data.y +
-        level.map.bigMackDoor.data.height -
-        level.bigMack.obj.body.height;
-      const lilPeanutDoorX =
-        level.map.lilPeanutDoor.data.x + level.map.lilPeanutDoor.data.width / 2 - offsetXLil;
+        level.map.bigMackDoor.data.y + level.map.bigMackDoor.data.height - level.bigMack.obj.body.height;
+      const lilPeanutDoorX = level.map.lilPeanutDoor.data.x + level.map.lilPeanutDoor.data.width / 2 - offsetXLil;
       const lilPeanutDoorY =
-        level.map.lilPeanutDoor.data.y +
-        level.map.lilPeanutDoor.data.height -
-        level.lilPeanut.obj.body.height;
+        level.map.lilPeanutDoor.data.y + level.map.lilPeanutDoor.data.height - level.lilPeanut.obj.body.height;
       //COLOCA SERRAS EM MOVIMENTO
       level.map.eletricSaw.map((key) => {
         key.moveSaw();
@@ -681,10 +659,7 @@ class GameEngine {
       level.bigMack.endAnimation(level, bigMackDoorX, bigMackDoorY);
       level.lilPeanut.endAnimation(level, lilPeanutDoorX, lilPeanutDoorY);
 
-      if (
-        level.bigMack.obj.body.velocity.x < offset &&
-        level.lilPeanut.obj.body.velocity.x < offset
-      ) {
+      if (level.bigMack.obj.body.velocity.x < offset && level.lilPeanut.obj.body.velocity.x < offset) {
         level.bigMack.doTurnAnimation();
         level.lilPeanut.doTurnAnimation();
 
@@ -1066,16 +1041,7 @@ class MapLevel {
     slidingDoor.body.gravity.y = 0;
     slidingDoor.enableBody = true;
     slidingDoor.body.immovable = true;
-    const newElevator = new SlidingDoor(
-      x,
-      y,
-      slidingDoor,
-      maxX,
-      maxY,
-      velocidade,
-      inverted,
-      chains
-    );
+    const newElevator = new SlidingDoor(x, y, slidingDoor, maxX, maxY, velocidade, inverted, chains);
     slidingDoor.scale.setTo(sizeX, sizeY);
     slidingDoor.smoothed = false;
     this.slidingDoors.push(newElevator);
@@ -1251,11 +1217,7 @@ class Level1 extends Level {
     background.scale.setTo(0.5, 0.5);
     this.map.background = background;
     //TOCHAS
-    this.map.addTorchInverted(
-      game.phaser.world.width - 75,
-      game.phaser.world.height - 300,
-      this.map
-    );
+    this.map.addTorchInverted(game.phaser.world.width - 75, game.phaser.world.height - 300, this.map);
     this.map.addTorch(-8, 100, this.map);
 
     //ELEVADOR
@@ -1403,20 +1365,10 @@ class Level2 extends Level {
 
     // DRAW BOUNDS
     levelData.bounds.map((bound_coords) => {
-      this.map.drawBound(
-        bound_coords[0],
-        bound_coords[1],
-        bound_coords[2],
-        bounds,
-        bound_coords[3]
-      );
+      this.map.drawBound(bound_coords[0], bound_coords[1], bound_coords[2], bounds, bound_coords[3]);
     });
 
-    var background = game.phaser.add.sprite(
-      levelData.background[0],
-      levelData.background[1],
-      levelData.background[2]
-    );
+    var background = game.phaser.add.sprite(levelData.background[0], levelData.background[1], levelData.background[2]);
     background.scale.setTo(levelData.background[3], levelData.background[4]);
     this.map.background = background;
     //TOCHAS
@@ -1459,11 +1411,7 @@ class Level2 extends Level {
 
     //PLATAFORMA
     levelData.plataformas.map((plataformas_data) => {
-      for (
-        var i = plataformas_data.visible_chains[0];
-        i < plataformas_data.visible_chains[1];
-        i++
-      ) {
+      for (var i = plataformas_data.visible_chains[0]; i < plataformas_data.visible_chains[1]; i++) {
         this.map.addChain(
           plataformas_data.visible_chains[2],
           plataformas_data.visible_chains[3] + plataformas_data.visible_chains[4] * i,
@@ -1515,23 +1463,11 @@ class Level2 extends Level {
     //BOTOES
     levelData.botoes.map((botoes_coords) => {
       if (botoes_coords[3] == "serra") {
-        this.map.addButton(
-          botoes_coords[0],
-          botoes_coords[1],
-          this.map.eletricSaw[botoes_coords[2]]
-        );
+        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.eletricSaw[botoes_coords[2]]);
       } else if (botoes_coords[3] == "plataforma") {
-        this.map.addButton(
-          botoes_coords[0],
-          botoes_coords[1],
-          this.map.platforms[botoes_coords[2]]
-        );
+        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.platforms[botoes_coords[2]]);
       } else if (botoes_coords[3] == "slidingDoor") {
-        this.map.addButton(
-          botoes_coords[0],
-          botoes_coords[1],
-          this.map.slidingDoors[botoes_coords[2]]
-        );
+        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.slidingDoors[botoes_coords[2]]);
       }
     });
 
@@ -1757,20 +1693,10 @@ class Level3 extends Level {
 
     // DRAW BOUNDS
     levelData.bounds.map((bound_coords) => {
-      this.map.drawBound(
-        bound_coords[0],
-        bound_coords[1],
-        bound_coords[2],
-        bounds,
-        bound_coords[3]
-      );
+      this.map.drawBound(bound_coords[0], bound_coords[1], bound_coords[2], bounds, bound_coords[3]);
     });
 
-    var background = game.phaser.add.sprite(
-      levelData.background[0],
-      levelData.background[1],
-      levelData.background[2]
-    );
+    var background = game.phaser.add.sprite(levelData.background[0], levelData.background[1], levelData.background[2]);
     background.scale.setTo(levelData.background[3], levelData.background[4]);
     this.map.background = background;
     //TOCHAS
@@ -1813,11 +1739,7 @@ class Level3 extends Level {
 
     //PLATAFORMA
     levelData.plataformas.map((plataformas_data) => {
-      for (
-        var i = plataformas_data.visible_chains[0];
-        i < plataformas_data.visible_chains[1];
-        i++
-      ) {
+      for (var i = plataformas_data.visible_chains[0]; i < plataformas_data.visible_chains[1]; i++) {
         this.map.addChain(
           plataformas_data.visible_chains[2],
           plataformas_data.visible_chains[3] + plataformas_data.visible_chains[4] * i,
@@ -1869,17 +1791,9 @@ class Level3 extends Level {
     //BOTOES
     levelData.botoes.map((botoes_coords) => {
       if (botoes_coords[3] == "serra") {
-        this.map.addButton(
-          botoes_coords[0],
-          botoes_coords[1],
-          this.map.eletricSaw[botoes_coords[2]]
-        );
+        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.eletricSaw[botoes_coords[2]]);
       } else if (botoes_coords[3] == "plataforma") {
-        this.map.addButton(
-          botoes_coords[0],
-          botoes_coords[1],
-          this.map.platforms[botoes_coords[2]]
-        );
+        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.platforms[botoes_coords[2]]);
       }
     });
 
@@ -2038,20 +1952,10 @@ class Level4 extends Level {
 
     // DRAW BOUNDS
     levelData.bounds.map((bound_coords) => {
-      this.map.drawBound(
-        bound_coords[0],
-        bound_coords[1],
-        bound_coords[2],
-        bounds,
-        bound_coords[3]
-      );
+      this.map.drawBound(bound_coords[0], bound_coords[1], bound_coords[2], bounds, bound_coords[3]);
     });
 
-    var background = game.phaser.add.sprite(
-      levelData.background[0],
-      levelData.background[1],
-      levelData.background[2]
-    );
+    var background = game.phaser.add.sprite(levelData.background[0], levelData.background[1], levelData.background[2]);
     background.scale.setTo(levelData.background[3], levelData.background[4]);
     this.map.background = background;
     //TOCHAS
@@ -2104,11 +2008,7 @@ class Level4 extends Level {
 
     //PLATAFORMA
     levelData.plataformas.map((plataformas_data) => {
-      for (
-        var i = plataformas_data.visible_chains[0];
-        i < plataformas_data.visible_chains[1];
-        i++
-      ) {
+      for (var i = plataformas_data.visible_chains[0]; i < plataformas_data.visible_chains[1]; i++) {
         this.map.addChain(
           plataformas_data.visible_chains[2],
           plataformas_data.visible_chains[3] + plataformas_data.visible_chains[4] * i,
@@ -2160,17 +2060,9 @@ class Level4 extends Level {
     //BOTOES
     levelData.botoes.map((botoes_coords) => {
       if (botoes_coords[3] == "serra") {
-        this.map.addButton(
-          botoes_coords[0],
-          botoes_coords[1],
-          this.map.eletricSaw[botoes_coords[2]]
-        );
+        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.eletricSaw[botoes_coords[2]]);
       } else if (botoes_coords[3] == "plataforma") {
-        this.map.addButton(
-          botoes_coords[0],
-          botoes_coords[1],
-          this.map.platforms[botoes_coords[2]]
-        );
+        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.platforms[botoes_coords[2]]);
       }
     });
 
@@ -3021,16 +2913,7 @@ class Options extends Menu {
   }
 
   addButton(x, y, name, callToAction) {
-    var button = game.phaser.add.button(
-      x,
-      y,
-      name,
-      callToAction,
-      { this: this, x: x, y: y },
-      0,
-      0,
-      0
-    );
+    var button = game.phaser.add.button(x, y, name, callToAction, { this: this, x: x, y: y }, 0, 0, 0);
     button.smoothed = false;
     this.buttons.push(button);
     return button;
@@ -3094,11 +2977,7 @@ class Options extends Menu {
 
   decreaseVolume() {
     if (this.y == 150) {
-      this.this.setVolume(
-        this.this.SoundEffectsFilledSoundBars,
-        this.this.soundEffectsVolume - 1,
-        147
-      );
+      this.this.setVolume(this.this.SoundEffectsFilledSoundBars, this.this.soundEffectsVolume - 1, 147);
     } else if (this.y == 300) {
       this.this.setVolume(this.this.GameMusicFilledSoundBars, this.this.gameMusicVolume - 1, 297);
     } else if (this.y == 450) {
@@ -3107,11 +2986,7 @@ class Options extends Menu {
   }
   increaseVolume() {
     if (this.y == 150) {
-      this.this.setVolume(
-        this.this.SoundEffectsFilledSoundBars,
-        this.this.soundEffectsVolume + 1,
-        147
-      );
+      this.this.setVolume(this.this.SoundEffectsFilledSoundBars, this.this.soundEffectsVolume + 1, 147);
     } else if (this.y == 300) {
       this.this.setVolume(this.this.GameMusicFilledSoundBars, this.this.gameMusicVolume + 1, 297);
     } else if (this.y == 450) {
@@ -3495,15 +3370,7 @@ class PauseMenu extends Menu {
       var pauseHelpMenu = new Help();
       pauseHelpMenu.addSprites(game);
       pauseHelpMenu.addButtons(game);
-      pauseHelpMenu.addTexts(
-        game,
-        "  BIG MACK    LIL PEANUT",
-        "JUMP",
-        "INTERACT",
-        "LEFT",
-        "RIGHT",
-        "CROUCH"
-      );
+      pauseHelpMenu.addTexts(game, "  BIG MACK    LIL PEANUT", "JUMP", "INTERACT", "LEFT", "RIGHT", "CROUCH");
     }).scale.setTo(2.5, 2.5);
     this.addButton(420, 260, "optionsBtn", () => {
       var pauseOptionsMenu = new Options();
@@ -3571,13 +3438,9 @@ class Cutscene {
     const offSetYBig = -70;
     const offSetXLil = -10;
     const offSetYLil = -70;
-    const xBig =
-      game.currentLevel.bigMack.obj.body.x + game.currentLevel.bigMack.obj.body.width + offSetXBig;
+    const xBig = game.currentLevel.bigMack.obj.body.x + game.currentLevel.bigMack.obj.body.width + offSetXBig;
     const yBig = game.currentLevel.bigMack.obj.body.y + offSetYBig;
-    const xLil =
-      game.currentLevel.lilPeanut.obj.body.x +
-      game.currentLevel.lilPeanut.obj.body.width +
-      offSetXLil;
+    const xLil = game.currentLevel.lilPeanut.obj.body.x + game.currentLevel.lilPeanut.obj.body.width + offSetXLil;
     const yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
     this.currentIndex += 1;
     this.currentScene.kill();
@@ -3621,10 +3484,7 @@ class Cutscene {
     //METER ISTO PARA TODOS
     const offSetXLil = -10;
     const offSetYLil = -70;
-    const xLil =
-      game.currentLevel.lilPeanut.obj.body.x +
-      game.currentLevel.lilPeanut.obj.body.width +
-      offSetXLil;
+    const xLil = game.currentLevel.lilPeanut.obj.body.x + game.currentLevel.lilPeanut.obj.body.width + offSetXLil;
     const yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
     const scale = 2.5;
     const spacebarX = 110;
@@ -3640,5 +3500,20 @@ class Cutscene {
     this.spacebarSprite = game.phaser.add.sprite(spacebarX, spacebarY, "spacebar");
     this.spacebarSprite.scale.setTo(scale, scale);
     this.spacebarSprite.smoothed = false;
+  }
+}
+
+class Load extends Menu {
+  constructor() {
+    super();
+  }
+
+  addSprites() {
+    this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
+    this.addSprite(180, 100, "titleNotInline").scale.setTo(0.6, 0.6);
+    var spacebarText = this.addSprite(170, 480, "pressSpacebar");
+    spacebarText.scale.setTo(0.6, 0.6);
+    spacebarText.alpha = 0;
+    game.phaser.add.tween(spacebarText).to({ alpha: 1 }, 1000, Phaser.Easing.Linear.None, true, 0, 1000, true);
   }
 }

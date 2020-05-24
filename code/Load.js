@@ -1,9 +1,10 @@
 var loadState = {
-  preload: () => {
-    //LOAD ALL IMAGES FROM LOAD PAGE
-  },
+  preload: () => {},
   create: () => {
-    //CREATE ALL IMAGES FROM LOAD PAGE
-    game.phaser.state.start("NameInput");
+    load = new Load();
+    load.addSprites();
+  },
+  update: () => {
+    game.loadUpdate();
   },
 };

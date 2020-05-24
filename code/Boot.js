@@ -98,12 +98,18 @@ var bootState = {
       ["spikes", "assets/spikes.png"],
       //LevelCompletedMenu
       ["LevelCompletedMenu", "assets/LevelCompletedMenu.png"],
+      //load
+      ["titleNotInline", "assets/titleNotInline.png"],
+      ["pressSpacebar", "assets/pressSpacebar.png"],
     ]);
     game.loadSpritesheet([["lilPeanut", "assets/lilPeanutSprite.png"]], 32);
     game.loadSpritesheet([["eletricSaw", "assets/eletricSawSprite.png"]], 32);
     game.loadSpritesheet([["button", "assets/buttonSprite.png"]], 32);
     game.loadSpritesheet([["torch", "assets/torchSprite.png"]], 32);
-    game.loadSpritesheet([["torchInverted", "assets/torchInvertedSprite.png"]], 32);
+    game.loadSpritesheet(
+      [["torchInverted", "assets/torchInvertedSprite.png"]],
+      32
+    );
     game.loadSpritesheet([["lava", "assets/lavaSprite.png"]], 32);
     game.loadSpritesheet([["lever", "assets/lever.png"]], 32);
     game.loadSpritesheet([["bigMack", "assets/bigMackSprite.png"]], 64);
