@@ -147,11 +147,16 @@ class GameEngine {
     level.map.bigBox.map((key) => {
       //BIG BOX COM LILPEANUT
 
-      this.phaser.physics.arcade.collide(key.data, level.lilPeanut.obj, this.boxcollision, (box, lilPeanut) => {
-        //COLOCAR so ha colisao em cima
-        box.body.moves = false;
-        return true;
-      });
+      this.phaser.physics.arcade.collide(
+        key.data,
+        level.lilPeanut.obj,
+        this.boxcollision,
+        (box, lilPeanut) => {
+          //COLOCAR so ha colisao em cima
+          box.body.moves = false;
+          return true;
+        }
+      );
 
       //BIG BOX COM SMALL BOX e COM BIGMACK
       if (
@@ -162,7 +167,8 @@ class GameEngine {
           (box, bigMack) => {
             if (
               !(
-                box.body.x + 6 < bigMack.body.x + bigMack.body.width && box.body.x + box.body.width > bigMack.body.x + 6
+                box.body.x + 6 < bigMack.body.x + bigMack.body.width &&
+                box.body.x + box.body.width > bigMack.body.x + 6
               )
             ) {
               box.body.moves = true;
@@ -188,7 +194,10 @@ class GameEngine {
           this
         )
       ) {
-        if (level.bigMack.boxAnim == false && !this.checkIfOnTopPartial(level.bigMack.obj, key.data)) {
+        if (
+          level.bigMack.boxAnim == false &&
+          !this.checkIfOnTopPartial(level.bigMack.obj, key.data)
+        ) {
           level.bigMack.boxAnim = true;
           if (level.bigMack.obj.body.velocity.x > 0) level.bigMack.doBoxRightAnimation();
           else {
@@ -208,14 +217,19 @@ class GameEngine {
     level.map.smallBox.map((key) => {
       key.data.body.velocity.x = 0;
       //SMALL BOX COM BIGMACK
-      this.phaser.physics.arcade.collide(key.data, level.bigMack.obj, this.boxcollision, (box, bigMack) => {
-        if (this.checkIfOnTopPartial(bigMack, box)) {
-          return true;
+      this.phaser.physics.arcade.collide(
+        key.data,
+        level.bigMack.obj,
+        this.boxcollision,
+        (box, bigMack) => {
+          if (this.checkIfOnTopPartial(bigMack, box)) {
+            return true;
+          }
+          box.kill();
+          level.map.addSmallBox(key.x, key.y);
+          //TODO: TIRAR DO ARRAY
         }
-        box.kill();
-        level.map.addSmallBox(key.x, key.y);
-        //TODO: TIRAR DO ARRAY
-      });
+      );
       //SMALL BOX COM BIG BOX
       if (
         this.phaser.physics.arcade.collide(
@@ -244,7 +258,10 @@ class GameEngine {
           this
         )
       ) {
-        if (level.lilPeanut.boxAnim == false && !this.checkIfOnTopPartial(level.lilPeanut.obj, key.data)) {
+        if (
+          level.lilPeanut.boxAnim == false &&
+          !this.checkIfOnTopPartial(level.lilPeanut.obj, key.data)
+        ) {
           level.lilPeanut.boxAnim = true;
           if (level.lilPeanut.obj.body.velocity.x > 0) level.lilPeanut.doBoxRightAnimation();
           else {
@@ -366,8 +383,10 @@ class GameEngine {
     const offset = 5;
     if (
       Math.round(obj1.body.x) >= Math.round(obj2.body.x) &&
-      Math.round(obj1.body.x) + Math.round(obj1.body.width) <= Math.round(obj2.body.x) + Math.round(obj2.body.width) &&
-      Math.abs(Math.round(obj1.body.y) + Math.round(obj1.body.height) - Math.round(obj2.body.y)) <= offset
+      Math.round(obj1.body.x) + Math.round(obj1.body.width) <=
+        Math.round(obj2.body.x) + Math.round(obj2.body.width) &&
+      Math.abs(Math.round(obj1.body.y) + Math.round(obj1.body.height) - Math.round(obj2.body.y)) <=
+        offset
     ) {
       return true;
     } else {
@@ -380,7 +399,8 @@ class GameEngine {
     if (
       Math.round(obj1.body.x) + Math.round(obj1.body.width) >= Math.round(obj2.body.x) &&
       Math.round(obj1.body.x) <= Math.round(obj2.body.x) + Math.round(obj2.body.width) &&
-      Math.abs(Math.round(obj1.body.y) + Math.round(obj1.body.height) - Math.round(obj2.body.y)) <= offset
+      Math.abs(Math.round(obj1.body.y) + Math.round(obj1.body.height) - Math.round(obj2.body.y)) <=
+        offset
     ) {
       return true;
     } else {
@@ -500,8 +520,6 @@ class GameEngine {
 
   checkLevers(level) {
     level.map.levers.map((key) => {
-      console.log(key);
-
       if (key.data.frame == 0) {
         key.actionObj.down(key.actionObj, key.actionObj.chains);
       } else {
@@ -514,6 +532,7 @@ class GameEngine {
     if (game.loaded == null) {
       let keySPACE = game.phaser.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
       keySPACE.onDown.add(() => {
+        game.loaded = true;
         game.phaser.state.start("NameInput");
       }, this);
     }
@@ -552,7 +571,10 @@ class GameEngine {
             level.lilPeanut.crouch = false;
           }
           //  Allow the player to jump if they are touching the ground.
-          if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.UP) && level.lilPeanut.obj.body.touching.down) {
+          if (
+            this.phaser.input.keyboard.isDown(Phaser.KeyCode.UP) &&
+            level.lilPeanut.obj.body.touching.down
+          ) {
             level.lilPeanut.jump();
           }
 
@@ -613,7 +635,10 @@ class GameEngine {
             });
           }
           //  Allow the player to jump if they are touching the ground.
-          if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.W) && level.bigMack.obj.body.touching.down) {
+          if (
+            this.phaser.input.keyboard.isDown(Phaser.KeyCode.W) &&
+            level.bigMack.obj.body.touching.down
+          ) {
             level.bigMack.jump();
           }
         } else {
@@ -645,12 +670,20 @@ class GameEngine {
       const offset = 0.5;
       const offsetXLil = 30;
       const offsetXBig = 60;
-      const bigMackDoorX = level.map.bigMackDoor.data.x + level.map.bigMackDoor.data.width / 2 - offsetXBig;
+      const bigMackDoorX =
+        level.map.bigMackDoor.data.x + level.map.bigMackDoor.data.width / 2 - offsetXBig;
       const bigMackDoorY =
-        level.map.bigMackDoor.data.y + level.map.bigMackDoor.data.height - level.bigMack.obj.body.height;
-      const lilPeanutDoorX = level.map.lilPeanutDoor.data.x + level.map.lilPeanutDoor.data.width / 2 - offsetXLil;
+        level.map.bigMackDoor.data.y +
+        level.map.bigMackDoor.data.height -
+        level.bigMack.obj.body.height;
+      const lilPeanutDoorX =
+        level.map.lilPeanutDoor.data.x + level.map.lilPeanutDoor.data.width / 2 - offsetXLil;
       const lilPeanutDoorY =
-        level.map.lilPeanutDoor.data.y + level.map.lilPeanutDoor.data.height - level.lilPeanut.obj.body.height;
+        level.map.lilPeanutDoor.data.y +
+        level.map.lilPeanutDoor.data.height -
+        level.lilPeanut.obj.body.height;
+      const limitLil = lilPeanutDoorX + 20;
+      const limitBig = Math.round(bigMackDoorX) + 48;
       //COLOCA SERRAS EM MOVIMENTO
       level.map.eletricSaw.map((key) => {
         key.moveSaw();
@@ -659,7 +692,10 @@ class GameEngine {
       level.bigMack.endAnimation(level, bigMackDoorX, bigMackDoorY);
       level.lilPeanut.endAnimation(level, lilPeanutDoorX, lilPeanutDoorY);
 
-      if (level.bigMack.obj.body.velocity.x < offset && level.lilPeanut.obj.body.velocity.x < offset) {
+      if (
+        Math.round(level.bigMack.obj.body.x) == limitBig &&
+        Math.round(level.lilPeanut.obj.body.x) == limitLil
+      ) {
         level.bigMack.doTurnAnimation();
         level.lilPeanut.doTurnAnimation();
 
@@ -832,10 +868,11 @@ class MapLevel {
     const scaleX = 4;
     const scaleY = 2.38;
     const gravity = 0;
+    const offsetX = 6;
     const newLava = this.addSpriteMap(x, y, scaleX, scaleY, "lava");
     this.addPhysicsToSprite(newLava, gravity);
     newLava.body.moves = false;
-    newLava.body.setSize(8 * scaleX, 3 * scaleY, 0, 17);
+    newLava.body.setSize(8 * scaleX - offsetX, 3 * scaleY, 3, 15);
     const newLavaObj = new Lava(x, y, newLava);
     this.lavaBlocks.push(newLavaObj);
   }
@@ -1041,7 +1078,16 @@ class MapLevel {
     slidingDoor.body.gravity.y = 0;
     slidingDoor.enableBody = true;
     slidingDoor.body.immovable = true;
-    const newElevator = new SlidingDoor(x, y, slidingDoor, maxX, maxY, velocidade, inverted, chains);
+    const newElevator = new SlidingDoor(
+      x,
+      y,
+      slidingDoor,
+      maxX,
+      maxY,
+      velocidade,
+      inverted,
+      chains
+    );
     slidingDoor.scale.setTo(sizeX, sizeY);
     slidingDoor.smoothed = false;
     this.slidingDoors.push(newElevator);
@@ -1049,7 +1095,7 @@ class MapLevel {
 }
 
 class Level {
-  constructor(numCut, numHelpers, coordsHelpers) {
+  constructor(numCut, numHelpers, coordsHelpers, idLevel) {
     this.map = new MapLevel();
     this.bigMack = null;
     this.lilPeanut = null;
@@ -1060,8 +1106,8 @@ class Level {
     this.menuBoards = [];
     this.doorChains = [];
     this.cutscene = null;
+    this.levelID = idLevel;
     //ADICIONAR AQUI A CONDIÇAO PARA MOSTRAR CUTSCENE
-    console.log(numCut, numHelpers);
 
     if (numHelpers + numCut != 0) {
       this.cutscene = new Cutscene(numCut, numHelpers, coordsHelpers);
@@ -1167,13 +1213,11 @@ class Level {
     return false;
   }
 
-  initializeCharacters(game, xBigMack, yBigMack, xLil, yLil) {
-    //character creation
+  initializeCharacters(game, xBigMack, yBigMack, xLil, yLil, side) {
     var lilPeanutObj = game.placeCharacter(xLil, yLil, "lilPeanut");
-    this.lilPeanut = new lilPeanut(lilPeanutObj);
-
+    this.lilPeanut = new lilPeanut(lilPeanutObj, side);
     var bigMackObj = game.placeCharacter(xBigMack, yBigMack, "bigMack");
-    this.bigMack = new bigMack(bigMackObj);
+    this.bigMack = new bigMack(bigMackObj, side);
   }
 
   debug() {
@@ -1187,194 +1231,66 @@ class Level {
     // game.phaser.debug.body(this.map.eletricSaw[0].data, "rgba(255, 255, 0, 0.6)");
     game.phaser.debug.body(this.map.lavaBlocks[0].data, "rgba(255, 255, 0, 0.6)");
     //game.phaser.debug.body(this.map.spikes[0].data, "rgba(255, 255, 0, 0.6)");
-    game.phaser.debug.body(this.map.levers[0].data, "rgba(255, 255, 0, 0.6)");
-  }
-}
-
-class Level1 extends Level {
-  constructor(num, numHelpers, coordsHelpers) {
-    super(num, numHelpers, coordsHelpers);
+    //game.phaser.debug.body(this.map.levers[0].data, "rgba(255, 255, 0, 0.6)");
   }
 
-  drawMap(game) {
-    var nEletricSaw = 0;
-    var bounds = game.phaser.add.group();
-    bounds.enableBody = true;
-
-    //PASSR TUDO PARA A FUNÇAO DRAW BOUND
-    this.map.drawBound(0, game.phaser.world.height - 38, 800, bounds);
-    this.map.drawBound(273, game.phaser.world.height - 402, 600, bounds);
-    this.map.drawBound(0, game.phaser.world.height - 216, 430, bounds);
-    this.map.drawBound(0, game.phaser.world.height - 201, 430, bounds);
-    this.map.drawBound(273, game.phaser.world.height - 388, 600, bounds);
-    this.map.drawBound(0, 54, 800, bounds);
-    this.map.drawBound(426, 385, 15, bounds, 1);
-    this.map.drawBound(272, 200, 15, bounds, 1);
-    this.map.drawBound(16, 0, 600, bounds, 1);
-    this.map.drawBound(game.phaser.world.width - 18, 0, 600, bounds, 1);
-
-    var background = game.phaser.add.sprite(0, 0, "backgroundLevel");
-    background.scale.setTo(0.5, 0.5);
-    this.map.background = background;
-    //TOCHAS
-    this.map.addTorchInverted(game.phaser.world.width - 75, game.phaser.world.height - 300, this.map);
-    this.map.addTorch(-8, 100, this.map);
-
-    //ELEVADOR
-    //MAIOR INDICE MAIOR y
-    for (var i = 0; i < 10; i++) {
-      this.map.addChain(500, 550 - 19 * (18 - i), this.map.chains, true);
-    }
-    for (var i = 10; i < 19; i++) {
-      this.map.addChain(500, 550 - 19 * (18 - i), this.map.chains, false);
-    }
-    this.map.addElevator(430, game.phaser.world.height - 216, 1, null, 562);
-
-    //BOXES
-    this.map.addBigBox(300, 250);
-    this.map.addSmallBox(640, 250);
-
-    //ELETRIC SAW
-    this.map.addEletricSaw(160, 505, 280, 505, 400);
-    //BOTOES
-    this.map.addButton(90, 511, this.map.eletricSaw[nEletricSaw]);
-    this.map.addButton(350, 511, this.map.eletricSaw[nEletricSaw]);
-    //PLATAFORMAS
-    this.map.platformsSprite = game.phaser.add.sprite(0, 0, "level1");
-
-    //Adicionar os limites do mapa para as colisoes
-    this.bounds = bounds;
-
-    //PORTAS FINAIS
-    this.map.addLilDoor(550, 132);
-    this.map.addBigDoor(650, 82);
-
-    //CIRA TIMER
-    this.timer.createTimer();
-
-    //BOARD PARA COLECTAVEIS
-    this.addCollectableBoards(30, -2);
-
-    //COLLECTAVEIS
-    this.map.addCollectableLilPeanut(140, 220);
-    this.map.addCollectableLilPeanut(387, 510);
-    this.map.addCollectableLilPeanut(730, 510);
-    this.map.addCollectableBigMack(370, 130);
-    this.map.addCollectableBigMack(180, 490);
-    this.map.addCollectableBigMack(460, 380);
-
-    //BOARD PARA RESTART E MENU
-    this.addMenuBoards(580, -2);
-  }
-}
-
-class Level2 extends Level {
-  constructor(num, numHelpers, coordsHelpers) {
-    super(num, numHelpers, coordsHelpers);
-  }
-  drawMap() {
+  drawMap(game, levelData) {
     var nEletricSaw = 0;
     var nPlataforma = 0;
-    var levelData = {
-      bounds: [
-        //[x, y, comprimento, vertical]
-        //pardes, teto e chao
-        [0, 562, 800, false],
-        [120, 198, 190, false],
-        [120, 212, 190, false],
-        [420, game.phaser.world.height - 402, 72, false],
-        //plataforma de cima
-        [420, game.phaser.world.height - 388, 72, false],
-        [620, 198, 50, false],
-        [620, 212, 50, false],
-        //plataforma de baixo
-        [740, 198, 50, false],
-        [740, 212, 50, false],
-        [0, 384, 375, false],
-        //mini plataforma
-        [425, 399, 375, false],
-        [425, 384, 375, false],
-        [0, 399, 375, false],
-        [260, 55, 100, true],
-        [245, 55, 100, true],
-        [0, 54, 800, false],
-        [16, 0, 600, true],
-        [782, 0, 600, true],
-      ],
-      tochas: [
-        //[x, y, inverted]
-        [725, 290, true],
-        [-8, 50, false],
-      ],
-      caixas: [],
-      portas_deslizantes: [
-        {
-          //[start i, end i, x, y_static, y_dynamic, visible]
-          visible_chains: [0, 4, 627, 217, 19, true],
-          invisible_chains: [0, 0, 269, 215, 19, false],
-          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
-          porta: [617, 217, 617, 286, 2, 1.5, 50, true],
-        },
-        {
-          //[start i, end i, x, y_static, y_dynamic, visible]
-          visible_chains: [0, 0, 630, 60, 19, true],
-          invisible_chains: [0, 0, 630, 60, 19, false],
-          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
-          porta: [10, 198, 110, 198, 10, 0.31, 50, true],
-        },
-      ],
-
-      plataformas: [],
-      serras: [
-        //[x, y, maxX, maxY, move_speed, vertical]
-        [300, 505, 500, 505, 200, false],
-      ],
-      botoes: [
-        //[x, y, numero_item, tipo_item]
-        [90, 333, 0, "slidingDoor"],
-        [710, 147, 1, "slidingDoor"],
-      ],
-      coletaveis_peanut: [
-        [740, 250],
-        [475, 70],
-        [750, 510],
-      ],
-      coletaveis_big: [
-        [390, 300],
-        [720, 510],
-        [560, 300],
-      ],
-      lava: [
-        [300, 160],
-        [492, 160],
-      ],
-      //[x, y, nome]
-      sprite_plataformas: [0, 0, "level2"],
-      //[x, y]
-      porta_pequena: [150, 496],
-      porta_grande: [20, 446],
-      quadro_coletaveis: [30, -2],
-      quadro_menu_restart: [580, -2],
-      //[x, y, sprite_name, x scale, y scale]
-      background: [0, 0, "backgroundLevel", 0.5, 0.5],
-    };
-
     var bounds = game.phaser.add.group();
+
     bounds.enableBody = true;
     this.bounds = bounds;
 
     // DRAW BOUNDS
     levelData.bounds.map((bound_coords) => {
-      this.map.drawBound(bound_coords[0], bound_coords[1], bound_coords[2], bounds, bound_coords[3]);
+      this.map.drawBound(
+        bound_coords[0],
+        bound_coords[1],
+        bound_coords[2],
+        bounds,
+        bound_coords[3]
+      );
     });
 
-    var background = game.phaser.add.sprite(levelData.background[0], levelData.background[1], levelData.background[2]);
+    var background = game.phaser.add.sprite(
+      levelData.background[0],
+      levelData.background[1],
+      levelData.background[2]
+    );
     background.scale.setTo(levelData.background[3], levelData.background[4]);
     this.map.background = background;
     //TOCHAS
     levelData.tochas.map((tochas_coords) => {
       if (tochas_coords[2]) this.map.addTorchInverted(tochas_coords[0], tochas_coords[1], this.map);
       else this.map.addTorch(tochas_coords[0], tochas_coords[1], this.map);
+    });
+
+    //ELEVADOR
+    levelData.elevadores.map((elevador) => {
+      for (var i = elevador.visible_chains[0]; i < elevador.visible_chains[1]; i++) {
+        this.map.addChain(
+          elevador.visible_chains[2],
+          elevador.visible_chains[3] + elevador.visible_chains[4] * i,
+          this.map.chains,
+          true
+        );
+      }
+      for (var i = elevador.invisible_chains[0]; i < elevador.invisible_chains[1]; i++) {
+        this.map.addChain(
+          elevador.invisible_chains[2],
+          elevador.invisible_chains[3] + elevador.invisible_chains[4] * i,
+          this.map.chains,
+          false
+        );
+      }
+      this.map.addElevator(
+        elevador.plataforma[0],
+        elevador.plataforma[1],
+        elevador.plataforma[2],
+        elevador.plataforma[3],
+        elevador.plataforma[4]
+      );
     });
 
     //PORTAS
@@ -1411,7 +1327,11 @@ class Level2 extends Level {
 
     //PLATAFORMA
     levelData.plataformas.map((plataformas_data) => {
-      for (var i = plataformas_data.visible_chains[0]; i < plataformas_data.visible_chains[1]; i++) {
+      for (
+        var i = plataformas_data.visible_chains[0];
+        i < plataformas_data.visible_chains[1];
+        i++
+      ) {
         this.map.addChain(
           plataformas_data.visible_chains[2],
           plataformas_data.visible_chains[3] + plataformas_data.visible_chains[4] * i,
@@ -1438,8 +1358,7 @@ class Level2 extends Level {
         this.map.addSmallBox(caixa[0], caixa[1]);
       }
     });
-
-    // //ELETRIC SAW
+    //ELETRIC SAW
     levelData.serras.map((serras_coords) => {
       if (serras_coords[5])
         this.map.addEletricSawVertical(
@@ -1463,17 +1382,30 @@ class Level2 extends Level {
     //BOTOES
     levelData.botoes.map((botoes_coords) => {
       if (botoes_coords[3] == "serra") {
-        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.eletricSaw[botoes_coords[2]]);
+        this.map.addButton(
+          botoes_coords[0],
+          botoes_coords[1],
+          this.map.eletricSaw[botoes_coords[2]]
+        );
       } else if (botoes_coords[3] == "plataforma") {
-        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.platforms[botoes_coords[2]]);
+        this.map.addButton(
+          botoes_coords[0],
+          botoes_coords[1],
+          this.map.platforms[botoes_coords[2]]
+        );
       } else if (botoes_coords[3] == "slidingDoor") {
-        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.slidingDoors[botoes_coords[2]]);
+        this.map.addButton(
+          botoes_coords[0],
+          botoes_coords[1],
+          this.map.slidingDoors[botoes_coords[2]]
+        );
       }
     });
 
     //SPIKES
-    this.map.addSpike(310, 320);
-    this.map.addSpike(430, 320);
+    levelData.spikes.map((spike_coords) => {
+      this.map.addSpike(spike_coords[0], spike_coords[1]);
+    });
 
     //PLATAFORMAS;
     this.map.platformsSprite = game.phaser.add.sprite(
@@ -1487,604 +1419,10 @@ class Level2 extends Level {
       this.map.addLava(lava_coords[0], lava_coords[1]);
     });
 
-    //PORTAS FINAIS
-    this.map.addLilDoor(levelData.porta_pequena[0], levelData.porta_pequena[1]);
-    this.map.addBigDoor(levelData.porta_grande[0], levelData.porta_grande[1]);
-
-    //CIRA TIMER
-    this.timer.createTimer();
-
-    //BOARD PARA COLECTAVEIS
-    this.addCollectableBoards(levelData.quadro_coletaveis[0], levelData.quadro_coletaveis[1]);
-
-    //BOARD PARA RESTART E MENU
-    this.addMenuBoards(levelData.quadro_menu_restart[0], levelData.quadro_menu_restart[1]);
-
-    //COLLECTAVEIS
-    levelData.coletaveis_peanut.map((coletavel) => {
-      this.map.addCollectableLilPeanut(coletavel[0], coletavel[1]);
-    });
-
-    levelData.coletaveis_big.map((coletavel) => {
-      this.map.addCollectableBigMack(coletavel[0], coletavel[1]);
-    });
-  }
-}
-// drawMap(game) {
-//   var nEletricSaw = 0;
-//   var bounds = game.phaser.add.group();
-//   bounds.enableBody = true;
-
-//   //PASSR TUDO PARA A FUNÇAO DRAW BOUND
-//   this.map.drawBound(0, game.phaser.world.height - 38, 800, bounds);
-//   this.map.drawBound(0, game.phaser.world.height - 402, 300, bounds);
-//   this.map.drawBound(0, game.phaser.world.height - 388, 300, bounds);
-//   this.map.drawBound(420, game.phaser.world.height - 402, 72, bounds);
-//   this.map.drawBound(420, game.phaser.world.height - 388, 72, bounds);
-//   this.map.drawBound(620, game.phaser.world.height - 402, 50, bounds);
-//   this.map.drawBound(620, game.phaser.world.height - 388, 50, bounds);
-//   this.map.drawBound(740, game.phaser.world.height - 402, 50, bounds);
-//   this.map.drawBound(740, game.phaser.world.height - 388, 50, bounds);
-//   this.map.drawBound(0, game.phaser.world.height - 216, 375, bounds);
-//   this.map.drawBound(425, game.phaser.world.height - 201, 375, bounds);
-//   this.map.drawBound(425, game.phaser.world.height - 216, 375, bounds);
-//   this.map.drawBound(0, game.phaser.world.height - 201, 375, bounds);
-//   this.map.drawBound(0, game.phaser.world.height - 388, 280, bounds);
-//   this.map.drawBound(620, game.phaser.world.height - 388, 190, bounds, 1);
-//   this.map.drawBound(635, game.phaser.world.height - 388, 190, bounds, 1);
-//   this.map.drawBound(260, 55, 100, bounds, 1);
-//   this.map.drawBound(245, 55, 100, bounds, 1);
-//   this.map.drawBound(0, 54, 800, bounds);
-//   this.map.drawBound(16, 0, 600, bounds, 1);
-//   this.map.drawBound(game.phaser.world.width - 18, 0, 600, bounds, 1);
-
-//   var background = game.phaser.add.sprite(0, 0, "backgroundLevel");
-//   background.scale.setTo(0.5, 0.5);
-//   this.map.background = background;
-//   //TOCHAS
-//   this.map.addTorchInverted(
-//     game.phaser.world.width - 75,
-//     game.phaser.world.height - 300,
-//     this.map
-//   );
-//   this.map.addTorch(-8, 100, this.map);
-
-//   //ELETRIC SAW
-//   this.map.addEletricSaw(300, 505, 500, 505, 200);
-//   //BOTOES
-//   this.map.addButton(90, 333, this);
-//   this.map.addButton(710, 147, this);
-//   //LAVA
-//   this.map.addLava(300, 160);
-//   this.map.addLava(492, 160);
-//   //SPIKES
-//   this.map.addSpike(310, 320);
-//   this.map.addSpike(430, 320);
-//   //PLATAFORMAS
-//   this.map.platformsSprite = game.phaser.add.sprite(0, 0, "level2");
-
-//   //Adicionar os limites do mapa para as colisoes
-//   this.bounds = bounds;
-
-//   //PORTAS FINAIS
-//   this.map.addLilDoor(150, 496);
-//   this.map.addBigDoor(20, 446);
-
-//   //CIRA TIMER
-//   this.timer.createTimer();
-
-//   //BOARD PARA COLECTAVEIS
-//   this.addCollectableBoards(30, -2);
-
-//   //COLLECTAVEIS
-//   this.map.addCollectableLilPeanut(740, 250);
-//   this.map.addCollectableBigMack(390, 300);
-//   this.map.addCollectableLilPeanut(475, 70);
-//   this.map.addCollectableBigMack(720, 510);
-//   this.map.addCollectableLilPeanut(750, 510);
-//   this.map.addCollectableBigMack(560, 300);
-
-//   //BOARD PARA RESTART E MENU
-//   this.addMenuBoards(580, -2);
-// }
-
-class Level3 extends Level {
-  constructor(num, numHelpers, coordsHelpers) {
-    super(num, numHelpers, coordsHelpers);
-  }
-
-  drawMap(game) {
-    var levelData = {
-      bounds: [
-        //[x, y, comprimento, vertical]
-        //pardes, teto e chao
-        [0, 562, 800, false],
-        [0, 54, 800, false],
-        [16, 0, 600, true],
-        [782, 0, 600, true],
-        //plataforma de cima
-        [0, 198, 600, false],
-        [0, 212, 600, false],
-        [596, 200, 15, true],
-        //plataforma de baixo
-        [225, 384, 600, false],
-        [225, 399, 600, false],
-        [225, 385, 15, true],
-        //mini plataforma
-        [0, 430, 80, false],
-        [0, 445, 80, false],
-        [76, 430, 15, true],
-      ],
-      tochas: [
-        //[x, y, inverted]
-        [725, 100, true],
-        [-8, 300, false],
-      ],
-      caixas: [
-        //[x, y, grande]
-        [450, 270, true],
-      ],
-      portas_deslizantes: [
-        {
-          //[start i, end i, x, y_static, y_dynamic, visible]
-          visible_chains: [0, 0, 269, 215, 19, true],
-          invisible_chains: [0, 5, 269, 215, 19, false],
-          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
-          porta: [260, 216, 260, 274, 2, 1.7, 50, true],
-        },
-        {
-          //[start i, end i, x, y_static, y_dynamic, visible]
-          visible_chains: [0, 7, 630, 60, 19, true],
-          invisible_chains: [7, 14, 630, 60, 19, false],
-          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
-          porta: [621, 200, 621, 320, 2, 1, 103, true],
-        },
-        {
-          //[start i, end i, x, y_static, y_dynamic, visible]
-          visible_chains: [0, 0, 630, 60, 19, true],
-          invisible_chains: [0, 0, 630, 60, 19, false],
-          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
-          porta: [120, -50, 120, 37, 2, 2.5, 80, true],
-        },
-      ],
-
-      plataformas: [
-        {
-          //[start i, end i, x, y_static, y_dynamic, visible]
-          visible_chains: [0, 19, 90, 208, 19, true],
-          //[x, y, id, maxX, maxY]
-          platform: [57, 550, 1, null, 500],
-        },
-      ],
-      serras: [
-        //[x, y, maxX, maxY, move_speed, vertical]
-        [340, 500, 345, 570, 100, true],
-      ],
-      botoes: [
-        //[x, y, numero_item, tipo_item]
-        [250, 511, 0, "serra"],
-        [300, 333, 0, "plataforma"],
-      ],
-      coletaveis_peanut: [
-        [40, 150],
-        [25, 510],
-        [390, 270],
-      ],
-      coletaveis_big: [
-        [75, 150],
-        [25, 475],
-        [700, 120],
-      ],
-      //[x, y, nome]
-      sprite_plataformas: [0, 0, "level3"],
-      //[x, y]
-      porta_pequena: [250, 132],
-      porta_grande: [340, 82],
-      quadro_coletaveis: [30, -2],
-      quadro_menu_restart: [580, -2],
-      //[x, y, sprite_name, x scale, y scale]
-      background: [0, 0, "backgroundLevel", 0.5, 0.5],
-    };
-
-    var nEletricSaw = 0;
-    var nPlataforma = 0;
-    var bounds = game.phaser.add.group();
-    bounds.enableBody = true;
-
-    // DRAW BOUNDS
-    levelData.bounds.map((bound_coords) => {
-      this.map.drawBound(bound_coords[0], bound_coords[1], bound_coords[2], bounds, bound_coords[3]);
-    });
-
-    var background = game.phaser.add.sprite(levelData.background[0], levelData.background[1], levelData.background[2]);
-    background.scale.setTo(levelData.background[3], levelData.background[4]);
-    this.map.background = background;
-    //TOCHAS
-    levelData.tochas.map((tochas_coords) => {
-      if (tochas_coords[2]) this.map.addTorchInverted(tochas_coords[0], tochas_coords[1], this.map);
-      else this.map.addTorch(tochas_coords[0], tochas_coords[1], this.map);
-    });
-
-    //PORTAS
-    levelData.portas_deslizantes.map((data) => {
-      var chains = [];
-      for (var i = data.visible_chains[0]; i < data.visible_chains[1]; i++) {
-        this.map.addChain(
-          data.visible_chains[2],
-          data.visible_chains[3] + data.visible_chains[4] * i,
-          chains,
-          data.visible_chains[5]
-        );
-      }
-      for (var i = data.invisible_chains[0]; i < data.invisible_chains[1]; i++) {
-        this.map.addChain(
-          data.invisible_chains[2],
-          data.invisible_chains[3] + data.invisible_chains[4] * i,
-          chains,
-          data.invisible_chains[5]
-        );
-      }
-      this.map.addSlidingDoor(
-        data.porta[0],
-        data.porta[1],
-        data.porta[2],
-        data.porta[3],
-        data.porta[4],
-        data.porta[5],
-        data.porta[6],
-        data.porta[7],
-        chains
-      );
-    });
-
-    //PLATAFORMA
-    levelData.plataformas.map((plataformas_data) => {
-      for (var i = plataformas_data.visible_chains[0]; i < plataformas_data.visible_chains[1]; i++) {
-        this.map.addChain(
-          plataformas_data.visible_chains[2],
-          plataformas_data.visible_chains[3] + plataformas_data.visible_chains[4] * i,
-          this.map.chains,
-          plataformas_data.visible_chains[5]
-        );
-      }
-      this.map.addPlataformaMovel(
-        plataformas_data.platform[0],
-        plataformas_data.platform[1],
-        plataformas_data.platform[2],
-        plataformas_data.platform[3],
-        plataformas_data.platform[4],
-        this.map.slidingDoors
-      );
-      nPlataforma++;
-    });
-
-    //BOXES
-    levelData.caixas.map((caixa) => {
-      if (caixa[2]) {
-        this.map.addBigBox(caixa[0], caixa[1]);
-      } else {
-        this.map.addSmallBox(caixa[0], caixa[1]);
-      }
-    });
-
-    // //ELETRIC SAW
-    levelData.serras.map((serras_coords) => {
-      if (serras_coords[5])
-        this.map.addEletricSawVertical(
-          serras_coords[0],
-          serras_coords[1],
-          serras_coords[2],
-          serras_coords[3],
-          serras_coords[4]
-        );
-      else
-        this.map.addEletricSaw(
-          serras_coords[0],
-          serras_coords[1],
-          serras_coords[2],
-          serras_coords[3],
-          serras_coords[4]
-        );
-      nEletricSaw++;
-    });
-
-    //BOTOES
-    levelData.botoes.map((botoes_coords) => {
-      if (botoes_coords[3] == "serra") {
-        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.eletricSaw[botoes_coords[2]]);
-      } else if (botoes_coords[3] == "plataforma") {
-        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.platforms[botoes_coords[2]]);
-      }
-    });
-
-    //PLATAFORMAS
-    this.map.platformsSprite = game.phaser.add.sprite(
-      levelData.sprite_plataformas[0],
-      levelData.sprite_plataformas[1],
-      levelData.sprite_plataformas[2]
-    );
-
-    //Adicionar os limites do mapa para as colisoes
-    this.bounds = bounds;
-
-    //PORTAS FINAIS
-    this.map.addLilDoor(levelData.porta_pequena[0], levelData.porta_pequena[1]);
-    this.map.addBigDoor(levelData.porta_grande[0], levelData.porta_grande[1]);
-
-    //CIRA TIMER
-    this.timer.createTimer();
-
-    //BOARD PARA COLECTAVEIS
-    this.addCollectableBoards(levelData.quadro_coletaveis[0], levelData.quadro_coletaveis[1]);
-
-    //BOARD PARA RESTART E MENU
-    this.addMenuBoards(levelData.quadro_menu_restart[0], levelData.quadro_menu_restart[1]);
-
-    //COLLECTAVEIS
-    levelData.coletaveis_peanut.map((coletavel) => {
-      this.map.addCollectableLilPeanut(coletavel[0], coletavel[1]);
-    });
-
-    levelData.coletaveis_big.map((coletavel) => {
-      this.map.addCollectableBigMack(coletavel[0], coletavel[1]);
-    });
-  }
-}
-
-class Level4 extends Level {
-  constructor(num, numHelpers, coordsHelpers) {
-    super(num, numHelpers, coordsHelpers);
-  }
-
-  drawMap(game) {
-    var levelData = {
-      bounds: [
-        //[x, y, comprimento, vertical]
-        //pardes, teto e chao
-
-        [0, 562, 70, false],
-        [200, 562, 400, false],
-        [730, 562, 100, false],
-
-        [0, 54, 800, false],
-        [16, 0, 600, true],
-        [782, 0, 600, true],
-        //plataforma de cima esquerda
-        [0, 198, 300, false],
-        [0, 212, 300, false],
-        [296, 200, 15, true],
-        //plataforma de cima direita
-        [500, 198, 300, false],
-        [500, 212, 300, false],
-        [500, 200, 15, true],
-        //plataforma de baixo esquerda
-        [0, 384, 300, false],
-        [0, 399, 300, false],
-        [296, 385, 15, true],
-        //plataforma de baixo direita
-        [500, 384, 300, false],
-        [500, 399, 300, false],
-        [500, 385, 15, true],
-      ],
-      tochas: [
-        //[x, y, inverted]
-        [725, 50, true],
-        [-8, 250, false],
-        [-8, 50, false],
-        [725, 250, true],
-      ],
-      caixas: [
-        //[x, y, grande]
-      ],
-      portas_deslizantes: [
-        //ESTATICAS
-        {
-          //[start i, end i, x, y_static, y_dynamic, visible]
-          visible_chains: [0, 0, 269, 215, 19, true],
-          invisible_chains: [0, 0, 269, 215, 19, false],
-          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
-          porta: [620, 58, 260, 274, 2, 1.5, 50, true],
-        },
-        {
-          //[start i, end i, x, y_static, y_dynamic, visible]
-          visible_chains: [0, 0, 269, 215, 19, true],
-          invisible_chains: [0, 0, 269, 215, 19, false],
-          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
-          porta: [150, 58, 260, 274, 2, 1.25, 50, true],
-        },
-        //DINAMICAS
-        {
-          //[start i, end i, x, y_static, y_dynamic, visible]
-
-          visible_chains: [0, 4, 584, 215, 19, true],
-          invisible_chains: [0, 0, 0, 0, 0, false],
-          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
-          porta: [575, 210, 575, 290, 2, 1.45, 50, true],
-        },
-        {
-          //[start i, end i, x, y_static, y_dynamic, visible]
-          visible_chains: [0, 4, 179, 215, 19, true],
-          invisible_chains: [0, 0, 0, 0, 0, false],
-          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
-          porta: [170, 210, 170, 290, 2, 1.45, 50, true],
-        },
-      ],
-      plataformas: [],
-      serras: [
-        //[x, y, maxX, maxY, move_speed, vertical]
-      ],
-      botoes: [
-        //[x, y, numero_item, tipo_item]
-      ],
-      coletaveis_peanut: [
-        [530, 300],
-        [655, 450],
-        [230, 120],
-      ],
-      coletaveis_big: [
-        [230, 300],
-        [125, 450],
-        [530, 120],
-      ],
-      lava: [
-        [72, 524],
-        [602, 524],
-      ],
-      lever: [
-        [40, 100, 3, 2],
-        [670, 110, 3, 3],
-      ],
-      //[x, y, nome]
-      sprite_plataformas: [0, 0, "level4"],
-      //[x, y]
-      porta_pequena: [70, 316],
-      porta_grande: [630, 267],
-      quadro_coletaveis: [30, -2],
-      quadro_menu_restart: [580, -2],
-      //[x, y, sprite_name, x scale, y scale]
-      background: [0, 0, "backgroundLevel", 0.5, 0.5],
-    };
-
-    var nEletricSaw = 0;
-    var nPlataforma = 0;
-    var bounds = game.phaser.add.group();
-    bounds.enableBody = true;
-
-    // DRAW BOUNDS
-    levelData.bounds.map((bound_coords) => {
-      this.map.drawBound(bound_coords[0], bound_coords[1], bound_coords[2], bounds, bound_coords[3]);
-    });
-
-    var background = game.phaser.add.sprite(levelData.background[0], levelData.background[1], levelData.background[2]);
-    background.scale.setTo(levelData.background[3], levelData.background[4]);
-    this.map.background = background;
-    //TOCHAS
-    levelData.tochas.map((tochas_coords) => {
-      if (tochas_coords[2]) this.map.addTorchInverted(tochas_coords[0], tochas_coords[1], this.map);
-      else this.map.addTorch(tochas_coords[0], tochas_coords[1], this.map);
-    });
-
-    //PORTAS
-    levelData.portas_deslizantes.map((data) => {
-      var chains = [];
-      for (var i = data.visible_chains[0]; i < data.visible_chains[1]; i++) {
-        this.map.addChain(
-          data.visible_chains[2],
-          data.visible_chains[3] + data.visible_chains[4] * i,
-          chains,
-          data.visible_chains[5]
-        );
-      }
-      for (var i = data.invisible_chains[0]; i < data.invisible_chains[1]; i++) {
-        this.map.addChain(
-          data.invisible_chains[2],
-          data.invisible_chains[3] + data.invisible_chains[4] * i,
-          chains,
-          data.invisible_chains[5]
-        );
-      }
-      this.map.addSlidingDoor(
-        data.porta[0],
-        data.porta[1],
-        data.porta[2],
-        data.porta[3],
-        data.porta[4],
-        data.porta[5],
-        data.porta[6],
-        data.porta[7],
-        chains
-      );
-    });
-
-    //ELEVADOR
-    //MAIOR INDICE MAIOR y
-    for (var i = 0; i < 6; i++) {
-      this.map.addChain(390, 400 - 19 * (18 - i), this.map.chains, true);
-    }
-    for (var i = 6; i < 27; i++) {
-      this.map.addChain(390, 400 - 19 * (18 - i), this.map.chains, false);
-    }
-    this.map.addElevator(320, 198, 2, null, 562);
-
-    //PLATAFORMA
-    levelData.plataformas.map((plataformas_data) => {
-      for (var i = plataformas_data.visible_chains[0]; i < plataformas_data.visible_chains[1]; i++) {
-        this.map.addChain(
-          plataformas_data.visible_chains[2],
-          plataformas_data.visible_chains[3] + plataformas_data.visible_chains[4] * i,
-          this.map.chains,
-          plataformas_data.visible_chains[5]
-        );
-      }
-      this.map.addPlataformaMovel(
-        plataformas_data.platform[0],
-        plataformas_data.platform[1],
-        plataformas_data.platform[2],
-        plataformas_data.platform[3],
-        plataformas_data.platform[4],
-        this.map.slidingDoors
-      );
-      nPlataforma++;
-    });
-
-    //BOXES
-    levelData.caixas.map((caixa) => {
-      if (caixa[2]) {
-        this.map.addBigBox(caixa[0], caixa[1]);
-      } else {
-        this.map.addSmallBox(caixa[0], caixa[1]);
-      }
-    });
-
-    // //ELETRIC SAW
-    levelData.serras.map((serras_coords) => {
-      if (serras_coords[5])
-        this.map.addEletricSawVertical(
-          serras_coords[0],
-          serras_coords[1],
-          serras_coords[2],
-          serras_coords[3],
-          serras_coords[4]
-        );
-      else
-        this.map.addEletricSaw(
-          serras_coords[0],
-          serras_coords[1],
-          serras_coords[2],
-          serras_coords[3],
-          serras_coords[4]
-        );
-      nEletricSaw++;
-    });
-
-    //BOTOES
-    levelData.botoes.map((botoes_coords) => {
-      if (botoes_coords[3] == "serra") {
-        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.eletricSaw[botoes_coords[2]]);
-      } else if (botoes_coords[3] == "plataforma") {
-        this.map.addButton(botoes_coords[0], botoes_coords[1], this.map.platforms[botoes_coords[2]]);
-      }
-    });
-
-    //LAVA
-    levelData.lava.map((lava_coords) => {
-      this.map.addLava(lava_coords[0], lava_coords[1]);
-    });
-
     //LEVERS
     levelData.lever.map((lever_coords) => {
       this.map.addLever(lever_coords[0], lever_coords[1], lever_coords[2], lever_coords[3]);
     });
-
-    //PLATAFORMAS
-    this.map.platformsSprite = game.phaser.add.sprite(
-      levelData.sprite_plataformas[0],
-      levelData.sprite_plataformas[1],
-      levelData.sprite_plataformas[2]
-    );
-
-    //Adicionar os limites do mapa para as colisoes
-    this.bounds = bounds;
 
     //PORTAS FINAIS
     this.map.addLilDoor(levelData.porta_pequena[0], levelData.porta_pequena[1]);
@@ -2128,48 +1466,50 @@ class Character {
 }
 
 class bigMack extends Character {
-  constructor(charObj) {
+  constructor(charObj, side) {
     let animWalkingEnd = [24, 25, 26];
     for (let i = 0; i < 2; i++) {
       animWalkingEnd = animWalkingEnd.concat(animWalkingEnd);
     }
     super(charObj);
-    this.boxAnim = false;
     charObj.body.setSize(16, 42, 24, 13);
     charObj.animations.add("walkLeft", [5, 6, 7, 8, 9], 11, false);
     charObj.animations.add("walkRight", [0, 1, 2, 3, 4], 11, false);
-
     charObj.animations.add("restRight", [10, 11], 4, true);
     charObj.animations.add("restLeft", [12, 13], 4, true);
     charObj.animations.add("restCrouchLeft", [46, 47], 4, true);
     charObj.animations.add("restCrouchRight", [43, 44], 4, true);
-
     charObj.animations.add("boxRight", [14, 15], 10, false);
     charObj.animations.add("boxLeft", [21, 20], 10, false);
     charObj.animations.add("walkBoxRight", [15, 16, 17], 10, true);
     charObj.animations.add("walkBoxLeft", [20, 19, 18], 10, true);
     charObj.animations.add("walkCrouchLeft", [46, 47, 48], 10, true);
     charObj.animations.add("walkCrouchRight", [43, 44, 45], 10, true);
-
     charObj.animations.add(
       "endAnimationLeft",
       [28, 27, 24].concat(animWalkingEnd).concat([29, 30, 31, 32, 33, 34]),
       10,
       false
     );
-
     charObj.animations.add(
       "endAnimationRight",
       [22, 23, 24].concat(animWalkingEnd).concat([29, 30, 31, 32, 33, 34]),
       10,
       false
     );
-    1;
 
     let anim = charObj.animations.add("gameover", [35, 36, 37, 37, 37, 36, 38, 39, 40], 8, false);
     anim.onComplete.add(game.gameOverMenu, this);
-
     charObj.animations.add("gameoverMenu", [41, 42], 6, true);
+
+    if (side === "right") {
+      charObj.frame = 10;
+      this.lastAnimation = "right";
+    } else if (side === "left") {
+      charObj.frame = 12;
+      this.lastAnimation = "left";
+    }
+    this.boxAnim = false;
   }
 
   doWalkLeftAnimation() {
@@ -2248,15 +1588,13 @@ class bigMack extends Character {
 }
 
 class lilPeanut extends Character {
-  constructor(charObj) {
+  constructor(charObj, side) {
+    super(charObj);
     let animWalkingEnd = [20, 21, 22];
     for (let i = 0; i < 2; i++) {
       animWalkingEnd = animWalkingEnd.concat(animWalkingEnd);
     }
-    super(charObj);
-    this.boxAnim = false;
     charObj.body.setSize(11, 26, 10, 5);
-    charObj.frame = 3;
     charObj.animations.add("walkLeft", [0, 1, 2], 10, true);
     charObj.animations.add("walkRight", [3, 4, 5], 10, true);
     charObj.animations.add("jump", [7], 1, true);
@@ -2270,14 +1608,12 @@ class lilPeanut extends Character {
     charObj.animations.add("walkBoxLeft", [16, 17], 10, true);
     charObj.animations.add("walkCrouchLeft", [39, 40, 41], 10, true);
     charObj.animations.add("walkCrouchRight", [7, 42, 43], 10, true);
-    //charObj.animations.add("walkCrouchLeft", [16, 17], 10, true);
     let anim = charObj.animations.add(
       "endAnimationLeft",
       [23, 24, 20].concat(animWalkingEnd).concat([25, 26, 27, 28, 29, 30, 31]),
       10,
       false
     );
-
     anim.onComplete.add(game.levelCompletedMenu, this);
     anim = charObj.animations.add(
       "endAnimationRight",
@@ -2286,10 +1622,18 @@ class lilPeanut extends Character {
       false
     );
     anim.onComplete.add(game.levelCompletedMenu, this);
-    //charObj.animations.add("crouch", [16, 17], 10, true);
     anim = charObj.animations.add("gameover", [32, 33, 34, 34, 34, 33, 35, 36, 37], 8, false);
     anim.onComplete.add(game.gameOverMenu, this);
     charObj.animations.add("gameoverMenu", [38, 37], 6, true);
+
+    if (side === "right") {
+      charObj.frame = 8;
+      this.lastAnimation = "right";
+    } else if (side === "left") {
+      charObj.frame = 10;
+      this.lastAnimation = "left";
+    }
+    this.boxAnim = false;
   }
 
   doWalkLeftAnimation() {
@@ -2913,7 +2257,16 @@ class Options extends Menu {
   }
 
   addButton(x, y, name, callToAction) {
-    var button = game.phaser.add.button(x, y, name, callToAction, { this: this, x: x, y: y }, 0, 0, 0);
+    var button = game.phaser.add.button(
+      x,
+      y,
+      name,
+      callToAction,
+      { this: this, x: x, y: y },
+      0,
+      0,
+      0
+    );
     button.smoothed = false;
     this.buttons.push(button);
     return button;
@@ -2977,7 +2330,11 @@ class Options extends Menu {
 
   decreaseVolume() {
     if (this.y == 150) {
-      this.this.setVolume(this.this.SoundEffectsFilledSoundBars, this.this.soundEffectsVolume - 1, 147);
+      this.this.setVolume(
+        this.this.SoundEffectsFilledSoundBars,
+        this.this.soundEffectsVolume - 1,
+        147
+      );
     } else if (this.y == 300) {
       this.this.setVolume(this.this.GameMusicFilledSoundBars, this.this.gameMusicVolume - 1, 297);
     } else if (this.y == 450) {
@@ -2986,7 +2343,11 @@ class Options extends Menu {
   }
   increaseVolume() {
     if (this.y == 150) {
-      this.this.setVolume(this.this.SoundEffectsFilledSoundBars, this.this.soundEffectsVolume + 1, 147);
+      this.this.setVolume(
+        this.this.SoundEffectsFilledSoundBars,
+        this.this.soundEffectsVolume + 1,
+        147
+      );
     } else if (this.y == 300) {
       this.this.setVolume(this.this.GameMusicFilledSoundBars, this.this.gameMusicVolume + 1, 297);
     } else if (this.y == 450) {
@@ -3370,7 +2731,15 @@ class PauseMenu extends Menu {
       var pauseHelpMenu = new Help();
       pauseHelpMenu.addSprites(game);
       pauseHelpMenu.addButtons(game);
-      pauseHelpMenu.addTexts(game, "  BIG MACK    LIL PEANUT", "JUMP", "INTERACT", "LEFT", "RIGHT", "CROUCH");
+      pauseHelpMenu.addTexts(
+        game,
+        "  BIG MACK    LIL PEANUT",
+        "JUMP",
+        "INTERACT",
+        "LEFT",
+        "RIGHT",
+        "CROUCH"
+      );
     }).scale.setTo(2.5, 2.5);
     this.addButton(420, 260, "optionsBtn", () => {
       var pauseOptionsMenu = new Options();
@@ -3423,9 +2792,6 @@ class LevelCompletedMenu extends Menu {
 
 class Cutscene {
   constructor(numScenes, numHelpers, coordsHelpers) {
-    console.log(numHelpers);
-    console.log(coordsHelpers);
-
     this.currentIndex = 0;
     this.numCutScenes = numScenes;
     this.numHelpers = numHelpers;
@@ -3434,19 +2800,50 @@ class Cutscene {
   }
 
   nextCutscene = (key) => {
-    const offSetXBig = -10;
-    const offSetYBig = -70;
-    const offSetXLil = -10;
-    const offSetYLil = -70;
-    const xBig = game.currentLevel.bigMack.obj.body.x + game.currentLevel.bigMack.obj.body.width + offSetXBig;
-    const yBig = game.currentLevel.bigMack.obj.body.y + offSetYBig;
-    const xLil = game.currentLevel.lilPeanut.obj.body.x + game.currentLevel.lilPeanut.obj.body.width + offSetXLil;
-    const yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
+    const isRightSide =
+      game.currentLevel.lilPeanut.obj.frame === 8 || game.currentLevel.lilPeanut.obj.frame === 9;
+    let offSetXBig = 0;
+    let offSetYBig = 0;
+    let offSetXLil = 0;
+    let offSetYLil = 0;
+    let xBig = 0;
+    let yBig = 0;
+    let xLil = 0;
+    let yLil = 0;
+
+    if (isRightSide) {
+      offSetXBig = -10;
+      offSetYBig = -70;
+      offSetXLil = -10;
+      offSetYLil = -70;
+      xBig =
+        game.currentLevel.bigMack.obj.body.x +
+        game.currentLevel.bigMack.obj.body.width +
+        offSetXBig;
+      yBig = game.currentLevel.bigMack.obj.body.y + offSetYBig;
+      xLil =
+        game.currentLevel.lilPeanut.obj.body.x +
+        game.currentLevel.lilPeanut.obj.body.width +
+        offSetXLil;
+      yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
+    } else {
+      offSetXBig = -10;
+      offSetYBig = -70;
+      offSetXLil = -10;
+      offSetYLil = -70;
+      xBig = game.currentLevel.bigMack.obj.body.x;
+      yBig = game.currentLevel.bigMack.obj.body.y + offSetYBig;
+      xLil = game.currentLevel.lilPeanut.obj.body.x + offSetXLil;
+      yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
+    }
+
     this.currentIndex += 1;
     this.currentScene.kill();
     this.currentScene.destroy();
+
     //TODO: METER AQUI O NOME DO NIVEL DINAMICO
-    let nameCutScene = "cut-level1-" + this.currentIndex.toString();
+    let nameCutScene =
+      "cut-level" + game.currentLevel.levelID.toString() + "-" + this.currentIndex.toString();
     if (this.numCutScenes >= this.currentIndex) {
       if (this.currentIndex % 2 == 0) {
         var newScene = game.phaser.add.sprite(xBig, yBig, nameCutScene);
@@ -3480,16 +2877,18 @@ class Cutscene {
   }
 
   startCutscene(level) {
-    //NAO HA AINDA NENHUMA
-    //METER ISTO PARA TODOS
     const offSetXLil = -10;
     const offSetYLil = -70;
-    const xLil = game.currentLevel.lilPeanut.obj.body.x + game.currentLevel.lilPeanut.obj.body.width + offSetXLil;
+    const xLil =
+      game.currentLevel.lilPeanut.obj.body.x +
+      game.currentLevel.lilPeanut.obj.body.width +
+      offSetXLil;
     const yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
     const scale = 2.5;
     const spacebarX = 110;
     const spacebarY = 480;
-    let nameCutScene = "cut-level1-" + this.currentIndex.toString();
+    let nameCutScene =
+      "cut-level" + game.currentLevel.levelID.toString() + "-" + this.currentIndex.toString();
     console.log(nameCutScene);
     var newScene = game.phaser.add.sprite(xLil, yLil, nameCutScene);
     this.currentScene = newScene;
@@ -3514,6 +2913,8 @@ class Load extends Menu {
     var spacebarText = this.addSprite(170, 480, "pressSpacebar");
     spacebarText.scale.setTo(0.6, 0.6);
     spacebarText.alpha = 0;
-    game.phaser.add.tween(spacebarText).to({ alpha: 1 }, 1000, Phaser.Easing.Linear.None, true, 0, 1000, true);
+    game.phaser.add
+      .tween(spacebarText)
+      .to({ alpha: 1 }, 1000, Phaser.Easing.Linear.None, true, 0, 1000, true);
   }
 }

@@ -92,6 +92,20 @@ var bootState = {
       ["cut-level1-10", "assets/Cutscenes/Level1/10.png"],
       ["cut-level1-11", "assets/Cutscenes/Level1/11.png"],
       ["spacebar", "assets/Cutscenes/Level1/spacebar.png"],
+      ["cut-level2-1", "assets/Cutscenes/Level2/1.png"],
+      ["cut-level2-2", "assets/Cutscenes/Level2/2.png"],
+      ["cut-level2-3", "assets/Cutscenes/Level2/3.png"],
+      ["cut-level2-4", "assets/Cutscenes/Level2/4.png"],
+      ["cut-level2-5", "assets/Cutscenes/Level2/5.png"],
+      ["cut-level2-6", "assets/Cutscenes/Level2/6.png"],
+      ["cut-level3-1", "assets/Cutscenes/Level3/1.png"],
+      ["cut-level3-2", "assets/Cutscenes/Level3/2.png"],
+      ["cut-level3-3", "assets/Cutscenes/Level3/3.png"],
+      ["cut-level3-4", "assets/Cutscenes/Level3/4.png"],
+      ["cut-level4-1", "assets/Cutscenes/Level4/1.png"],
+      ["cut-level4-2", "assets/Cutscenes/Level4/2.png"],
+      ["cut-level4-3", "assets/Cutscenes/Level4/3.png"],
+
       //LEVEL3
       ["slidingDoor", "assets/slidingdoor.png"],
       //LEVEL2
@@ -106,10 +120,7 @@ var bootState = {
     game.loadSpritesheet([["eletricSaw", "assets/eletricSawSprite.png"]], 32);
     game.loadSpritesheet([["button", "assets/buttonSprite.png"]], 32);
     game.loadSpritesheet([["torch", "assets/torchSprite.png"]], 32);
-    game.loadSpritesheet(
-      [["torchInverted", "assets/torchInvertedSprite.png"]],
-      32
-    );
+    game.loadSpritesheet([["torchInverted", "assets/torchInvertedSprite.png"]], 32);
     game.loadSpritesheet([["lava", "assets/lavaSprite.png"]], 32);
     game.loadSpritesheet([["lever", "assets/lever.png"]], 32);
     game.loadSpritesheet([["bigMack", "assets/bigMackSprite.png"]], 64);
@@ -123,6 +134,6 @@ var bootState = {
   create: () => {
     game.phaser.physics.startSystem(Phaser.Physics.ARCADE);
     //game.dataBaseGet("bernardo");
-    game.phaser.state.start("Load");
+    game.phaser.state.start("Level4");
   },
 };
