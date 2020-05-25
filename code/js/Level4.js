@@ -123,6 +123,7 @@ var level4 = {
     const nHelpers = 1;
     const bigPeanutCoords = { x: 450, y: 450 };
     const lilPeanutCoords = { x: 250, y: 500 };
+
     const side = "right";
     game.currentLevel = new Level(nCutScenes, nHelpers, coordsHelpers, 4);
     game.currentLevel.drawMap(game, levelData);

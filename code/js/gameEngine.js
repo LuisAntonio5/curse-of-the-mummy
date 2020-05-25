@@ -534,8 +534,8 @@ class GameEngine {
       levelCompletedMenu.addTexts(score, timeToShow, true);
       game.player.totalScore -= game.player[levelStr].score;
       game.player[levelStr].score = score;
-      game.player[levelStr].nLilPeanutCollected = game.currentLevel.nLilPeanutCollected;
-      game.player[levelStr].nBigMackCollected = game.currentLevel.nBigMackCollected;
+      game.player[levelStr].collectablesPeanut = game.currentLevel.nLilPeanutCollected;
+      game.player[levelStr].collectablesBig = game.currentLevel.nBigMackCollected;
       game.player.totalScore += score;
       game.dataBaseSet();
     } else {
@@ -1058,10 +1058,10 @@ class MapLevel {
     const scaleX = 2;
     const scaleY = 3.5;
     const gravity = 0;
-    const sizeX = 25;
-    const sizeY = 14;
-    const offsetX = 2;
-    const offsetY = 6;
+    const sizeX = 21;
+    const sizeY = 12;
+    const offsetX = 4;
+    const offsetY = 7;
     const newSpike = this.addSpriteMap(x, y, scaleX, scaleY, "spikes");
     this.addPhysicsToSprite(newSpike, gravity);
     newSpike.body.moves = false;
@@ -1372,7 +1372,7 @@ class Level {
     //game.phaser.debug.body(this.map.smallBox[0].data, "rgba(255, 255, 0, 0.1)");
     // game.phaser.debug.body(this.map.bigBox[0].data, "rgba(255, 255, 0, 0.1)");
     // game.phaser.debug.body(this.lilPeanut.obj, "rgba(255, 255, 0, 0.1)");
-    game.phaser.debug.body(this.bigMack.obj, "rgba(255, 255, 0, 0.6)");
+    //game.phaser.debug.body(this.bigMack.obj, "rgba(255, 255, 0, 0.6)");
     // game.phaser.debug.body(this.map.buttons[0].data, "rgba(255, 255, 0, 0.6)");
     // game.phaser.debug.body(this.map.eletricSaw[0].data, "rgba(255, 255, 0, 0.6)");
     //game.phaser.debug.body(this.map.lavaBlocks[0].data, "rgba(255, 255, 0, 0.6)");
@@ -3069,21 +3069,21 @@ class LevelSelector extends Menu {
     var textData = [
       [530, 35, "TOTAL SCORE:\n  " + String(scoreToShow) + " PTS.", 24],
       //level1
-      [310, 235, String(game.player.level1.nBigMackCollected) + " / 3", 16, "level1"],
-      [310, 255, String(game.player.level1.nLilPeanutCollected) + " / 3", 16, "level1"],
+      [310, 235, String(game.player.level1.collectablesBig) + " / 3", 16, "level1"],
+      [310, 255, String(game.player.level1.collectablesPeanut) + " / 3", 16, "level1"],
       [260, 295, "SCORE:" + String(game.player.level1.score), 16, "level1"],
       //level2
-      [650, 235, String(game.player.level1.nBigMackCollected) + " / 3", 16, "level2"],
-      [650, 255, String(game.player.level1.nLilPeanutCollected) + " / 3", 16, "level2"],
-      [600, 295, "SCORE:" + String(game.player.level1.score), 16, "level2"],
+      [650, 235, String(game.player.level2.collectablesBig) + " / 3", 16, "level2"],
+      [650, 255, String(game.player.level2.collectablesPeanut) + " / 3", 16, "level2"],
+      [600, 295, "SCORE:" + String(game.player.level2.score), 16, "level2"],
       //level3
-      [310, 380, String(game.player.level1.nBigMackCollected) + " / 3", 16, "level3"],
-      [310, 400, String(game.player.level1.nLilPeanutCollected) + " / 3", 16, "level3"],
-      [260, 440, "SCORE:" + String(game.player.level1.score), 16, "level3"],
+      [310, 380, String(game.player.level3.collectablesBig) + " / 3", 16, "level3"],
+      [310, 400, String(game.player.level3.collectablesPeanut) + " / 3", 16, "level3"],
+      [260, 440, "SCORE:" + String(game.player.level3.score), 16, "level3"],
       //lvl4
-      [650, 380, String(game.player.level1.nBigMackCollected) + " / 3", 16, "level4"],
-      [650, 400, String(game.player.level1.nLilPeanutCollected) + " / 3", 16, "level4"],
-      [600, 440, "SCORE:" + String(game.player.level1.score), 16, "level4"],
+      [650, 380, String(game.player.level4.collectablesBig) + " / 3", 16, "level4"],
+      [650, 400, String(game.player.level4.collectablesPeanut) + " / 3", 16, "level4"],
+      [600, 440, "SCORE:" + String(game.player.level4.score), 16, "level4"],
     ];
 
     textData.map((key) => {
@@ -3185,6 +3185,7 @@ class GameOverMenu extends Menu {
         "restartBtn",
         () => {
           game.phaser.paused = false;
+          game.playContinuousSound(game.gameMusic);
           game.phaser.state.start(game.phaser.state.current);
         },
       ],
