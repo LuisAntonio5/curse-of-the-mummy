@@ -4,7 +4,6 @@ var levelSelectorState = {
     levelSelector = new LevelSelector();
     levelSelector.addSprites(game);
     levelSelector.addButtons(game);
-    console.log(game.player);
 
     levelSelector.addTexts();
   },

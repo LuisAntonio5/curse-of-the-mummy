@@ -534,6 +534,8 @@ class GameEngine {
       levelCompletedMenu.addTexts(score, timeToShow, true);
       game.player.totalScore -= game.player[levelStr].score;
       game.player[levelStr].score = score;
+      game.player[levelStr].nLilPeanutCollected = game.currentLevel.nLilPeanutCollected;
+      game.player[levelStr].nBigMackCollected = game.currentLevel.nBigMackCollected;
       game.player.totalScore += score;
       game.dataBaseSet();
     } else {
@@ -3065,20 +3067,20 @@ class LevelSelector extends Menu {
     var textData = [
       [530, 35, "TOTAL SCORE:\n  " + String(scoreToShow) + " PTS.", 24],
       //level1
-      [310, 235, String(1) + " / 3", 16, "level1"],
-      [310, 255, String(1) + " / 3", 16, "level1"],
+      [310, 235, String(game.player.level1.nBigMackCollected) + " / 3", 16, "level1"],
+      [310, 255, String(game.player.level1.nLilPeanutCollected) + " / 3", 16, "level1"],
       [260, 295, "SCORE:" + String(game.player.level1.score), 16, "level1"],
       //level2
-      [650, 235, String(1) + " / 3", 16, "level2"],
-      [650, 255, String(1) + " / 3", 16, "level2"],
+      [650, 235, String(game.player.level1.nBigMackCollected) + " / 3", 16, "level2"],
+      [650, 255, String(game.player.level1.nLilPeanutCollected) + " / 3", 16, "level2"],
       [600, 295, "SCORE:" + String(game.player.level1.score), 16, "level2"],
       //level3
-      [310, 380, String(1) + " / 3", 16, "level3"],
-      [310, 400, String(1) + " / 3", 16, "level3"],
+      [310, 380, String(game.player.level1.nBigMackCollected) + " / 3", 16, "level3"],
+      [310, 400, String(game.player.level1.nLilPeanutCollected) + " / 3", 16, "level3"],
       [260, 440, "SCORE:" + String(game.player.level1.score), 16, "level3"],
       //lvl4
-      [650, 380, String(1) + " / 3", 16, "level4"],
-      [650, 400, String(1) + " / 3", 16, "level4"],
+      [650, 380, String(game.player.level1.nBigMackCollected) + " / 3", 16, "level4"],
+      [650, 400, String(game.player.level1.nLilPeanutCollected) + " / 3", 16, "level4"],
       [600, 440, "SCORE:" + String(game.player.level1.score), 16, "level4"],
     ];
 
