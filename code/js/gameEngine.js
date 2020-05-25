@@ -405,6 +405,16 @@ class GameEngine {
         this.phaser.physics.arcade.collide(level.map.bigBox[k].data, level.map.buttons[i].data);
       }
     }
+
+    //BOXES COM BOTOES
+    for (var i = 0; i < level.map.slidingDoors.length; i++) {
+      for (var k = 0; k < level.map.bigBox.length; k++) {
+        this.phaser.physics.arcade.collide(
+          level.map.bigBox[k].data,
+          level.map.slidingDoors[i].data
+        );
+      }
+    }
   }
 
   collisionWithBounds(level) {
