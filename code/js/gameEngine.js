@@ -1,3 +1,4 @@
+const debug = false;
 //"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files
 class GameEngine {
   constructor() {
@@ -15,7 +16,6 @@ class GameEngine {
   }
 
   dataBaseSet() {
-    console.log(game.player);
     // This function sets the info given by data to the object in the database
     //corresponding to the game.player instance. It assumes game.player exists
     const dataToSend = {
@@ -38,6 +38,10 @@ class GameEngine {
     // Given a name, this function sets game.player data do the data
     //corresponding to the name in the databse or default values should
     //that name not yet exist, creating a new object
+    const defaultVolume = 5;
+    const defaultScore = 0;
+    const defaultCollectables = 0;
+    const defaultCutScene = false;
     var docRef = db.collection("players").doc(name);
 
     var doc = docRef
@@ -61,22 +65,21 @@ class GameEngine {
         } else {
           //Player does not exist
           var levelDefault = {
-            collectablesBig: 0,
-            collectablesPeanut: 0,
-            score: 0,
-            time: 0,
-            cutscenesCheck: false,
+            collectablesBig: defaultCollectables,
+            collectablesPeanut: defaultCollectables,
+            score: defaultScore,
+            cutscenesCheck: defaultCutScene,
           };
           game.player = new Player(
             name,
-            5,
-            5,
-            5,
+            defaultVolume,
+            defaultVolume,
+            defaultVolume,
             { ...levelDefault },
             { ...levelDefault },
             { ...levelDefault },
             { ...levelDefault },
-            0,
+            defaultScore,
             docRef
           );
           this.dataBaseSet();
@@ -116,8 +119,6 @@ class GameEngine {
       this.phaser.load.spritesheet(key[0], key[1], size, size);
     });
   }
-
-  //TODO: MUDAR ISTO PARA CLASSE MAPA
 
   placeCharacter(x, y, character) {
     var newCharacter = this.phaser.add.sprite(x, y, character);
@@ -161,11 +162,15 @@ class GameEngine {
 
   collisionObjects(level) {
     //AQUI SAO FEITAS TODAS AS COLISOES ENTRE OBJETOS MOVABLE E NAO MOVABLE
-    let buttonsCheck = false;
+    const offsetX = 6;
+    const offsetCaixa = 1;
+    const offsetColisao = 5;
+    const setVelocity = 0;
+    const limitVelocity = 0;
+    const clicksPerButton = 1;
     //BIG BOXES COM ELEVADORES E CHARACTERS E SMALL BOXES
     level.map.bigBox.map((key) => {
       //BIG BOX COM LILPEANUT
-
       this.phaser.physics.arcade.collide(
         key.data,
         level.lilPeanut.obj,
@@ -186,8 +191,8 @@ class GameEngine {
           (box, bigMack) => {
             if (
               !(
-                box.body.x + 6 < bigMack.body.x + bigMack.body.width &&
-                box.body.x + box.body.width > bigMack.body.x + 6
+                box.body.x + offsetX < bigMack.body.x + bigMack.body.width &&
+                box.body.x + box.body.width > bigMack.body.x + offsetX
               )
             ) {
               box.body.moves = true;
@@ -196,13 +201,13 @@ class GameEngine {
             for (var i = 0; i < level.map.smallBox.length; i++) {
               if (this.phaser.physics.arcade.collide(box, level.map.smallBox[i].data)) {
                 if (level.map.smallBox[i].data.x < box.body.x) {
-                  box.body.x += 1;
-                  bigMack.body.x += 5;
-                  bigMack.body.velocity.x = 0;
+                  box.body.x += offsetCaixa;
+                  bigMack.body.x += offsetColisao;
+                  bigMack.body.velocity.x = setVelocity;
                 } else {
-                  box.body.x -= 1;
-                  bigMack.body.x -= 5;
-                  bigMack.body.velocity.x = 0;
+                  box.body.x -= offsetCaixa;
+                  bigMack.body.x -= offsetColisao;
+                  bigMack.body.velocity.x = setVelocity;
                 }
                 return false;
               } else {
@@ -218,7 +223,8 @@ class GameEngine {
           !this.checkIfOnTopPartial(level.bigMack.obj, key.data)
         ) {
           level.bigMack.boxAnim = true;
-          if (level.bigMack.obj.body.velocity.x > 0) level.bigMack.doBoxRightAnimation();
+          if (level.bigMack.obj.body.velocity.x > limitVelocity)
+            level.bigMack.doBoxRightAnimation();
           else {
             level.bigMack.doBoxLeftAnimation();
           }
@@ -236,7 +242,7 @@ class GameEngine {
 
     //SMALL BOXES COM ELEVVADORES E CHARACTERS
     level.map.smallBox.map((key) => {
-      key.data.body.velocity.x = 0;
+      key.data.body.velocity.x = setVelocity;
       //SMALL BOX COM BIGMACK
       this.phaser.physics.arcade.collide(
         key.data,
@@ -263,13 +269,13 @@ class GameEngine {
             for (var i = 0; i < level.map.bigBox.length; i++) {
               if (this.phaser.physics.arcade.collide(box, level.map.bigBox[i].data)) {
                 if (level.map.bigBox[i].data.x < box.body.x) {
-                  box.body.x += 1;
-                  lilPeanut.body.x += 5;
-                  lilPeanut.body.velocity.x = 0;
+                  box.body.x += offsetCaixa;
+                  lilPeanut.body.x += offsetColisao;
+                  lilPeanut.body.velocity.x = setVelocity;
                 } else {
-                  box.body.x -= 1;
-                  lilPeanut.body.x -= 5;
-                  lilPeanut.body.velocity.x = 0;
+                  box.body.x -= offsetCaixa;
+                  lilPeanut.body.x -= offsetColisao;
+                  lilPeanut.body.velocity.x = setVelocity;
                 }
                 return false;
               } else {
@@ -285,7 +291,8 @@ class GameEngine {
           !this.checkIfOnTopPartial(level.lilPeanut.obj, key.data)
         ) {
           level.lilPeanut.boxAnim = true;
-          if (level.lilPeanut.obj.body.velocity.x > 0) level.lilPeanut.doBoxRightAnimation();
+          if (level.lilPeanut.obj.body.velocity.x > limitVelocity)
+            level.lilPeanut.doBoxRightAnimation();
           else {
             level.lilPeanut.doBoxLeftAnimation();
           }
@@ -327,10 +334,10 @@ class GameEngine {
       ) {
         if (!objPressed[level.map.buttons[i].actionObj]) {
           level.map.buttons[i].buttonPressed();
-          objPressed[level.map.buttons[i].actionObj] = 1;
+          objPressed[level.map.buttons[i].actionObj] = clicksPerButton;
         } else {
           level.map.buttons[i].buttonPressed();
-          objPressed[level.map.buttons[i].actionObj] += 1;
+          objPressed[level.map.buttons[i].actionObj] += clicksPerButton;
         }
       } else {
         if (!objPressed[level.map.buttons[i].actionObj]) {
@@ -442,8 +449,10 @@ class GameEngine {
   }
 
   checkElevatorStatus(level) {
+    const numMaxChars = 2;
+    const setVelocity = 0;
     level.map.elevators.map((key) => {
-      if (key.num == 2) {
+      if (key.num == numMaxChars) {
         //CHECKA 2 colisoes para subir
         if (
           this.checkIfOnTopTotal(level.lilPeanut.obj, key.data) &&
@@ -465,7 +474,7 @@ class GameEngine {
               this.playContinuousSound(key.sound);
             }
           } else {
-            key.data.body.velocity.y = 0;
+            key.data.body.velocity.y = setVelocity;
             this.stopContinuousSound(key.sound);
           }
         }
@@ -491,7 +500,7 @@ class GameEngine {
               this.playContinuousSound(key.sound);
             }
           } else {
-            key.data.body.velocity.y = 0;
+            key.data.body.velocity.y = setVelocity;
             this.stopContinuousSound(key.sound);
           }
         }
@@ -502,35 +511,33 @@ class GameEngine {
   levelCompletedMenu(sprite, animation) {
     var levelCompletedMenu = new LevelCompletedMenu();
     const levelStr = "level" + game.currentLevel.levelID.toString();
-    console.log(game.currentLevel.nBigMackCollected);
-    console.log(game.currentLevel.nLilPeanutCollected);
-
+    const pointsPerCollectable = 1000;
+    const timeDivider = 5;
+    const minimumPoints = 350;
     let score = Math.round(
-      ((game.currentLevel.nBigMackCollected + game.currentLevel.nLilPeanutCollected) * 1000) /
-        (game.currentLevel.timer.finalTime / 5) +
-        350
+      ((game.currentLevel.nBigMackCollected + game.currentLevel.nLilPeanutCollected) *
+        pointsPerCollectable) /
+        (game.currentLevel.timer.finalTime / timeDivider) +
+        minimumPoints
     );
-    score = Math.round(score);
     var minutes = String(Math.floor(game.currentLevel.timer.finalTime / 60));
     var seconds = String(game.currentLevel.timer.finalTime % 60);
     var timeToShow = { minutes, seconds };
 
     //PARA OBJETOS
-    console.log(game.currentLevel);
-
     game.currentLevel.map.eletricSaw.map((key) => {
       key.data.body.moves = false;
     });
     levelCompletedMenu.addSprites();
     levelCompletedMenu.addButtons();
     if (score > game.player[levelStr].score) {
-      levelCompletedMenu.addTexts(score, timeToShow, 1);
+      levelCompletedMenu.addTexts(score, timeToShow, true);
       game.player.totalScore -= game.player[levelStr].score;
       game.player[levelStr].score = score;
       game.player.totalScore += score;
       game.dataBaseSet();
     } else {
-      levelCompletedMenu.addTexts(score, timeToShow, 0);
+      levelCompletedMenu.addTexts(score, timeToShow, false);
     }
   }
 
@@ -542,21 +549,22 @@ class GameEngine {
   }
 
   checkPlatformStatus(level) {
+    const maxChars = 2;
+    const setVelocity = 0;
+    const initialFrame = 0;
     level.map.platforms.map((key) => {
-      if (key.num == 2) {
+      if (key.num == maxChars) {
         //CHECKA 2 colisoes para subir
         if (
           this.checkIfOnTopPartial(level.lilPeanut.obj, key.data) &&
           this.checkIfOnTopPartial(level.bigMack.obj, key.data)
         ) {
           key.platformDown(key, level.map.chains);
-          //key.press();
         } else {
           if (key.data.body.y >= key.minY) {
             key.platformUp(key, level.map.chains);
-            //key.unpress();
           } else {
-            key.data.body.velocity.y = 0;
+            key.data.body.velocity.y = setVelocity;
           }
         }
       } else {
@@ -567,12 +575,14 @@ class GameEngine {
         } else {
           if (key.data.body.y >= key.minY) {
             key.platformUp(key, level.map.chains);
-            //key.unpress();
           } else {
-            key.data.body.velocity.y = 0;
+            key.data.body.velocity.y = setVelocity;
           }
           level.map.buttons.map((button) => {
-            if (button.actionObj.constructor.name == "PlataformaMovel" && button.data.frame === 0) {
+            if (
+              button.actionObj.constructor.name == "PlataformaMovel" &&
+              button.data.frame === initialFrame
+            ) {
               key.unpress();
             }
           });
@@ -582,8 +592,9 @@ class GameEngine {
   }
 
   checkLevers(level) {
+    const initialFrame = 0;
     level.map.levers.map((key) => {
-      if (key.data.frame == 0) {
+      if (key.data.frame == initialFrame) {
         key.actionObj.down(key.actionObj, key.actionObj.chains);
       } else {
         key.actionObj.up(key.actionObj, key.actionObj.chains);
@@ -599,6 +610,39 @@ class GameEngine {
   }
 
   levelUpdate(level) {
+    const setVelocity = 0;
+    const bigMackSizeX = 16;
+    const bigMackSizeY = 45;
+    const bigMackOffsetX = 24;
+    const bigMackOffsetY = 10;
+    const lilPeanutSizeX = 11;
+    const lilPeanutSizeY = 28;
+    const lilPeanutOffsetX = 10;
+    const lilPeanutOffsetY = 3;
+    const difLil = 7;
+    const difBig = 16;
+    const initialFrame = 0;
+    const finalFrame = 1;
+    const offsetXLilCompleted = 30;
+    const offsetXBigCompleted = 60;
+    const bigMackDoorX =
+      level.map.bigMackDoor.data.x + level.map.bigMackDoor.data.width / 2 - offsetXBigCompleted;
+    const bigMackDoorY =
+      level.map.bigMackDoor.data.y +
+      level.map.bigMackDoor.data.height -
+      level.bigMack.obj.body.height;
+    const lilPeanutDoorX =
+      level.map.lilPeanutDoor.data.x + level.map.lilPeanutDoor.data.width / 2 - offsetXLilCompleted;
+    const lilPeanutDoorY =
+      level.map.lilPeanutDoor.data.y +
+      level.map.lilPeanutDoor.data.height -
+      level.lilPeanut.obj.body.height;
+    const offsetDoorLil = 20;
+    const offsetDoorBig = 48;
+    const limitLil = lilPeanutDoorX + offsetDoorLil;
+    const limitBig = Math.round(bigMackDoorX) + offsetDoorBig;
+
+    let flagCrouch = true;
     if (!level.animation) {
       //ANIMA OS OBJECTOS TODOS
       this.animateAllObjects(level);
@@ -613,7 +657,7 @@ class GameEngine {
       if (!level.animation) {
         if (!level.cutscene) {
           //LILPEANUT
-          level.lilPeanut.obj.body.velocity.x = 0;
+          level.lilPeanut.obj.body.velocity.x = setVelocity;
           if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.RIGHT)) {
             level.lilPeanut.doWalkRightAnimation();
           } else if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.LEFT)) {
@@ -623,12 +667,14 @@ class GameEngine {
           }
 
           if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.DOWN)) {
-            const difLil = 7;
-            level.lilPeanut.obj.body.setSize(11, 28 - difLil, 10, 3 + difLil);
+            level.lilPeanut.obj.body.setSize(
+              lilPeanutSizeX,
+              lilPeanutSizeY - difLil,
+              lilPeanutOffsetX,
+              lilPeanutOffsetY + difLil
+            );
             level.lilPeanut.crouch = true;
           } else {
-            const difLil = 7;
-            let flagCrouch = true;
             const pointsToCheck = [
               { x: level.lilPeanut.obj.body.x, y: level.lilPeanut.obj.body.y - difLil },
               {
@@ -648,7 +694,12 @@ class GameEngine {
               });
             }
             if (flagCrouch === true) {
-              level.lilPeanut.obj.body.setSize(11, 28, 10, 3);
+              level.lilPeanut.obj.body.setSize(
+                lilPeanutSizeX,
+                lilPeanutSizeY,
+                lilPeanutOffsetX,
+                lilPeanutOffsetY
+              );
               level.lilPeanut.crouch = false;
             }
           }
@@ -661,7 +712,7 @@ class GameEngine {
           }
 
           //BIGMACK
-          level.bigMack.obj.body.velocity.x = 0;
+          level.bigMack.obj.body.velocity.x = setVelocity;
           if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.D)) {
             level.bigMack.doWalkRightAnimation();
           } else if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.A)) {
@@ -671,11 +722,14 @@ class GameEngine {
           }
 
           if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.S)) {
-            const difBig = 16;
-            level.bigMack.obj.body.setSize(16, 45 - difBig, 24, 10 + difBig);
+            level.bigMack.obj.body.setSize(
+              bigMackSizeX,
+              bigMackSizeY - difBig,
+              bigMackOffsetX,
+              bigMackOffsetY + difBig
+            );
             level.bigMack.crouch = true;
           } else {
-            const difBig = 16;
             let flagCrouch = true;
             const pointsToCheck = [
               { x: level.bigMack.obj.body.x, y: level.bigMack.obj.body.y - difBig },
@@ -696,7 +750,12 @@ class GameEngine {
               });
             }
             if (flagCrouch === true) {
-              level.bigMack.obj.body.setSize(16, 45, 24, 10);
+              level.bigMack.obj.body.setSize(
+                bigMackSizeX,
+                bigMackSizeY,
+                bigMackOffsetX,
+                bigMackOffsetY
+              );
               level.bigMack.crouch = false;
             }
           }
@@ -709,8 +768,8 @@ class GameEngine {
                 key.data,
                 (player, lever) => {
                   //SE EXISTIR OVERLAP
-                  if (key.data.frame == 0) {
-                    key.data.frame = 1;
+                  if (key.data.frame == initialFrame) {
+                    key.data.frame = finalFrame;
                     //SET TIMER
                     this.playSingleSound(key.sound);
                     setTimeout(key.resetLever, key.timeToReset);
@@ -721,6 +780,7 @@ class GameEngine {
               );
             });
           }
+
           if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.SHIFT)) {
             //CHECK SE HA OVERLAP COM ALGUMA LEVER
             level.map.levers.map((key) => {
@@ -729,8 +789,8 @@ class GameEngine {
                 key.data,
                 (player, lever) => {
                   //SE EXISTIR OVERLAP
-                  if (key.data.frame == 0) {
-                    key.data.frame = 1;
+                  if (key.data.frame == initialFrame) {
+                    key.data.frame = finalFrame;
                     //SET TIMER
                     this.playSingleSound(key.sound);
                     setTimeout(key.resetLever, key.timeToReset);
@@ -770,23 +830,6 @@ class GameEngine {
         this.checkCollected(level);
       }
     } else if (level.animation === "COMPLETED") {
-      const offsetXLil = 30;
-      const offsetXBig = 60;
-      const bigMackDoorX =
-        level.map.bigMackDoor.data.x + level.map.bigMackDoor.data.width / 2 - offsetXBig;
-      const bigMackDoorY =
-        level.map.bigMackDoor.data.y +
-        level.map.bigMackDoor.data.height -
-        level.bigMack.obj.body.height;
-      const lilPeanutDoorX =
-        level.map.lilPeanutDoor.data.x + level.map.lilPeanutDoor.data.width / 2 - offsetXLil;
-      const lilPeanutDoorY =
-        level.map.lilPeanutDoor.data.y +
-        level.map.lilPeanutDoor.data.height -
-        level.lilPeanut.obj.body.height;
-      const limitLil = lilPeanutDoorX + 20;
-      const limitBig = Math.round(bigMackDoorX) + 48;
-
       level.bigMack.endAnimation(level, bigMackDoorX, bigMackDoorY);
       level.lilPeanut.endAnimation(level, lilPeanutDoorX, lilPeanutDoorY);
 
@@ -802,8 +845,6 @@ class GameEngine {
 
       //TIMER UPDATE
       level.timer.updateTimer();
-      //TODO: SHOW MENU DE LEVEL COMPLETE
-      //TODO: Velocidade a baixo de 0.05 começar a animaçao
     }
     this.collisionWithBounds(level);
     //ANIMA OS OBJECTOS TODOS
@@ -811,6 +852,10 @@ class GameEngine {
     level.map.eletricSaw.map((key) => {
       key.moveSaw();
     });
+
+    if (debug) {
+      this.currentLevel.debug();
+    }
   }
 
   gameover(level, sprite) {
@@ -821,6 +866,7 @@ class GameEngine {
     const yBig = 170;
     const scaleLil = 5;
     const scaleBig = 4;
+    const setGravity = 0;
     //APAGAR OS MENUS DAS BOARDS
     level.menuBoards.map((key) => {
       key.kill();
@@ -828,7 +874,7 @@ class GameEngine {
     });
     if (sprite == "lilpeanut") {
       level.stop("lilpeanut");
-      level.lilPeanut.obj.body.gravity.y = 0;
+      level.lilPeanut.obj.body.gravity.y = setGravity;
       level.lilPeanut.obj.moves = false;
       level.lilPeanut.obj.x = xLil;
       level.lilPeanut.obj.y = yLil;
@@ -839,7 +885,7 @@ class GameEngine {
       level.bigMack.obj.kill();
     } else {
       level.stop("bigmack");
-      level.bigMack.obj.body.gravity.y = 0;
+      level.bigMack.obj.body.gravity.y = setGravity;
       level.bigMack.obj.moves = false;
       level.bigMack.obj.x = xBig;
       level.bigMack.obj.y = yBig;
@@ -849,7 +895,6 @@ class GameEngine {
       level.lilPeanut.obj.animations.stop();
       level.lilPeanut.obj.kill();
     }
-    //game.phaser.state.start("Level1");
   }
 
   checkCollected(level) {
@@ -898,14 +943,16 @@ class GameEngine {
   }
 
   playSingleSound(sound) {
-    sound.volume = this.player.soundEffectsVolume / 10;
+    const divideSound = 10;
+    sound.volume = this.player.soundEffectsVolume / divideSound;
     sound.load(); //restarts sound
     sound.play();
   }
 
   playContinuousSound(sound) {
+    const divideSound = 10;
     if (sound.paused) {
-      sound.volume = this.player.soundEffectsVolume / 10;
+      sound.volume = this.player.soundEffectsVolume / divideSound;
       sound.load(); //restarts sound
       sound.loop = true;
       sound.play();
@@ -975,7 +1022,6 @@ class MapLevel {
     const gravity = 600;
     const scale = 3.5;
     const box = this.addSpriteMap(x, y, scale, scale, "bigBox");
-    game.phaser.physics.arcade.enable(box);
     this.addPhysicsToSprite(box, gravity);
     box.body.immovable = false;
     const newBox = new BigBox(x, y, box);
@@ -987,10 +1033,19 @@ class MapLevel {
     const scaleY = 2.38;
     const gravity = 0;
     const offsetX = 6;
+    const mutlForScaleX = 8;
+    const mutlForScaleY = 3;
+    const offsetBodyLavaX = 3;
+    const offsetBodyLavaY = 15;
     const newLava = this.addSpriteMap(x, y, scaleX, scaleY, "lava");
     this.addPhysicsToSprite(newLava, gravity);
     newLava.body.moves = false;
-    newLava.body.setSize(8 * scaleX - offsetX, 3 * scaleY, 3, 15);
+    newLava.body.setSize(
+      mutlForScaleX * scaleX - offsetX,
+      mutlForScaleY * scaleY,
+      offsetBodyLavaX,
+      offsetBodyLavaY
+    );
     const newLavaObj = new Lava(x, y, newLava);
     this.lavaBlocks.push(newLavaObj);
   }
@@ -1030,74 +1085,62 @@ class MapLevel {
   addSmallBox(x, y) {
     const gravity = 600;
     const scale = 2;
-    const box = game.phaser.add.sprite(x, y, "smallBox");
-    game.phaser.physics.arcade.enable(box);
-    box.body.gravity.y = gravity;
-    box.enableBody = true;
+    const box = this.addSpriteMap(x, y, scale, scale, "smallBox");
+    this.addPhysicsToSprite(box, gravity);
     box.body.immovable = false;
     const newBox = new SmallBox(x, y, box);
-    box.scale.setTo(scale, scale);
-    box.smoothed = false;
     this.smallBox.push(newBox);
   }
 
   addLilDoor(x, y) {
     const gravity = 0;
     const scale = 2;
-    const door = game.phaser.add.sprite(x, y, "portaLil");
-    game.phaser.physics.arcade.enable(door);
-    door.body.gravity.y = gravity;
-    door.enableBody = true;
+    const door = this.addSpriteMap(x, y, scale, scale, "portaLil");
+    this.addPhysicsToSprite(door, gravity);
     door.body.immovable = false;
     const newDoor = new LilDoor(x, y, door);
-    door.scale.setTo(scale, scale);
-    door.smoothed = false;
     this.lilPeanutDoor = newDoor;
   }
 
   addBigDoor(x, y) {
     const gravity = 0;
     const scale = 3.5;
-    const door = game.phaser.add.sprite(x, y, "portaBig");
-    game.phaser.physics.arcade.enable(door);
-    door.body.gravity.y = gravity;
-    door.enableBody = true;
+    const door = this.addSpriteMap(x, y, scale, scale, "portaBig");
+    this.addPhysicsToSprite(door, gravity);
     door.body.immovable = false;
     const newDoor = new BigDoor(x, y, door);
-    door.scale.setTo(scale, scale);
-    door.smoothed = false;
     this.bigMackDoor = newDoor;
   }
 
   addEletricSaw(x, y, maxX, maxY, velocity) {
     const gravity = 0;
     const scale = 3.5;
-    const eletricSaw = game.phaser.add.sprite(x, y, "eletricSaw");
-    game.phaser.physics.arcade.enable(eletricSaw);
-    eletricSaw.body.gravity.y = gravity;
-    eletricSaw.enableBody = true;
+    const radiusBody = 10;
+    const offsetX = 5;
+    const offsetY = 5;
+    const eletricSaw = this.addSpriteMap(x, y, scale, scale, "eletricSaw");
+    this.addPhysicsToSprite(eletricSaw, gravity);
     eletricSaw.body.immovable = true;
-    const newEletricSaw = new EletricSaw(x + 5, y, eletricSaw, maxX, maxY, velocity);
-    eletricSaw.scale.setTo(scale, scale);
-    eletricSaw.body.setCircle(10, 5, 5);
-    eletricSaw.smoothed = false;
+    const newEletricSaw = new EletricSaw(x + offsetX, y, eletricSaw, maxX, maxY, velocity);
+    eletricSaw.body.setCircle(radiusBody, offsetX, offsetY);
     this.eletricSaw.push(newEletricSaw);
   }
 
   addButton(x, y, actionObj) {
     const gravity = 50;
     const scale = 3;
-    const button = game.phaser.add.sprite(x, y, "button");
-    game.phaser.physics.arcade.enable(button);
-    button.body.gravity.y = gravity;
-    button.enableBody = true;
+    const button = this.addSpriteMap(x, y, scale, scale, "button");
+    const initialFrame = 1;
+    const bodyX = 6;
+    const bodyY = 3;
+    const offsetBodyX = 13;
+    const offsetBodyY = 14;
+    this.addPhysicsToSprite(button, gravity);
     button.body.immovable = true;
     button.body.moves = false;
-    button.body.setSize(6, 3, 13, 14);
+    button.body.setSize(bodyX, bodyY, offsetBodyX, offsetBodyY);
     const newButton = new Button(x, y, button, actionObj);
-    button.scale.setTo(scale, scale);
-    button.smoothed = false;
-    button.frame = 1;
+    button.frame = initialFrame;
     this.buttons.push(newButton);
   }
 
@@ -1105,15 +1148,10 @@ class MapLevel {
     const gravity = 0;
     const scale = 3.5;
     const target = "lilpeanut";
-    const collectable = game.phaser.add.sprite(x, y, "collectableLilPeanut");
-    game.phaser.physics.arcade.enable(collectable);
-    collectable.body.gravity.y = gravity;
-    collectable.enableBody = true;
+    const collectable = this.addSpriteMap(x, y, scale, scale, "collectableLilPeanut");
+    this.addPhysicsToSprite(collectable, gravity);
     collectable.body.immovable = false;
-    collectable.body.moves = true;
     const newCollectable = new Collectable(x, y, collectable, target);
-    collectable.scale.setTo(scale, scale);
-    collectable.smoothed = false;
     this.collectables.push(newCollectable);
   }
 
@@ -1121,32 +1159,23 @@ class MapLevel {
     const gravity = 0;
     const scale = 3.5;
     const target = "bigmack";
-    const collectable = game.phaser.add.sprite(x, y, "collectableBigMack");
-    game.phaser.physics.arcade.enable(collectable);
-    collectable.body.gravity.y = gravity;
-    collectable.enableBody = true;
+    const collectable = this.addSpriteMap(x, y, scale, scale, "collectableBigMack");
+    this.addPhysicsToSprite(collectable, gravity);
     collectable.body.immovable = false;
-    collectable.body.moves = true;
     const newCollectable = new Collectable(x, y, collectable, target);
-    collectable.scale.setTo(scale, scale);
-    collectable.smoothed = false;
     this.collectables.push(newCollectable);
   }
 
   addTorch(x, y) {
-    const torch = game.phaser.add.sprite(x, y, "torch");
-    //torch.body.immovable = true;
-    torch.scale.setTo(3, 3);
-    torch.smoothed = false;
+    const scale = 3;
+    const torch = this.addSpriteMap(x, y, scale, scale, "torch");
     const newTorch = new Torch(x, y, torch);
     this.immovableObjects.push(newTorch);
   }
 
   addTorchInverted(x, y) {
-    const torch = game.phaser.add.sprite(x, y, "torchInverted");
-    //torch.body.immovable = true;
-    torch.scale.setTo(3, 3);
-    torch.smoothed = false;
+    const scale = 3;
+    const torch = this.addSpriteMap(x, y, scale, scale, "torchInverted");
     const newTorch = new Torch(x, y, torch);
     this.immovableObjects.push(newTorch);
   }
@@ -1154,8 +1183,8 @@ class MapLevel {
   drawBound(x, y, width, group, vertical) {
     if (vertical) {
       var platform = group.create(x, y, "boundsVertical");
-      platform.body.immovable = true;
       platform.height = width;
+      platform.body.immovable = true;
     } else {
       var platform = group.create(x, y, "boundsHorizontal");
       platform.width = width;
@@ -1166,43 +1195,36 @@ class MapLevel {
   addEletricSawVertical(x, y, maxX, maxY, velocity) {
     const gravity = 0;
     const scale = 3.5;
-    const eletricSaw = game.phaser.add.sprite(x, y, "eletricSaw");
-    game.phaser.physics.arcade.enable(eletricSaw);
-    eletricSaw.body.gravity.y = gravity;
-    eletricSaw.enableBody = true;
+    const eletricSaw = this.addSpriteMap(x, y, scale, scale, "eletricSaw");
+    const offsetX = 5;
+    const radiusBody = 10;
+    this.addPhysicsToSprite(eletricSaw, gravity);
     eletricSaw.body.immovable = true;
-    const newEletricSaw = new EletricSawVertical(x + 5, y, eletricSaw, maxX, maxY, velocity);
-    eletricSaw.scale.setTo(scale, scale);
-    eletricSaw.body.setCircle(10, 5, 5);
-    eletricSaw.smoothed = false;
+    const newEletricSaw = new EletricSawVertical(x + offsetX, y, eletricSaw, maxX, maxY, velocity);
+    eletricSaw.body.setCircle(radiusBody, offsetX, offsetX);
     this.eletricSaw.push(newEletricSaw);
   }
 
   addPlataformaMovel(x, y, num, maxX, minY, actionObj) {
-    const platform = game.phaser.add.sprite(x, y, "elevator");
-    game.phaser.physics.arcade.enable(platform);
-    platform.body.gravity.y = 0;
-    platform.enableBody = true;
+    const scaleX = 5;
+    const scaleY = 2.5;
+    const gravity = 0;
+    const platform = this.addSpriteMap(x, y, scaleX, scaleY, "elevator");
+    this.addPhysicsToSprite(platform, gravity);
     platform.body.immovable = true;
     const newElevator = new PlataformaMovel(x, y, platform, num, maxX, minY, actionObj);
-    platform.scale.setTo(5, 2.5);
-    platform.smoothed = false;
     this.platforms.push(newElevator);
   }
 
   addSlidingDoor(x, y, maxX, maxY, sizeX, sizeY, velocidade, inverted, chains) {
+    const gravity = 0;
     let slidingDoor = null;
     if (y == maxY) {
-      console.log("aaa");
-
-      slidingDoor = game.phaser.add.sprite(x, y, "slidingDoorHorizontal");
+      slidingDoor = this.addSpriteMap(x, y, sizeX, sizeY, "slidingDoorHorizontal");
     } else {
-      slidingDoor = game.phaser.add.sprite(x, y, "slidingDoor");
+      slidingDoor = this.addSpriteMap(x, y, sizeX, sizeY, "slidingDoor");
     }
-
-    game.phaser.physics.arcade.enable(slidingDoor);
-    slidingDoor.body.gravity.y = 0;
-    slidingDoor.enableBody = true;
+    this.addPhysicsToSprite(slidingDoor, gravity);
     slidingDoor.body.immovable = true;
     const newElevator = new SlidingDoor(
       x,
@@ -1214,14 +1236,13 @@ class MapLevel {
       inverted,
       chains
     );
-    slidingDoor.scale.setTo(sizeX, sizeY);
-    slidingDoor.smoothed = false;
     this.slidingDoors.push(newElevator);
   }
 }
 
 class Level {
   constructor(numCut, numHelpers, coordsHelpers, idLevel) {
+    const levelStr = "level" + idLevel.toString();
     this.map = new MapLevel();
     this.bigMack = null;
     this.lilPeanut = null;
@@ -1234,9 +1255,6 @@ class Level {
     this.cutscene = null;
     this.levelID = idLevel;
     game.currentLevel = this;
-    //ADICIONAR AQUI A CONDIÇAO PARA MOSTRAR CUTSCENE
-    const levelStr = "level" + idLevel.toString();
-
     if (numHelpers + numCut != 0 && !game.player[levelStr].cutscenesCheck)
       this.cutscene = new Cutscene(numCut, numHelpers, coordsHelpers);
   }
@@ -1287,19 +1305,16 @@ class Level {
   addCollectableBoards(x, y) {
     const scale = 2;
     const offSetX = 100;
-    let board = game.phaser.add.sprite(x, y, "collectableBigMackBoard");
-    board.scale.setTo(scale, scale);
-    board.smoothed = false;
+    let board = this.map.addSpriteMap(x, y, scale, scale, "collectableBigMackBoard");
     board.fixedToCamera = true;
-    board = game.phaser.add.sprite(x + offSetX, y, "collectableLilPeanutBoard");
-    board.scale.setTo(scale, scale);
-    board.smoothed = false;
+    board = this.map.addSpriteMap(x + offSetX, y, scale, scale, "collectableLilPeanutBoard");
     board.fixedToCamera = true;
   }
 
   addMenuBoards(x, y) {
     const scale = 2;
     const offSetX = 100;
+    var date = new Date();
     var board = game.phaser.add.button(x, y, "restartBoard", () => {
       game.phaser.state.start(game.phaser.state.current);
     });
@@ -1308,7 +1323,6 @@ class Level {
     board.smoothed = false;
     board.fixedToCamera = true;
     board = game.phaser.add.button(x + offSetX, y, "menuBoard", () => {
-      var date = new Date();
       if (game.phaser.paused == true) {
         game.pauseMenu.hideContent(game);
         game.phaser.paused = false;
@@ -1380,7 +1394,6 @@ class Level {
       );
     });
     this.bounds = bounds;
-    console.log(bounds);
 
     var background = game.phaser.add.sprite(
       levelData.background[0],
@@ -1581,64 +1594,6 @@ class Character {
     this.lastAnimation = null;
   }
 
-  endAnimation(level, x, y) {
-    if (this.obj.body.x <= x) {
-      //ANDA PARA LADO DIREITO
-      this.obj.play("walkRight");
-    } else {
-      this.obj.play("walkLeft");
-    }
-    game.phaser.physics.arcade.moveToXY(this.obj, x, y, 10, 300);
-  }
-}
-
-class bigMack extends Character {
-  constructor(charObj, side) {
-    let animWalkingEnd = [24, 25, 26];
-    for (let i = 0; i < 2; i++) {
-      animWalkingEnd = animWalkingEnd.concat(animWalkingEnd);
-    }
-    super(charObj);
-    charObj.body.setSize(16, 42, 24, 13);
-    charObj.animations.add("walkLeft", [5, 6, 7, 8, 9], 11, false);
-    charObj.animations.add("walkRight", [0, 1, 2, 3, 4], 11, false);
-    charObj.animations.add("restRight", [10, 11], 4, true);
-    charObj.animations.add("restLeft", [12, 13], 4, true);
-    charObj.animations.add("restCrouchLeft", [46, 47], 4, true);
-    charObj.animations.add("restCrouchRight", [43, 44], 4, true);
-    charObj.animations.add("boxRight", [14, 15], 10, false);
-    charObj.animations.add("boxLeft", [21, 20], 10, false);
-    charObj.animations.add("walkBoxRight", [15, 16, 17], 10, true);
-    charObj.animations.add("walkBoxLeft", [20, 19, 18], 10, true);
-    charObj.animations.add("walkCrouchLeft", [46, 47, 48], 10, true);
-    charObj.animations.add("walkCrouchRight", [43, 44, 45], 10, true);
-    charObj.animations.add(
-      "endAnimationLeft",
-      [28, 27, 24].concat(animWalkingEnd).concat([29, 30, 31, 32, 33, 34]),
-      10,
-      false
-    );
-    charObj.animations.add(
-      "endAnimationRight",
-      [22, 23, 24].concat(animWalkingEnd).concat([29, 30, 31, 32, 33, 34]),
-      10,
-      false
-    );
-
-    let anim = charObj.animations.add("gameover", [35, 36, 37, 37, 37, 36, 38, 39, 40], 8, false);
-    anim.onComplete.add(game.gameOverMenu, this);
-    charObj.animations.add("gameoverMenu", [41, 42], 6, true);
-
-    if (side === "right") {
-      charObj.frame = 10;
-      this.lastAnimation = "right";
-    } else if (side === "left") {
-      charObj.frame = 12;
-      this.lastAnimation = "left";
-    }
-    this.boxAnim = false;
-  }
-
   doWalkLeftAnimation() {
     this.obj.body.velocity.x = -200;
     if (this.boxAnim == false) {
@@ -1697,6 +1652,18 @@ class bigMack extends Character {
     this.obj.body.velocity.y = -380;
   }
 
+  endAnimation(level, x, y) {
+    const finalPosX = 10;
+    const finalPosY = 300;
+    if (this.obj.body.x <= x) {
+      //ANDA PARA LADO DIREITO
+      this.obj.play("walkRight");
+    } else {
+      this.obj.play("walkLeft");
+    }
+    game.phaser.physics.arcade.moveToXY(this.obj, x, y, finalPosX, finalPosY);
+  }
+
   restAnimation() {
     if (this.lastAnimation == "right" || this.lastAnimation == null) {
       if (this.crouch) {
@@ -1711,6 +1678,81 @@ class bigMack extends Character {
         this.obj.play("restLeft");
       }
     }
+  }
+}
+
+class bigMack extends Character {
+  constructor(charObj, side) {
+    super(charObj);
+    let animWalkingEnd = [24, 25, 26];
+    for (let i = 0; i < 2; i++) {
+      animWalkingEnd = animWalkingEnd.concat(animWalkingEnd);
+    }
+    const animWalkLeft = [5, 6, 7, 8, 9];
+    const animWalkRight = [0, 1, 2, 3, 4];
+    const animRestRight = [10, 11];
+    const animRestLeft = [12, 13];
+    const animRestCrouchLeft = [46, 47];
+    const animRestCrouchRight = [43, 44];
+    const animBoxRight = [43, 44];
+    const animBoxLeft = [21, 20];
+    const animWalkBoxRight = [15, 16, 17];
+    const animWalkBoxLeft = [20, 19, 18];
+    const animWalkCrouchLeft = [46, 47, 48];
+    const animWalkCrouchRight = [43, 44, 45];
+    const startEndAnimLeft = [28, 27, 24];
+    const endEndAnimLeft = [29, 30, 31, 32, 33, 34];
+    const startEndAnimRight = [22, 23, 24];
+    const endEndAnimRight = [29, 30, 31, 32, 33, 34];
+    const gameOverAnim = [35, 36, 37, 37, 37, 36, 38, 39, 40];
+    const gameOverMenuAnim = [41, 42];
+    const frameRateWalk = 11;
+    const frameRateRest = 4;
+    const frameRateAnims = 10;
+    const frameRateGameOver = 8;
+    const frameRateGameOverMenu = 6;
+    const restRightFrame = 10;
+    const restLeftFrame = 12;
+    const bodySize = { x: 16, y: 45, offsetX: 24, offsetY: 10 };
+    charObj.body.setSize(bodySize.x, bodySize.y, bodySize.offsetX, bodySize.offsetY);
+
+    charObj.animations.add("walkLeft", animWalkLeft, frameRateWalk, false);
+    charObj.animations.add("walkRight", animWalkRight, frameRateWalk, false);
+    charObj.animations.add("restRight", animRestRight, frameRateRest, true);
+    charObj.animations.add("restLeft", animRestLeft, frameRateRest, true);
+    charObj.animations.add("restCrouchLeft", animRestCrouchLeft, frameRateRest, true);
+    charObj.animations.add("restCrouchRight", animRestCrouchRight, frameRateRest, true);
+    charObj.animations.add("boxRight", animBoxRight, frameRateAnims, false);
+    charObj.animations.add("boxLeft", animBoxLeft, frameRateAnims, false);
+    charObj.animations.add("walkBoxRight", animWalkBoxRight, frameRateAnims, true);
+    charObj.animations.add("walkBoxLeft", animWalkBoxLeft, frameRateAnims, true);
+    charObj.animations.add("walkCrouchLeft", animWalkCrouchLeft, frameRateAnims, true);
+    charObj.animations.add("walkCrouchRight", animWalkCrouchRight, frameRateAnims, true);
+    charObj.animations.add(
+      "endAnimationLeft",
+      startEndAnimLeft.concat(animWalkingEnd).concat(endEndAnimLeft),
+      frameRateAnims,
+      false
+    );
+    charObj.animations.add(
+      "endAnimationRight",
+      startEndAnimRight.concat(animWalkingEnd).concat(endEndAnimRight),
+      frameRateAnims,
+      false
+    );
+
+    let anim = charObj.animations.add("gameover", gameOverAnim, frameRateGameOver, false);
+    anim.onComplete.add(game.gameOverMenu, this);
+    charObj.animations.add("gameoverMenu", gameOverMenuAnim, frameRateGameOverMenu, true);
+
+    if (side === "right") {
+      charObj.frame = restRightFrame;
+      this.lastAnimation = "right";
+    } else if (side === "left") {
+      charObj.frame = restLeftFrame;
+      this.lastAnimation = "left";
+    }
+    this.boxAnim = false;
   }
 }
 
@@ -1721,112 +1763,70 @@ class lilPeanut extends Character {
     for (let i = 0; i < 2; i++) {
       animWalkingEnd = animWalkingEnd.concat(animWalkingEnd);
     }
-    charObj.animations.add("walkLeft", [0, 1, 2], 10, true);
-    charObj.animations.add("walkRight", [3, 4, 5], 10, true);
-    charObj.animations.add("jump", [7], 1, true);
-    charObj.animations.add("restRight", [8, 9], 5, true);
-    charObj.animations.add("restLeft", [10, 11], 5, true);
-    charObj.animations.add("restCrouchLeft", [39, 40], 4, true);
-    charObj.animations.add("restCrouchRight", [7, 42], 4, true);
-    charObj.animations.add("boxRight", [12, 13], 10, false);
-    charObj.animations.add("boxLeft", [15, 16], 10, false);
-    charObj.animations.add("walkBoxRight", [13, 14], 10, true);
-    charObj.animations.add("walkBoxLeft", [16, 17], 10, true);
-    charObj.animations.add("walkCrouchLeft", [39, 40, 41], 10, true);
-    charObj.animations.add("walkCrouchRight", [7, 42, 43], 10, true);
+    const animWalkLeft = [0, 1, 2];
+    const animWalkRight = [3, 4, 5];
+    const animRestRight = [8, 9];
+    const animRestLeft = [10, 11];
+    const animRestCrouchLeft = [39, 40];
+    const animRestCrouchRight = [7, 42];
+    const animBoxRight = [12, 13];
+    const animBoxLeft = [15, 16];
+    const animWalkBoxRight = [13, 14];
+    const animWalkBoxLeft = [16, 17];
+    const animWalkCrouchLeft = [39, 40, 41];
+    const animWalkCrouchRight = [7, 42, 43];
+    const startEndAnimLeft = [23, 24, 20];
+    const endEndAnimLeft = [25, 26, 27, 28, 29, 30, 31];
+    const startEndAnimRight = [18, 19, 20];
+    const endEndAnimRight = [25, 26, 27, 28, 29, 30, 31];
+    const gameOverAnim = [32, 33, 34, 34, 34, 33, 35, 36, 37];
+    const gameOverMenuAnim = [38, 37];
+
+    const walkFrameRate = 10;
+    const restFrameRate = 5;
+    const menuFrameRate = 8;
+
+    const restRightFrame = 8;
+    const restLeftFrame = 10;
+
+    charObj.animations.add("walkLeft", animWalkLeft, walkFrameRate, true);
+    charObj.animations.add("walkRight", animWalkRight, walkFrameRate, true);
+    charObj.animations.add("restRight", animRestRight, restFrameRate, true);
+    charObj.animations.add("restLeft", animRestLeft, restFrameRate, true);
+    charObj.animations.add("restCrouchLeft", animRestCrouchLeft, restFrameRate, true);
+    charObj.animations.add("restCrouchRight", animRestCrouchRight, restFrameRate, true);
+    charObj.animations.add("boxRight", animBoxRight, walkFrameRate, false);
+    charObj.animations.add("boxLeft", animBoxLeft, walkFrameRate, false);
+    charObj.animations.add("walkBoxRight", animWalkBoxRight, walkFrameRate, true);
+    charObj.animations.add("walkBoxLeft", animWalkBoxLeft, walkFrameRate, true);
+    charObj.animations.add("walkCrouchLeft", animWalkCrouchLeft, walkFrameRate, true);
+    charObj.animations.add("walkCrouchRight", animWalkCrouchRight, walkFrameRate, true);
     let anim = charObj.animations.add(
       "endAnimationLeft",
-      [23, 24, 20].concat(animWalkingEnd).concat([25, 26, 27, 28, 29, 30, 31]),
-      10,
+      startEndAnimLeft.concat(animWalkingEnd).concat(endEndAnimLeft),
+      walkFrameRate,
       false
     );
     anim.onComplete.add(game.levelCompletedMenu, this);
     anim = charObj.animations.add(
       "endAnimationRight",
-      [18, 19, 20].concat(animWalkingEnd).concat([25, 26, 27, 28, 29, 30, 31]),
-      10,
+      startEndAnimRight.concat(animWalkingEnd).concat(endEndAnimRight),
+      walkFrameRate,
       false
     );
     anim.onComplete.add(game.levelCompletedMenu, this);
-    anim = charObj.animations.add("gameover", [32, 33, 34, 34, 34, 33, 35, 36, 37], 8, false);
+    anim = charObj.animations.add("gameover", gameOverAnim, menuFrameRate, false);
     anim.onComplete.add(game.gameOverMenu, this);
-    charObj.animations.add("gameoverMenu", [38, 37], 6, true);
+    charObj.animations.add("gameoverMenu", gameOverMenuAnim, menuFrameRate, true);
 
     if (side === "right") {
-      charObj.frame = 8;
+      charObj.frame = restRightFrame;
       this.lastAnimation = "right";
     } else if (side === "left") {
-      charObj.frame = 10;
+      charObj.frame = restLeftFrame;
       this.lastAnimation = "left";
     }
     this.boxAnim = false;
-  }
-
-  doWalkLeftAnimation() {
-    this.obj.body.velocity.x = -200;
-    if (this.boxAnim == false) {
-      if (this.crouch) {
-        this.obj.play("walkCrouchLeft");
-      } else {
-        this.obj.play("walkLeft");
-      }
-    } else {
-      this.obj.play("walkBoxLeft");
-    }
-    this.lastAnimation = "left";
-  }
-
-  doWalkRightAnimation() {
-    this.obj.body.velocity.x = 200;
-    if (this.boxAnim == false) {
-      if (this.crouch) {
-        this.obj.play("walkCrouchRight");
-      } else {
-        this.obj.play("walkRight");
-      }
-    } else {
-      this.obj.play("walkBoxRight");
-    }
-    this.lastAnimation = "right";
-  }
-
-  jump() {
-    this.obj.play("jump");
-    this.obj.body.velocity.y = -380;
-  }
-
-  doBoxRightAnimation() {
-    this.obj.play("boxRight");
-  }
-
-  doBoxLeftAnimation() {
-    this.obj.play("boxLeft");
-  }
-
-  doTurnAnimation() {
-    this.obj.body.velocity.x = 0;
-    this.obj.body.velocity.y = 0;
-    if (this.lastAnimation == "right" || this.lastAnimation == null) {
-      this.obj.play("endAnimationRight");
-    } else if (this.lastAnimation == "left") {
-      this.obj.play("endAnimationLeft");
-    }
-  }
-
-  restAnimation() {
-    if (this.lastAnimation == "right" || this.lastAnimation == null) {
-      if (this.crouch) {
-        this.obj.play("restCrouchRight");
-      } else {
-        this.obj.play("restRight");
-      }
-    } else if (this.lastAnimation == "left") {
-      if (this.crouch) {
-        this.obj.play("restCrouchLeft");
-      } else {
-        this.obj.play("restLeft");
-      }
-    }
   }
 }
 
@@ -1837,6 +1837,7 @@ class Sprite {
     this.y = y;
     this.data = data;
   }
+
   doAnimation() {
     this.data.play("animation");
   }
@@ -1851,7 +1852,9 @@ class Platform extends Sprite {
 class Torch extends Sprite {
   constructor(x, y, data) {
     super(x, y, data);
-    this.data.animations.add("animation", [0, 1], 5, true);
+    const animationFrames = [0, 1];
+    const frameRate = 5;
+    this.data.animations.add("animation", animationFrames, frameRate, true);
   }
 }
 
@@ -1864,7 +1867,9 @@ class Bounds extends Sprite {
 class Lava extends Sprite {
   constructor(x, y, data) {
     super(x, y, data);
-    this.data.animations.add("animation", [0, 1, 2], 5, true);
+    const animationFrames = [0, 1, 2];
+    const frameRate = 5;
+    this.data.animations.add("animation", animationFrames, frameRate, true);
     this.data.play("animation");
     game.soundEffects.map((sound) => {
       if (sound[0] == "lavaSoundEffect") {
@@ -1882,14 +1887,14 @@ class Lever extends Sprite {
     game.soundEffects.map((sound) => {
       if (sound[0] == "leverSoundEffect") {
         this.sound = sound[1];
-        console.log(sound[1]);
       }
     });
   }
 
   resetLever = () => {
+    const initialFrame = 0;
     game.playSingleSound(this.sound);
-    this.data.frame = 0;
+    this.data.frame = initialFrame;
   };
 }
 
@@ -1918,8 +1923,8 @@ class Elevator extends Sprite {
   }
 
   elevatorUp(elevator, chains) {
-    //elevator.data.body.gravity.y = 800;
-    elevator.data.body.velocity.y = -50;
+    const velocity = -50;
+    elevator.data.body.velocity.y = velocity;
     chains.map((key, index) => {
       if (elevator.data.body.y < key.data.y) {
         key.data.visible = false;
@@ -1928,7 +1933,8 @@ class Elevator extends Sprite {
   }
 
   elevatorDown(elevator, chains) {
-    elevator.data.body.velocity.y = 50;
+    const velocity = 50;
+    elevator.data.body.velocity.y = velocity;
     chains.map((key) => {
       if (elevator.data.body.y >= key.y && key.data.visible === false) {
         key.data.visible = true;
@@ -2051,11 +2057,15 @@ class BigDoor extends Sprite {
 class EletricSaw extends Sprite {
   constructor(x, y, data, maxX, maxY, velocity) {
     super(x, y, data);
+
+    const animationFrames = [0, 1, 2];
+    const frameRate = 8;
+
     this.maxX = maxX;
     this.maxY = maxY;
     this.velocity = velocity;
     this.stop = false;
-    data.animations.add("rotate", [0, 1, 2], 8, true);
+    data.animations.add("rotate", animationFrames, frameRate, true);
     data.body.velocity.x = velocity;
     game.soundEffects.map((sound) => {
       if (sound[0] == "sawSoundEffect") {
@@ -2063,6 +2073,7 @@ class EletricSaw extends Sprite {
       }
     });
   }
+
   doAnimation() {
     this.data.play("rotate");
   }
@@ -2087,17 +2098,22 @@ class EletricSaw extends Sprite {
 class EletricSawVertical extends Sprite {
   constructor(x, y, data, maxX, maxY, velocity) {
     super(x, y, data);
+
+    const animationFrames = [0, 1, 2];
+    const frameRate = 8;
+
     this.maxX = maxX;
     this.maxY = maxY;
     this.velocity = velocity;
     this.stop = false;
-    data.animations.add("rotate", [0, 1, 2], 8, true);
+    data.animations.add("rotate", animationFrames, frameRate, true);
     game.soundEffects.map((sound) => {
       if (sound[0] == "sawSoundEffect") {
         this.sound = sound[1];
       }
     });
   }
+
   doAnimation() {
     this.data.play("rotate");
   }
@@ -2151,18 +2167,19 @@ class Button extends Sprite {
   }
 
   buttonPressed() {
+    const pressedFrame = 1;
     if (this.actionObj.constructor.name === "EletricSaw") {
       //PARA A SAW
-      this.data.frame = 1;
+      this.data.frame = pressedFrame;
       this.actionObj.press();
     } else if (this.actionObj.constructor.name === "EletricSawVertical") {
-      this.data.frame = 1;
+      this.data.frame = pressedFrame;
       this.actionObj.press();
     } else if (this.actionObj.constructor.name === "PlataformaMovel") {
-      this.data.frame = 1;
+      this.data.frame = pressedFrame;
       this.actionObj.press();
     } else if (this.actionObj.constructor.name === "SlidingDoor") {
-      this.data.frame = 1;
+      this.data.frame = pressedFrame;
 
       if (this.actionObj.x == this.actionObj.maxX) {
         this.actionObj.up(this.actionObj, this.actionObj.chains);
@@ -2173,17 +2190,18 @@ class Button extends Sprite {
   }
 
   buttonUnpressed() {
+    const unpressedFrame = 0;
     if (this.actionObj.constructor.name === "EletricSaw") {
-      this.data.frame = 0;
+      this.data.frame = unpressedFrame;
       this.actionObj.unpress();
     } else if (this.actionObj.constructor.name === "EletricSawVertical") {
-      this.data.frame = 0;
+      this.data.frame = unpressedFrame;
       this.actionObj.unpress();
     } else if (this.actionObj.constructor.name === "PlataformaMovel") {
-      this.data.frame = 0;
+      this.data.frame = unpressedFrame;
       this.actionObj.unpress();
     } else if (this.actionObj.constructor.name === "SlidingDoor") {
-      this.data.frame = 0;
+      this.data.frame = unpressedFrame;
 
       if (this.actionObj.x == this.actionObj.maxX) {
         this.actionObj.down(this.actionObj, this.actionObj.chains);
@@ -2197,7 +2215,10 @@ class Button extends Sprite {
 class Collectable extends Sprite {
   constructor(x, y, data, target) {
     super(x, y, data);
-    this.velocity = 20;
+
+    const animVelocity = 20;
+
+    this.velocity = animVelocity;
     this.target = target;
     game.soundEffects.map((sound) => {
       if (sound[0] == "collectableSoundEffect") {
@@ -2207,7 +2228,8 @@ class Collectable extends Sprite {
   }
 
   doAnimation() {
-    if (this.data.body.y >= this.y + 10) {
+    const offsetAnim = 10;
+    if (this.data.body.y >= this.y + offsetAnim) {
       this.data.body.velocity.y = -this.velocity;
     } else if (this.data.body.y <= this.y) {
       this.data.body.velocity.y = this.velocity;
@@ -2226,22 +2248,28 @@ class Timer {
   }
 
   createTimer() {
-    const posX = 400 - 60;
+    const posX = 340;
     const posY = -8;
     const scale = 3;
-    const board = game.phaser.add.sprite(posX, posY, "timerBoard");
     const xCoords = [361, 381, 416, 436];
     const yCoord = 19;
     const nNums = 10;
     const nSlots = 4;
+    const nIndexOffset = 1;
+    const board = game.phaser.add.sprite(posX, posY, "timerBoard");
+    var date = new Date();
+
     board.scale.setTo(scale, scale);
     board.smoothed = false;
     board.fixedToCamera = true;
-    var date = new Date();
     this.startTime = date.getTime();
     for (let i = 1; i <= nSlots; i++) {
       for (let k = 0; k < nNums; k++) {
-        this["slot" + String(i)][k] = game.phaser.add.sprite(xCoords[i - 1], yCoord, String(k));
+        this["slot" + String(i)][k] = game.phaser.add.sprite(
+          xCoords[i - nIndexOffset],
+          yCoord,
+          String(k)
+        );
         this["slot" + String(i)][k].visible = false;
         this["slot" + String(i)][k].scale.setTo(scale, scale);
         this["slot" + String(i)][k].smoothed = false;
@@ -2258,6 +2286,7 @@ class Timer {
 
   updateDigit(digit, slot) {
     const nNums = 10;
+
     if (slot[digit].visible == false) {
       for (let k = 0; k < nNums; k++) {
         slot[k].visible = false;
@@ -2267,20 +2296,22 @@ class Timer {
   }
 
   updateTimer() {
+    var date = new Date();
+    var currentTime = date.getTime();
+    var timerValue = Math.round((currentTime - this.startTime) / 1000) + this.timerAux;
+    var minutes = String(Math.floor(timerValue / 60));
+    var seconds = String(timerValue % 60);
+    var limitSeconds = 9;
+
     if (!game.currentLevel.cutscene) {
-      var date = new Date();
-      var currentTime = date.getTime();
-      var timerValue = Math.round((currentTime - this.startTime) / 1000) + this.timerAux;
-      var minutes = String(Math.floor(timerValue / 60));
-      var seconds = String(timerValue % 60);
-      if (parseInt(seconds) > 9) {
+      if (parseInt(seconds) > limitSeconds) {
         this.updateDigit(seconds[0], this.slot3);
         this.updateDigit(seconds[1], this.slot4);
       } else {
         this.updateDigit("0", this.slot3);
         this.updateDigit(seconds[0], this.slot4);
       }
-      if (parseInt(minutes) > 9) {
+      if (parseInt(minutes) > limitSeconds) {
         this.updateDigit(minutes[0], this.slot1);
         this.updateDigit(minutes[1], this.slot2);
       } else {
@@ -2302,26 +2333,32 @@ class SlidingDoor extends Sprite {
   }
 
   right(platform) {
+    const setVelocity = 0;
+
     if (Math.round(platform.data.body.x) < this.maxX) {
       platform.data.body.velocity.x = this.velocidade;
     } else {
-      platform.data.body.velocity.x = 0;
+      platform.data.body.velocity.x = setVelocity;
     }
   }
 
   left(platform) {
+    const setVelocity = 0;
+
     if (Math.round(platform.data.body.x) > this.x) {
       platform.data.body.velocity.x = -this.velocidade;
     } else {
-      platform.data.body.velocity.x = 0;
+      platform.data.body.velocity.x = setVelocity;
     }
   }
 
   up(platform, chains) {
+    const setVelocity = 0;
+
     if (Math.round(platform.data.body.y) >= this.y) {
       platform.data.body.velocity.y = -this.velocidade;
     } else {
-      platform.data.body.velocity.y = 0;
+      platform.data.body.velocity.y = setVelocity;
     }
     chains.map((key, index) => {
       if (platform.data.body.y < key.data.y) {
@@ -2331,10 +2368,12 @@ class SlidingDoor extends Sprite {
   }
 
   down(platform, chains) {
+    const setVelocity = 0;
+
     if (Math.round(platform.data.body.y) <= this.maxY) {
       platform.data.body.velocity.y = this.velocidade;
     } else {
-      platform.data.body.velocity.y = 0;
+      platform.data.body.velocity.y = setVelocity;
     }
 
     chains.map((key) => {
@@ -2342,16 +2381,17 @@ class SlidingDoor extends Sprite {
         key.data.visible = true;
       }
     });
-    //COLISAO COM BOXs
+
+    //COLISAO COM BOXS
     if (
       game.phaser.physics.arcade.collide(game.currentLevel.lilPeanut.obj, this.data) ||
       game.phaser.physics.arcade.collide(game.currentLevel.bigMack.obj, this.data)
     ) {
-      platform.data.body.velocity.y = 0;
+      platform.data.body.velocity.y = setVelocity;
     }
     game.currentLevel.map.bigBox.map((key) => {
       if (game.phaser.physics.arcade.collide(key.data, this.data)) {
-        platform.data.body.velocity.y = 0;
+        platform.data.body.velocity.y = setVelocity;
       }
     });
   }
@@ -2414,15 +2454,19 @@ class Menu {
   }
 
   toLevel(level) {
+    var data = {
+      volumeScale: 10,
+      lastLevel: 5,
+    };
     game.playSingleSound(this.sound);
     game.menuMusic.pause();
     if (game.gameMusic.paused) {
-      game.gameMusic.volume = game.player.gameMusicVolume / 10;
+      game.gameMusic.volume = game.player.gameMusicVolume / data.volumeScale;
       game.gameMusic.loop = true;
       game.gameMusic.load();
       game.gameMusic.play();
     }
-    if (level == 5) {
+    if (level == data.lastLevel) {
       game.phaser.state.start("EndOfGame");
     } else {
       game.phaser.state.start("Level" + level.toString());
@@ -2435,12 +2479,13 @@ class Menu {
   }
 
   toMainMenu() {
+    var volumeScale = 10;
     if (this && this.sound) {
       game.playSingleSound(this.sound);
     }
     game.gameMusic.pause();
     if (game.menuMusic.paused) {
-      game.menuMusic.volume = game.player.menuMusicVolume / 10;
+      game.menuMusic.volume = game.player.menuMusicVolume / volumeScale;
       game.menuMusic.loop = true;
       game.menuMusic.load(); //resets sound
       game.menuMusic.play();
@@ -2488,15 +2533,16 @@ class Options extends Menu {
   }
 
   addButton(x, y, name, callToAction) {
+    var defaultFlag = 0;
     var button = game.phaser.add.button(
       x,
       y,
       name,
       callToAction,
       { this: this, x: x, y: y },
-      0,
-      0,
-      0
+      defaultFlag,
+      defaultFlag,
+      defaultFlag
     );
     button.smoothed = false;
     this.buttons.push(button);
@@ -2521,29 +2567,35 @@ class Options extends Menu {
   }
 
   setVolume(sound, volume, y) {
-    if (volume <= 10 && volume >= 0) {
+    var data = {
+      minVolume: 0,
+      maxVolume: 10,
+      soundBarXCoords: [285, 30],
+    };
+
+    if (volume <= data.maxVolume && volume >= data.minVolume) {
       if (sound == this.SoundEffectsFilledSoundBars) {
         this.soundEffectsVolume = volume;
         game.player.soundEffectsVolume = volume;
         game.soundEffects.map((sound) => {
-          sound.volume = volume / 10;
+          sound.volume = volume / data.maxVolume;
         });
       } else if (sound == this.GameMusicFilledSoundBars) {
         this.gameMusicVolume = volume;
         game.player.gameMusicVolume = volume;
-        game.gameMusic.volume = volume / 10;
+        game.gameMusic.volume = volume / data.maxVolume;
       } else if (sound == this.MenuMusicFilledSoundBars) {
         this.menuMusicVolume = volume;
         game.player.menuMusicVolume = volume;
-        game.menuMusic.volume = volume / 10;
+        game.menuMusic.volume = volume / data.maxVolume;
       }
 
       for (let i = 0; i < volume; i++) {
         if (!sound[i].alive) {
-          sound[i].reset(285 + 30 * i, y);
+          sound[i].reset(data.soundBarXCoords[0] + data.soundBarXCoords[1] * i, y);
         }
       }
-      for (let i = volume; i < 10; i++) {
+      for (let i = volume; i < data.maxVolume; i++) {
         if (sound[i].alive) {
           sound[i].kill();
         }
@@ -2552,120 +2604,241 @@ class Options extends Menu {
   }
 
   changeVolume() {
-    const button = this.this;
-    game.playSingleSound(button.sound);
+    var data = {
+      soundBarYCoords: [147, 297, 447],
+      soundBarXCoords: [285, 30],
+      volumeDifference: 1,
+    };
+    var button = this.this;
     var volume;
-    if (this.y == 147) {
-      volume = (this.x - 285) / 30 + 1;
-      button.setVolume(button.SoundEffectsFilledSoundBars, volume, 147);
-    } else if (this.y == 297) {
-      volume = (this.x - 285) / 30 + 1;
-      button.setVolume(button.GameMusicFilledSoundBars, volume, 297);
-    } else if (this.y == 447) {
-      volume = (this.x - 285) / 30 + 1;
-      button.setVolume(button.MenuMusicFilledSoundBars, volume, 447);
+    if (this.y == data.soundBarYCoords[0]) {
+      volume = (this.x - data.soundBarXCoords[0]) / data.soundBarXCoords[1] + data.volumeDifference;
+      button.setVolume(button.SoundEffectsFilledSoundBars, volume, data.soundBarYCoords[0]);
+    } else if (this.y == data.soundBarYCoords[1]) {
+      volume = (this.x - data.soundBarXCoords[0]) / data.soundBarXCoords[1] + data.volumeDifference;
+      button.setVolume(button.GameMusicFilledSoundBars, volume, data.soundBarYCoords[1]);
+    } else if (this.y == data.soundBarYCoords[2]) {
+      volume = (this.x - data.soundBarXCoords[0]) / data.soundBarXCoords[1] + data.volumeDifference;
+      button.setVolume(button.MenuMusicFilledSoundBars, volume, data.soundBarYCoords[2]);
     }
+    game.playSingleSound(button.sound);
   }
 
   decreaseVolume() {
+    var data = {
+      soundBarYCoords: [147, 297, 447],
+      soundYCoords: [150, 300, 450],
+      volumeDifference: 1,
+    };
     const button = this.this;
     game.playSingleSound(button.sound);
-    if (this.y == 150) {
-      button.setVolume(button.SoundEffectsFilledSoundBars, button.soundEffectsVolume - 1, 147);
-    } else if (this.y == 300) {
-      button.setVolume(button.GameMusicFilledSoundBars, button.gameMusicVolume - 1, 297);
-    } else if (this.y == 450) {
-      button.setVolume(button.MenuMusicFilledSoundBars, button.menuMusicVolume - 1, 447);
+    if (this.y == data.soundYCoords[0]) {
+      button.setVolume(
+        button.SoundEffectsFilledSoundBars,
+        button.soundEffectsVolume - data.volumeDifference,
+        data.soundBarYCoords[0]
+      );
+    } else if (this.y == data.soundYCoords[1]) {
+      button.setVolume(
+        button.GameMusicFilledSoundBars,
+        button.gameMusicVolume - data.volumeDifference,
+        data.soundBarYCoords[1]
+      );
+    } else if (this.y == data.soundYCoords[2]) {
+      button.setVolume(
+        button.MenuMusicFilledSoundBars,
+        button.menuMusicVolume - data.volumeDifference,
+        data.soundBarYCoords[2]
+      );
     }
   }
+
   increaseVolume() {
+    var data = {
+      soundYCoords: [150, 300, 450],
+      soundBarYCoords: [147, 297, 447],
+      volumeDifference: 1,
+    };
     const button = this.this;
     game.playSingleSound(button.sound);
-    if (this.y == 150) {
-      button.setVolume(button.SoundEffectsFilledSoundBars, button.soundEffectsVolume + 1, 147);
-    } else if (this.y == 300) {
-      button.setVolume(button.GameMusicFilledSoundBars, button.gameMusicVolume + 1, 297);
-    } else if (this.y == 450) {
-      button.setVolume(button.MenuMusicFilledSoundBars, button.menuMusicVolume + 1, 447);
+    if (this.y == data.soundYCoords[0]) {
+      button.setVolume(
+        button.SoundEffectsFilledSoundBars,
+        button.soundEffectsVolume + data.volumeDifference,
+        data.soundBarYCoords[0]
+      );
+    } else if (this.y == data.soundYCoords[1]) {
+      button.setVolume(
+        button.GameMusicFilledSoundBars,
+        button.gameMusicVolume + data.volumeDifference,
+        data.soundBarYCoords[1]
+      );
+    } else if (this.y == data.soundYCoords[2]) {
+      button.setVolume(
+        button.MenuMusicFilledSoundBars,
+        button.menuMusicVolume + data.volumeDifference,
+        data.soundBarYCoords[2]
+      );
     }
   }
 
   muteVolume() {
+    var data = {
+      soundBarYCoords: [147, 297, 447],
+      soundYCoords: [150, 300, 450],
+      volume: 0,
+    };
     const button = this.this;
     game.playSingleSound(button.sound);
-    if (this.y == 150) {
-      button.setVolume(button.SoundEffectsFilledSoundBars, 0, 147);
-    } else if (this.y == 300) {
-      button.setVolume(button.GameMusicFilledSoundBars, 0, 297);
-    } else if (this.y == 450) {
-      button.setVolume(button.MenuMusicFilledSoundBars, 0, 447);
+    if (this.y == data.soundYCoords[0]) {
+      button.setVolume(button.SoundEffectsFilledSoundBars, data.volume, data.soundBarYCoords[0]);
+    } else if (this.y == data.soundYCoords[1]) {
+      button.setVolume(button.GameMusicFilledSoundBars, data.volume, data.soundBarYCoords[1]);
+    } else if (this.y == data.soundYCoords[2]) {
+      button.setVolume(button.MenuMusicFilledSoundBars, data.volume, data.soundBarYCoords[2]);
     }
   }
 
   addSprites(game) {
-    this.addSprite(0, 0, "menuBackground");
-    this.addSprite(175, -100, "optionsTitle").scale.setTo(0.75, 0.75);
-    this.addSprite(50, 150, "optionsSoundEffects").scale.setTo(0.6, 0.6);
-    this.addSprite(65, 300, "optionsGameMusic").scale.setTo(0.6, 0.6);
-    this.addSprite(65, 450, "optionsMenuMusic").scale.setTo(0.6, 0.6);
+    var data = {
+      backgroundCoords: [0, 0],
+      spritesX: [50, 65, 65],
+      spritesScale: [0.6, 0.6],
+      optionsTitle: [175, -100, 0.75, 0.75],
+      soundYCoords: [150, 300, 450],
+    };
+    this.addSprite(data.backgroundCoords[0], data.backgroundCoords[1], "menuBackground");
+    this.addSprite(data.optionsTitle[0], data.optionsTitle[1], "optionsTitle").scale.setTo(
+      data.optionsTitle[2],
+      data.optionsTitle[3]
+    );
+    this.addSprite(data.spritesX[0], data.soundYCoords[0], "optionsSoundEffects").scale.setTo(
+      data.spritesScale[0],
+      data.spritesScale[1]
+    );
+    this.addSprite(data.spritesX[1], data.soundYCoords[1], "optionsGameMusic").scale.setTo(
+      data.spritesScale[0],
+      data.spritesScale[1]
+    );
+    this.addSprite(data.spritesX[2], data.soundYCoords[2], "optionsMenuMusic").scale.setTo(
+      data.spritesScale[0],
+      data.spritesScale[1]
+    );
   }
 
   addButtons(game) {
-    this.addButton(210, 150, "SoundLess", this.decreaseVolume).scale.setTo(1.5, 1.5);
-    this.addButton(210, 300, "SoundLess", this.decreaseVolume).scale.setTo(1.5, 1.5);
-    this.addButton(210, 450, "SoundLess", this.decreaseVolume).scale.setTo(1.5, 1.5);
+    var data = {
+      numLines: 3,
+      minVolume: 0,
+      maxVolume: 10,
+      numButtonsPerLine: 3,
+      // [xStatic, xDynamic]
+      soundBarXCoords: [285, 30],
+      // [y1, y2, y3]
+      soundBarYCoords: [147, 297, 447],
+      soundYCoords: [150, 300, 450],
+      soundXCoords: [210, 605, 680],
+      soundButtonsScale: [1.5, 1.5],
+      soundButtonName: ["SoundLess", "SoundPlus", "SoundOff"],
+      soundButtonFunctions: [this.decreaseVolume, this.increaseVolume, this.muteVolume],
 
-    this.addButton(605, 150, "SoundPlus", this.increaseVolume).scale.setTo(1.5, 1.5);
-    this.addButton(605, 300, "SoundPlus", this.increaseVolume).scale.setTo(1.5, 1.5);
-    this.addButton(605, 450, "SoundPlus", this.increaseVolume).scale.setTo(1.5, 1.5);
+      backButtonData: [50, 30, 2.8, 2.8],
+      soundBarEmptyScales: [2.5, 2.2],
+      soundBarFilledScales: [2.6, 2.2],
+    };
 
-    this.addButton(680, 150, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
-    this.addButton(680, 300, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
-    this.addButton(680, 450, "SoundOff", this.muteVolume).scale.setTo(1.5, 1.5);
+    for (let i = 0; i < data.numLines; i++) {
+      for (let j = 0; j < data.numButtonsPerLine; j++) {
+        this.addButton(
+          data.soundXCoords[i],
+          data.soundYCoords[j],
+          data.soundButtonName[i],
+          data.soundButtonFunctions[i]
+        ).scale.setTo(data.soundButtonsScale[0], data.soundButtonsScale[1]);
+      }
+    }
 
-    //back button nao tem de ser necessariamente de volta para o main menu
-    this.addButton(50, 30, "backBtn", this.exitOptions).scale.setTo(2.8, 2.8);
+    this.addButton(
+      data.backButtonData[0],
+      data.backButtonData[1],
+      "backBtn",
+      this.exitOptions
+    ).scale.setTo(data.backButtonData[2], data.backButtonData[3]);
 
-    for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(285 + 30 * i, 147, "SoundBarEmpty", this.changeVolume);
-      bar.scale.setTo(2.5, 2.2);
+    for (let i = 0; i < data.maxVolume; i++) {
+      var bar = this.addButton(
+        data.soundBarXCoords[0] + data.soundBarXCoords[1] * i,
+        data.soundBarYCoords[0],
+        "SoundBarEmpty",
+        this.changeVolume
+      );
+      bar.scale.setTo(data.soundBarEmptyScales[0], data.soundBarEmptyScales[1]);
       this.SoundEffectsEmptySoundBars.push(bar);
     }
 
-    for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(285 + 30 * i, 147, "SoundBarFilled", this.changeVolume);
-      bar.scale.setTo(2.6, 2.2);
+    for (let i = 0; i < data.maxVolume; i++) {
+      var bar = this.addButton(
+        data.soundBarXCoords[0] + data.soundBarXCoords[1] * i,
+        data.soundBarYCoords[0],
+        "SoundBarFilled",
+        this.changeVolume
+      );
+      bar.scale.setTo(data.soundBarFilledScales[0], data.soundBarFilledScales[1]);
 
       this.SoundEffectsFilledSoundBars.push(bar);
     }
 
-    for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(285 + 30 * i, 297, "SoundBarEmpty", this.changeVolume);
-      bar.scale.setTo(2.5, 2.2);
+    for (let i = 0; i < data.maxVolume; i++) {
+      var bar = this.addButton(
+        data.soundBarXCoords[0] + data.soundBarXCoords[1] * i,
+        data.soundBarYCoords[1],
+        "SoundBarEmpty",
+        this.changeVolume
+      );
+      bar.scale.setTo(data.soundBarEmptyScales[0], data.soundBarEmptyScales[1]);
       this.GameMusicEmptySoundBars.push(bar);
     }
 
-    for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(285 + 30 * i, 297, "SoundBarFilled", this.changeVolume);
-      bar.scale.setTo(2.6, 2.2);
+    for (let i = 0; i < data.maxVolume; i++) {
+      var bar = this.addButton(
+        data.soundBarXCoords[0] + data.soundBarXCoords[1] * i,
+        data.soundBarYCoords[1],
+        "SoundBarFilled",
+        this.changeVolume
+      );
+      bar.scale.setTo(data.soundBarFilledScales[0], data.soundBarFilledScales[1]);
       this.GameMusicFilledSoundBars.push(bar);
     }
 
-    for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(285 + 30 * i, 447, "SoundBarEmpty", this.changeVolume);
-      bar.scale.setTo(2.5, 2.2);
+    for (let i = 0; i < data.maxVolume; i++) {
+      var bar = this.addButton(
+        data.soundBarXCoords[0] + data.soundBarXCoords[1] * i,
+        data.soundBarYCoords[2],
+        "SoundBarEmpty",
+        this.changeVolume
+      );
+      bar.scale.setTo(data.soundBarEmptyScales[0], data.soundBarEmptyScales[1]);
       this.MenuMusicEmptySoundBars.push(bar);
     }
 
-    for (let i = 0; i < 10; i++) {
-      var bar = this.addButton(285 + 30 * i, 447, "SoundBarFilled", this.changeVolume);
-      bar.scale.setTo(2.6, 2.2);
+    for (let i = 0; i < data.maxVolume; i++) {
+      var bar = this.addButton(
+        data.soundBarXCoords[0] + data.soundBarXCoords[1] * i,
+        data.soundBarYCoords[2],
+        "SoundBarFilled",
+        this.changeVolume
+      );
+      bar.scale.setTo(data.soundBarFilledScales[0], data.soundBarFilledScales[1]);
       this.MenuMusicFilledSoundBars.push(bar);
     }
 
-    this.setVolume(this.SoundEffectsFilledSoundBars, this.soundEffectsVolume, 147);
-    this.setVolume(this.GameMusicFilledSoundBars, this.gameMusicVolume, 297);
-    this.setVolume(this.MenuMusicFilledSoundBars, this.menuMusicVolume, 447);
+    this.setVolume(
+      this.SoundEffectsFilledSoundBars,
+      this.soundEffectsVolume,
+      data.soundBarYCoords[0]
+    );
+    this.setVolume(this.GameMusicFilledSoundBars, this.gameMusicVolume, data.soundBarYCoords[1]);
+    this.setVolume(this.MenuMusicFilledSoundBars, this.menuMusicVolume, data.soundBarYCoords[2]);
   }
 }
 
@@ -2675,26 +2848,44 @@ class MainMenu extends Menu {
   }
 
   addSprites(game) {
-    let anim = null;
-    this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
-    this.addSprite(100, -75, "titleInline").scale.setTo(0.6, 0.6);
-    anim = this.addSprite(570, 340, "lilPeanut");
-    anim.scale.setTo(6, 6);
-    anim.animations.add("restLeft", [10, 11], 5, true);
-    anim.play("restLeft");
-    anim = this.addSprite(-40, 185, "bigMack");
-    anim.scale.setTo(6, 6);
-    anim.animations.add("restRight", [10, 11], 4, true);
-    anim.play("restRight");
+    var spriteData = [
+      [0, 0, "menuBackground", 0.63, 0.85],
+      [100, -75, "titleInline", 0.6, 0.6],
+    ];
+
+    var spriteAnimData = [
+      [570, 340, "lilPeanut", "restLeft", [10, 11], 5, true, 6, 6],
+      [-40, 185, "bigMack", "restRight", [10, 11], 4, true, 6, 6],
+    ];
+
+    spriteData.map((key) => {
+      this.addSprite(key[0], key[1], key[2]).scale.setTo(key[3], key[4]);
+    });
+
+    spriteAnimData.map((key) => {
+      let anim = null;
+      anim = this.addSprite(key[0], key[1], key[2]);
+      anim.scale.setTo(key[7], key[8]);
+      anim.animations.add(key[3], [key[4][0], key[4][1]], key[5], key[6]);
+      anim.play(key[3]);
+    });
   }
 
   addButtons(game) {
-    this.addButton(330, 200, "startBtn", this.toLevelSelector).scale.setTo(2.8, 2.8);
-    this.addButton(330, 270, "optionsBtn", this.toOptions).scale.setTo(2.8, 2.8);
-    this.addButton(330, 340, "helpBtn", this.toHelp).scale.setTo(2.8, 2.8);
-    this.addButton(330, 410, "rankingBtn", this.toRanking).scale.setTo(2.8, 2.8);
+    var buttonScales = [2.8, 2.8];
+    var buttonData = [
+      [330, 200, "startBtn", this.toLevelSelector],
+      [330, 270, "optionsBtn", this.toOptions],
+      [330, 340, "helpBtn", this.toHelp],
+      [330, 410, "rankingBtn", this.toRanking],
+    ];
+
+    buttonData.map((key) => {
+      this.addButton(key[0], key[1], key[2], key[3]).scale.setTo(buttonScales[0], buttonScales[1]);
+    });
   }
 }
+
 class Ranking extends Menu {
   constructor() {
     super();
@@ -2702,42 +2893,58 @@ class Ranking extends Menu {
   }
 
   addText(game) {
-    var t1 = game.phaser.add.bitmapText(50, 150, "myfont", "1-                      PTS", 32);
-    this.rankings.push(t1);
-    var t2 = game.phaser.add.bitmapText(50, 220, "myfont", "2-                      PTS", 32);
-    this.rankings.push(t2);
-    var t3 = game.phaser.add.bitmapText(50, 290, "myfont", "3-                      PTS", 32);
-    this.rankings.push(t3);
-    var t4 = game.phaser.add.bitmapText(50, 360, "myfont", "4-                      PTS", 32);
-    this.rankings.push(t4);
-    var t5 = game.phaser.add.bitmapText(50, 430, "myfont", "5-                      PTS", 32);
-    this.rankings.push(t5);
+    var textData = [
+      [50, 150, "myfont", "1-                      PTS", 32],
+      [50, 220, "myfont", "2-                      PTS", 32],
+      [50, 290, "myfont", "3-                      PTS", 32],
+      [50, 360, "myfont", "4-                      PTS", 32],
+      [50, 430, "myfont", "5-                      PTS", 32],
+    ];
+
+    textData.map((key) => {
+      var t = game.phaser.add.bitmapText(key[0], key[1], key[2], key[3]);
+      this.rankings.push(t);
+    });
     this.loadRankings();
   }
 
   addSprites(game) {
-    this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
-    this.addSprite(45, -255, "rankingInline").scale.setTo(0.6, 0.6);
+    var spriteData = [
+      [0, 0, "menuBackground", 0.63, 0.85],
+      [45, -255, "rankingInline", 0.6, 0.6],
+    ];
+
+    spriteData.map((key) => {
+      this.addSprite(key[0], key[1], key[2]).scale.setTo(key[3], key[4]);
+    });
   }
 
   addButtons(game) {
-    this.addButton(50, 30, "backBtn", this.toMainMenu).scale.setTo(2.8, 2.8);
+    var buttonData = [50, 30, "backBtn", this.toMainMenu, 2.8, 2.8];
+    this.addButton(buttonData[0], buttonData[1], buttonData[2], buttonData[3]).scale.setTo(
+      buttonData[4],
+      buttonData[5]
+    );
   }
 
   loadRankings() {
+    var offsetNameLength = 20;
+    var sliceIni = 0;
+    var sliceFim = 3;
+    var limit = 5;
     var rankings = this.rankings;
     db.collection("players")
       .orderBy("totalScore", "desc")
-      .limit(5)
+      .limit(limit)
       .get()
       .then(function (querySnapshot) {
         let i = 0;
         querySnapshot.forEach(function (doc) {
           let score = String(doc.data().totalScore);
           rankings[i].setText(
-            rankings[i]._text.slice(0, 3) +
+            rankings[i]._text.slice(sliceIni, sliceFim) +
               doc.data().name +
-              " ".repeat(20 - doc.data().name.length - score.length) +
+              " ".repeat(offsetNameLength - doc.data().name.length - score.length) +
               score +
               " PTS"
           );
@@ -2766,38 +2973,54 @@ class Help extends Menu {
   }
 
   addTexts(game, t1, t2, t3, t4, t5, t6) {
-    this.addBitmapText(50, 200, t1, 32);
-    this.addBitmapText(185, 300, t2, 12);
-    this.addBitmapText(250, 300, t3, 12);
-    this.addBitmapText(115, 460, t4, 12);
-    this.addBitmapText(260, 460, t5, 12);
-    this.addBitmapText(180, 460, t6, 12);
-    this.addBitmapText(560, 300, t2, 12);
-    this.addBitmapText(430, 300, t3, 12);
-    this.addBitmapText(495, 460, t4, 12);
-    this.addBitmapText(635, 460, t5, 12);
-    this.addBitmapText(555, 460, t6, 12);
+    var textData = [
+      [50, 200, t1, 32],
+      [185, 300, t2, 12],
+      [250, 300, t3, 12],
+      [115, 460, t4, 12],
+      [260, 460, t5, 12],
+      [180, 460, t6, 12],
+      [560, 300, t2, 12],
+      [430, 300, t3, 12],
+      [495, 460, t4, 12],
+      [635, 460, t5, 12],
+      [555, 460, t6, 12],
+    ];
+
+    textData.map((key) => {
+      this.addBitmapText(key[0], key[1], key[2], key[3]);
+    });
   }
 
   addSprites(game) {
-    this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
-    this.addSprite(-180, -50, "helpInline").scale.setTo(0.6, 0.6);
-    this.addSprite(145, 350, "sKey").scale.setTo(2.5, 2.5);
-    this.addSprite(145, 280, "wKey").scale.setTo(2.5, 2.5);
-    this.addSprite(220, 350, "dKey").scale.setTo(2.5, 2.5);
-    this.addSprite(220, 280, "eKey").scale.setTo(2.5, 2.5);
-    this.addSprite(70, 350, "aKey").scale.setTo(2.5, 2.5);
-    this.addSprite(520, 350, "downKey").scale.setTo(2.5, 2.5);
-    this.addSprite(450, 350, "leftKey").scale.setTo(2.5, 2.5);
-    this.addSprite(590, 350, "rightKey").scale.setTo(2.5, 2.5);
-    this.addSprite(520, 280, "upKey").scale.setTo(2.5, 2.5);
-    this.addSprite(390, 260, "rightShiftKey").scale.setTo(2.5, 2.5);
-    this.addSprite(720, 400, "lilPeanutImg").scale.setTo(3, 3);
-    this.addSprite(20, 350, "bigMackImg").scale.setTo(3, 3);
+    var spriteData = [
+      [0, 0, "menuBackground", 0.63, 0.85],
+      [-180, -50, "helpInline", 0.6, 0.6],
+      [145, 350, "sKey", 2.5, 2.5],
+      [145, 280, "wKey", 2.5, 2.5],
+      [220, 350, "dKey", 2.5, 2.5],
+      [220, 280, "eKey", 2.5, 2.5],
+      [70, 350, "aKey", 2.5, 2.5],
+      [520, 350, "downKey", 2.5, 2.5],
+      [450, 350, "leftKey", 2.5, 2.5],
+      [590, 350, "rightKey", 2.5, 2.5],
+      [520, 280, "upKey", 2.5, 2.5],
+      [390, 260, "rightShiftKey", 2.5, 2.5],
+      [720, 400, "lilPeanutImg", 3, 3],
+      [20, 350, "bigMackImg", 3, 3],
+    ];
+
+    spriteData.map((key) => {
+      this.addSprite(key[0], key[1], key[2]).scale.setTo(key[3], key[4]);
+    });
   }
 
   addButtons(game) {
-    this.addButton(50, 30, "backBtn", this.toExitHelp).scale.setTo(2.8, 2.8);
+    var buttonData = [50, 30, "backBtn", this.toExitHelp, 2.8, 2.8];
+    this.addButton(buttonData[0], buttonData[1], buttonData[2], buttonData[3]).scale.setTo(
+      buttonData[4],
+      buttonData[5]
+    );
   }
 }
 
@@ -2941,18 +3164,38 @@ class GameOverMenu extends Menu {
   }
 
   addButtons(game) {
-    this.addButton(361, 340, "quitBtn", () => {
-      game.phaser.paused = false;
-      this.toMainMenu();
-    }).scale.setTo(2.5, 2.5);
-    this.addButton(361, 270, "restartBtn", () => {
-      game.phaser.paused = false;
-      game.phaser.state.start(game.phaser.state.current);
-    }).scale.setTo(2.5, 2.5);
+    var scalesButtons = [2.5, 2.5];
+    var buttons = [
+      [
+        361,
+        340,
+        "quitBtn",
+        () => {
+          game.phaser.paused = false;
+          this.toMainMenu();
+        },
+      ],
+      [
+        361,
+        270,
+        "restartBtn",
+        () => {
+          game.phaser.paused = false;
+          game.phaser.state.start(game.phaser.state.current);
+        },
+      ],
+    ];
+    buttons.map((button) => {
+      this.addButton(button[0], button[1], button[2], button[3]).scale.setTo(
+        scalesButtons[0],
+        scalesButtons[1]
+      );
+    });
   }
 
   addSprites(game) {
-    this.addSprite(240, 180, "GameOverMenu").scale.setTo(0.5, 0.5);
+    var sprites = [240, 180, "GameOverMenu", 0.5, 0.5];
+    this.addSprite(sprites[0], sprites[1], sprites[2]).scale.setTo(sprites[3], sprites[4]);
   }
 }
 
@@ -2963,12 +3206,23 @@ class NameInput extends Menu {
   }
 
   addSprites(game) {
-    this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
-    this.addSprite(125, 280, "inputBox");
+    var sprites = [
+      [0, 0, "menuBackground", 0.63, 0.85],
+      [125, 280, "inputBox"],
+    ];
+    this.addSprite(sprites[0][0], sprites[0][1], sprites[0][2]).scale.setTo(
+      sprites[0][3],
+      sprites[0][4]
+    );
+    this.addSprite(sprites[1][0], sprites[1][1], sprites[1][2]);
   }
 
   addButtons(game) {
-    this.addButton(300, 450, "submitBtn", this.getName).scale.setTo(2.8, 2.8);
+    var buttons = [300, 450, "submitBtn", this.getName, 2.8, 2.8];
+    this.addButton(buttons[0], buttons[1], buttons[2], buttons[3]).scale.setTo(
+      buttons[4],
+      buttons[5]
+    );
   }
 
   inputFocus(sprite) {
@@ -2976,16 +3230,24 @@ class NameInput extends Menu {
   }
 
   addInput(game) {
+    const key = 13;
     const inputFieldValue = document.getElementById("name-input");
     inputFieldValue.addEventListener("keyup", (event) => {
-      if (event.keyCode === 13) {
+      if (event.keyCode === key) {
         this.getName();
       }
     });
   }
 
   addText(game, t) {
-    var text = game.phaser.add.bitmapText(90, 150, "myfont", t, 32);
+    var bmptext = [90, 150, "myfont", t, 32];
+    var text = game.phaser.add.bitmapText(
+      bmptext[0],
+      bmptext[1],
+      bmptext[2],
+      bmptext[3],
+      bmptext[4]
+    );
     text.align = "center";
   }
 
@@ -3035,42 +3297,71 @@ class PauseMenu extends Menu {
   }
 
   addButtons() {
-    this.addButton(420, 342, "quitBtn", () => {
-      game.phaser.paused = false;
-      this.toMainMenu();
-    }).scale.setTo(2.5, 2.5);
-    this.addButton(240, 260, "helpBtn", () => {
-      this.hideContent(game);
-      var pauseHelpMenu = new Help();
-      pauseHelpMenu.addSprites(game);
-      pauseHelpMenu.addButtons(game);
-      pauseHelpMenu.addTexts(
-        game,
-        "  BIG MACK    LIL PEANUT",
-        "JUMP",
-        "INTERACT",
-        "LEFT",
-        "RIGHT",
-        "CROUCH"
+    var buttons = [
+      [
+        420,
+        342,
+        "quitBtn",
+        () => {
+          game.phaser.paused = false;
+          this.toMainMenu();
+        },
+      ],
+      [
+        240,
+        260,
+        "helpBtn",
+        () => {
+          this.hideContent(game);
+          var pauseHelpMenu = new Help();
+          pauseHelpMenu.addSprites(game);
+          pauseHelpMenu.addButtons(game);
+          pauseHelpMenu.addTexts(
+            game,
+            "  BIG MACK    LIL PEANUT",
+            "JUMP",
+            "INTERACT",
+            "LEFT",
+            "RIGHT",
+            "CROUCH"
+          );
+        },
+      ],
+      [
+        420,
+        260,
+        "optionsBtn",
+        () => {
+          this.hideContent();
+          var pauseOptionsMenu = new Options();
+          pauseOptionsMenu.addSprites(game);
+          pauseOptionsMenu.addButtons(game);
+        },
+      ],
+      [
+        240,
+        340,
+        "backBtn",
+        () => {
+          this.hideContent(game);
+          game.phaser.paused = false;
+          var date = new Date();
+          game.currentLevel.timer.startTime = date.getTime();
+        },
+      ],
+    ];
+    var scalesButtons = [2.5, 2.5];
+    buttons.map((button) => {
+      this.addButton(button[0], button[1], button[2], button[3]).scale.setTo(
+        scalesButtons[0],
+        scalesButtons[1]
       );
-    }).scale.setTo(2.5, 2.5);
-    this.addButton(420, 260, "optionsBtn", () => {
-      this.hideContent();
-      var pauseOptionsMenu = new Options();
-      pauseOptionsMenu.addSprites(game);
-      pauseOptionsMenu.addButtons(game);
-    }).scale.setTo(2.5, 2.5);
-    this.addButton(240, 340, "backBtn", () => {
-      this.hideContent(game);
-      game.phaser.paused = false;
-      //AQUI
-      var date = new Date();
-      game.currentLevel.timer.startTime = date.getTime();
-    }).scale.setTo(2.5, 2.5);
+    });
   }
 
-  addSprites(game) {
-    this.addSprite(210, 180, "pauseMenu").scale.setTo(0.5, 0.5);
+  addSprites() {
+    var sprites = [210, 180, "pauseMenu", 0.5, 0.5];
+    this.addSprite(sprites[0], sprites[1], sprites[2]).scale.setTo(sprites[3], sprites[4]);
   }
 }
 
@@ -3086,16 +3377,54 @@ class LevelCompletedMenu extends Menu {
   }
 
   addTexts(score, time, highestScore) {
-    this.addBitmapText(385, 252, String(game.currentLevel.nBigMackCollected) + " / 3", 20);
-    this.addBitmapText(385, 292, String(game.currentLevel.nLilPeanutCollected) + " / 3", 20);
-    this.addBitmapText(305, 332, "TIME- " + time.minutes + ":" + time.seconds + " MIN", 20);
+    var data = {
+      bigCollectables: [385, 252, 20],
+      lilCollectables: [385, 292, 20],
+      time: [305, 332, 20],
+      highscore: [210, 372, 20],
+      scoreBoundLimit: 1000,
+      score: [305, 372, 20],
+    };
+    this.addBitmapText(
+      data.bigCollectables[0],
+      data.bigCollectables[1],
+      String(game.currentLevel.nBigMackCollected) + " / 3",
+      data.bigCollectables[2]
+    );
+    this.addBitmapText(
+      data.lilCollectables[0],
+      data.lilCollectables[1],
+      String(game.currentLevel.nLilPeanutCollected) + " / 3",
+      data.lilCollectables[2]
+    );
+    this.addBitmapText(
+      data.time[0],
+      data.time[1],
+      "TIME- " + time.minutes + ":" + time.seconds + " MIN",
+      data.time[2]
+    );
     if (highestScore) {
-      this.addBitmapText(210, 372, "NEW HIGH SCORE- " + String(score) + " pts.", 20);
+      this.addBitmapText(
+        data.highscore[0],
+        data.highscore[1],
+        "NEW HIGH SCORE- " + String(score) + " pts.",
+        data.highscore[2]
+      );
     } else {
-      if (score >= 1000) {
-        this.addBitmapText(305, 372, "SCORE-" + String(score) + "pts.", 20);
+      if (score >= data.scoreBoundLimit) {
+        this.addBitmapText(
+          data.score[0],
+          data.score[1],
+          "SCORE-" + String(score) + "pts.",
+          data.score[2]
+        );
       } else {
-        this.addBitmapText(305, 372, "SCORE- " + String(score) + "pts.", 20);
+        this.addBitmapText(
+          data.score[0],
+          data.score[1],
+          "SCORE- " + String(score) + "pts.",
+          data.score[2]
+        );
       }
     }
   }
@@ -3104,10 +3433,13 @@ class LevelCompletedMenu extends Menu {
     const lastLvl = 4;
     let posData = null;
     const scale = 2.5;
+    const menuButton = [230, 415];
+    const nextButton = [410, 415];
+    const levelIncrement = 1;
     posData = [
       [
-        230,
-        415,
+        menuButton[0],
+        menuButton[1],
         "menuBtn",
         () => {
           game.phaser.paused = false;
@@ -3115,13 +3447,13 @@ class LevelCompletedMenu extends Menu {
         },
       ],
       [
-        410,
-        415,
+        nextButton[0],
+        nextButton[1],
 
         "nextLvlBtn",
         () => {
           this.hideContent(game);
-          this.toLevel(game.currentLevel.levelID + 1);
+          this.toLevel(game.currentLevel.levelID + levelIncrement);
         },
       ],
     ];
@@ -3132,9 +3464,23 @@ class LevelCompletedMenu extends Menu {
   }
 
   addSprites(game) {
-    this.addSprite(160, 170, "LevelCompletedMenu").scale.setTo(0.6, 0.6);
-    this.addSprite(305, 250, "collectableBigMack").scale.setTo(4, 4);
-    this.addSprite(305, 290, "collectableLilPeanut").scale.setTo(4, 4);
+    var data = {
+      sprite1: [160, 170, 0.6, 0.6],
+      sprite2: [305, 250, 4, 4],
+      sprite3: [305, 290, 4, 4],
+    };
+    this.addSprite(data.sprite1[0], data.sprite1[1], "LevelCompletedMenu").scale.setTo(
+      data.sprite1[2],
+      data.sprite1[3]
+    );
+    this.addSprite(data.sprite2[0], data.sprite2[1], "collectableBigMack").scale.setTo(
+      data.sprite2[2],
+      data.sprite2[3]
+    );
+    this.addSprite(data.sprite3[0], data.sprite3[1], "collectableLilPeanut").scale.setTo(
+      data.sprite3[2],
+      data.sprite3[3]
+    );
   }
 }
 
@@ -3160,7 +3506,6 @@ class Cutscene {
     let yLil = 0;
     const menuBoardsData = { quadro_coletaveis: [30, -2], quadro_menu_restart: [580, -2] };
     const levelStr = "level" + game.currentLevel.levelID.toString();
-    console.log(isRightSide);
 
     if (isRightSide) {
       offSetXBig = -10;
@@ -3239,8 +3584,11 @@ class Cutscene {
   }
 
   startCutscene(level) {
+    const initLilPeanutFrame = 8;
+    const initLilPeanutFrame2 = 9;
     const isRightSide =
-      game.currentLevel.lilPeanut.obj.frame === 8 || game.currentLevel.lilPeanut.obj.frame === 9;
+      game.currentLevel.lilPeanut.obj.frame === initLilPeanutFrame ||
+      game.currentLevel.lilPeanut.obj.frame === initLilPeanutFrame2;
     let offSetXLil = 0;
     let offSetYLil = 0;
     let xLil = 0;
@@ -3282,14 +3630,35 @@ class Load extends Menu {
   }
 
   addSprites() {
-    this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
-    this.addSprite(180, 100, "titleNotInline").scale.setTo(0.6, 0.6);
-    var spacebarText = this.addSprite(170, 480, "pressSpacebar");
-    spacebarText.scale.setTo(0.6, 0.6);
-    spacebarText.alpha = 0;
+    var spriteData = [
+      [0, 0, "menuBackground", 0.63, 0.85],
+      [180, 100, "titleNotInline", 0.6, 0.6],
+    ];
+    var spacebarData = [170, 480, "pressSpacebar", 0.6, 0.6];
+    var spacebarAlphaIni = 0;
+    var spacebarAlphaFim = 1;
+    var spacebarSpeed = 1000;
+    var defaultValueIni = 0;
+    var defaultValueFalse = 1000;
+
+    spriteData.map((key) => {
+      this.addSprite(key[0], key[1], key[2]).scale.setTo(key[3], key[4]);
+    });
+
+    var spacebarText = this.addSprite(spacebarData[0], spacebarData[1], spacebarData[2]);
+    spacebarText.scale.setTo(spacebarData[3], spacebarData[4]);
+    spacebarText.alpha = spacebarAlphaIni;
     game.phaser.add
       .tween(spacebarText)
-      .to({ alpha: 1 }, 1000, Phaser.Easing.Linear.None, true, 0, 1000, true);
+      .to(
+        { alpha: spacebarAlphaFim },
+        spacebarSpeed,
+        Phaser.Easing.Linear.None,
+        true,
+        defaultValueIni,
+        defaultValueFalse,
+        true
+      );
   }
 }
 

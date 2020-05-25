@@ -94,7 +94,6 @@ var level1 = {
       lilPeanutCoords.y,
       side
     );
-    //game.currentLevel.initializeCharacters(game, 350, 50, 350, 75);
     game.pauseMenu.addSprites();
     game.pauseMenu.addButtons();
     game.pauseMenu.hideContent();
