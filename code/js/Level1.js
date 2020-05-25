@@ -32,7 +32,7 @@ var level1 = {
       plataformas: [],
       serras: [
         //[x, y, maxX, maxY, move_speed, vertical]
-        [160, 505, 280, 505, 400, false],
+        [160, 520, 280, 520, 400, false],
       ],
       botoes: [
         //[x, y, numero_item, tipo_item]
@@ -94,7 +94,7 @@ var level1 = {
       lilPeanutCoords.y,
       side
     );
-    // game.currentLevel.initializeCharacters(game, 350, 50, 350, 75);
+    //game.currentLevel.initializeCharacters(game, 350, 50, 350, 75);
     game.pauseMenu.addSprites();
     game.pauseMenu.addButtons();
     game.pauseMenu.hideContent();
