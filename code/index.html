@@ -37,6 +37,7 @@
     <script type="text/javascript" src="gameEngine.js"></script>
     <script type="text/javascript" src="NameInput.js"></script>
     <script type="text/javascript" src="Level4.js"></script>
+    <script type="text/javascript" src="EndOfGame.js"></script>
   </head>
   <body>
     <script type="text/javascript">
@@ -54,6 +55,7 @@
         game.phaser.state.add("Options", optionsState);
         game.phaser.state.add("Ranking", rankingState);
         game.phaser.state.add("Help", helpState);
+        game.phaser.state.add("EndOfGame", endOfGameState);
         game.phaser.state.start("Boot");
       };
     </script>

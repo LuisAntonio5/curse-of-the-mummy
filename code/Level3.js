@@ -99,8 +99,11 @@ var level3 = {
 
     const bigPeanutCoords = { x: 660, y: 450 };
     const lilPeanutCoords = { x: 620, y: 500 };
+    const coordsHelpers = [[140, 470]];
+    const nCutScenes = 3;
+    const nHelpers = 1;
     const side = "left";
-    game.currentLevel = new Level(0, 0, 0, 3);
+    game.currentLevel = new Level(nCutScenes, nHelpers, coordsHelpers, 3);
     game.currentLevel.drawMap(game, levelData);
     game.currentLevel.initializeCharacters(
       game,

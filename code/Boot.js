@@ -69,6 +69,9 @@ var bootState = {
       ["levelsInline", "assets/levels.png"],
       ["pyramidLevelSelector", "assets/pyramidLevelSelector.png"],
       ["lvl1", "assets/lvl1.png"],
+      ["lvl2", "assets/lvl2.png"],
+      ["lvl3", "assets/lvl3.png"],
+      ["lvl4", "assets/lvl4.png"],
       //nameInput
       ["inputBox", "assets/text_sprites/nameinput.png"],
       ["nothing", "assets/nothing.png"],
@@ -79,6 +82,8 @@ var bootState = {
       //PauseMenu
       ["pauseMenu", "assets/PauseMenu.png"],
       ["quitBtn", "assets/BotaoSampleQuit.png"],
+      ["nextLvlBtn", "assets/nextLvlBtn.png"],
+      ["menuBtn", "assets/menuBtn.png"],
       //CUTSCENES
       ["cut-level1-1", "assets/Cutscenes/Level1/1.png"],
       ["cut-level1-2", "assets/Cutscenes/Level1/2.png"],
@@ -110,6 +115,7 @@ var bootState = {
       ["slidingDoor", "assets/slidingdoor.png"],
       //LEVEL2
       ["spikes", "assets/spikes.png"],
+      ["slidingDoorHorizontal", "assets/slidingdoorHorizontal.png"],
       //LevelCompletedMenu
       ["LevelCompletedMenu", "assets/LevelCompletedMenu.png"],
       //load
@@ -125,6 +131,21 @@ var bootState = {
     game.loadSpritesheet([["lever", "assets/lever.png"]], 32);
     game.loadSpritesheet([["bigMack", "assets/bigMackSprite.png"]], 64);
     game.loadFonts();
+    game.loadAudios([
+      ["menuMusic", "assets/soundEffects/menuMusic.mp3"],
+      ["gameMusic", "assets/soundEffects/gameMusic1.mp3"],
+      ["boxBreakSoundEffect", "assets/soundEffects/boxBreakSoundEffect.mp3"],
+      ["boxMoveSoundEffect", "assets/soundEffects/boxMoveSoundEffect.mp3"],
+      ["buttonSoundEffect", "assets/soundEffects/buttonSoundEffect.mp3"],
+      ["collectableSoundEffect", "assets/soundEffects/collectableSoundEffect.mp3"],
+      ["elevatorSoundEffect", "assets/soundEffects/elevatorSoundEffect.mp3"],
+      ["lavaSoundEffect", "assets/soundEffects/lavaSoundEffect.mp3"],
+      ["leverSoundEffect", "assets/soundEffects/leverSoundEffect.mp3"],
+      ["sawSoundEffect", "assets/soundEffects/sawSoundEffect.mp3"],
+      ["slidingDoorSoundEffect", "assets/soundEffects/slidingDoorSoundEffect.mp3"],
+      ["spikesSoundEffect", "assets/soundEffects/spikesSoundEffect.mp3"],
+      ["levelCompleteSoundEffect", "assets/soundEffects/levelCompleteSoundEffect.mp3"],
+    ]);
     game.phaser.load.script(
       "gray",
       "https://cdn.rawgit.com/photonstorm/phaser-ce/master/filters/Gray.js"
@@ -134,6 +155,6 @@ var bootState = {
   create: () => {
     game.phaser.physics.startSystem(Phaser.Physics.ARCADE);
     //game.dataBaseGet("bernardo");
-    game.phaser.state.start("Level4");
+    game.phaser.state.start("EndOfGame");
   },
 };

@@ -21,8 +21,6 @@ var level2 = {
         [425, 399, 375, false],
         [425, 384, 375, false],
         [0, 399, 375, false],
-        [260, 55, 100, true],
-        [245, 55, 100, true],
         [0, 54, 800, false],
         [16, 0, 600, true],
         [782, 0, 600, true],
@@ -46,7 +44,14 @@ var level2 = {
           visible_chains: [0, 0, 630, 60, 19, true],
           invisible_chains: [0, 0, 630, 60, 19, false],
           //[x, y, maxX, maxY, sizeX, sizeY, inverted]
-          porta: [10, 198, 110, 198, 10, 0.31, 50, true],
+          porta: [20, 198, 110, 198, 2.2, 1.4, 50, true],
+        },
+        {
+          //[start i, end i, x, y_static, y_dynamic, visible]
+          visible_chains: [0, 0, 627, 217, 19, true],
+          invisible_chains: [0, 0, 269, 215, 19, false],
+          //[x, y, maxX, maxY, sizeX, sizeY, inverted]
+          porta: [245, 50, 245, 75, 2, 1.6, 50, true],
         },
       ],
 
@@ -68,7 +73,7 @@ var level2 = {
       coletaveis_big: [
         [390, 300],
         [720, 510],
-        [560, 300],
+        [390, 480],
       ],
       lava: [
         [300, 160],

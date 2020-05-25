@@ -1,4 +1,4 @@
-const debug = false;
+const debug = true;
 //"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" --allow-file-access-from-files
 class GameEngine {
   constructor() {
@@ -10,18 +10,33 @@ class GameEngine {
     this.phaser = new Phaser.Game(canvasWidth, canvasHeight, Phaser.AUTO, "");
     this.lilPeanut = null;
     this.bigMack = null;
-    this.loaded = null;
+    this.menuMusic = null;
+    this.gameMusic = null;
+    this.soundEffects = [];
   }
 
-  dataBaseSet(data) {
+  dataBaseSet() {
+    console.log("aa");
+    console.log(game.player);
     // This function sets the info given by data to the object in the database
     //corresponding to the game.player instance. It assumes game.player exists
-    game.player.docRef.set(data, { merge: true }).catch((err) => {
+    const dataToSend = {
+      name: game.player.name,
+      totalScore: game.player.totalScore,
+      level1: game.player.level1,
+      level2: game.player.level2,
+      level3: game.player.level3,
+      level4: game.player.level4,
+      gameMusicVolume: game.player.gameMusicVolume,
+      menuMusicVolume: game.player.menuMusicVolume,
+      soundEffectsVolume: game.player.soundEffectsVolume,
+    };
+    game.player.docRef.set(dataToSend).catch((err) => {
       console.log("error", err);
     });
   }
 
-  dataBaseGet(name) {
+  dataBaseGet(name, doneFunction) {
     // Given a name, this function sets game.player data do the data
     //corresponding to the name in the databse or default values should
     //that name not yet exist, creating a new object
@@ -44,6 +59,7 @@ class GameEngine {
             doc.data().totalScore,
             docRef
           );
+          doneFunction();
         } else {
           //Player does not exist
           var levelDefault = {
@@ -53,43 +69,38 @@ class GameEngine {
             time: 0,
             cutscenesCheck: false,
           };
-          docRef
-            .set({
-              name: name,
-              score: 0,
-              soundEffectsVolume: 5,
-              gameMusicVolume: 5,
-              menuMusicVolume: 5,
-              level1: levelDefault,
-              level2: levelDefault,
-              level3: levelDefault,
-              level4: levelDefault,
-              totalScore: 0,
-            })
-            .then(() => {
-              //DEFAULT
-
-              game.player = new Player(
-                name,
-                5,
-                5,
-                5,
-                levelDefault,
-                levelDefault,
-                levelDefault,
-                levelDefault,
-                0,
-                docRef
-              );
-            })
-            .catch((err) => {
-              console.log("error setting document", err);
-            });
+          game.player = new Player(
+            name,
+            5,
+            5,
+            5,
+            { ...levelDefault },
+            { ...levelDefault },
+            { ...levelDefault },
+            { ...levelDefault },
+            0,
+            docRef
+          );
+          this.dataBaseSet();
+          doneFunction();
         }
       })
       .catch((err) => {
         console.log("Error getting document", err);
       });
+  }
+
+  loadAudios(files) {
+    files.map((file) => {
+      var audio = new Audio(file[1]);
+      if (file[0] == "menuMusic") {
+        game.menuMusic = audio;
+      } else if (file[0] == "gameMusic") {
+        game.gameMusic = audio;
+      } else {
+        game.soundEffects.push([file[0], audio]);
+      }
+    });
   }
 
   loadFonts() {
@@ -225,6 +236,7 @@ class GameEngine {
           if (this.checkIfOnTopPartial(bigMack, box)) {
             return true;
           }
+          this.playSingleSound(key.breakSound);
           box.kill();
           level.map.addSmallBox(key.x, key.y);
           //TODO: TIRAR DO ARRAY
@@ -367,7 +379,6 @@ class GameEngine {
   }
 
   collisionWithBounds(level) {
-    let countN = 0;
     level.map.bigBox.map((key) => {
       this.phaser.physics.arcade.collide(key.data, level.bounds);
     });
@@ -466,9 +477,27 @@ class GameEngine {
 
   levelCompletedMenu(sprite, animation) {
     var levelCompletedMenu = new LevelCompletedMenu();
+    const levelStr = "level" + game.currentLevel.levelID.toString();
+    let score =
+      ((game.currentLevel.nBigMackCollected + game.currentLevel.nLilPeanutCollected) * 1000) /
+        game.currentLevel.timer.finalTime +
+      350;
+    score = Math.round(score);
+    var minutes = String(Math.floor(game.currentLevel.timer.finalTime / 60));
+    var seconds = String(game.currentLevel.timer.finalTime % 60);
+    var timeToShow = { minutes, seconds };
+
     levelCompletedMenu.addSprites();
     levelCompletedMenu.addButtons();
-    levelCompletedMenu.addTexts();
+    if (score > game.player[levelStr].score) {
+      levelCompletedMenu.addTexts(score, timeToShow, 1);
+      game.player.totalScore -= game.player[levelStr].score;
+      game.player[levelStr].score = score;
+      game.player.totalScore += score;
+      game.dataBaseSet();
+    } else {
+      levelCompletedMenu.addTexts(score, timeToShow, 0);
+    }
   }
 
   gameOverMenu(sprite, animation) {
@@ -529,13 +558,10 @@ class GameEngine {
   }
 
   loadUpdate() {
-    if (game.loaded == null) {
-      let keySPACE = game.phaser.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
-      keySPACE.onDown.add(() => {
-        game.loaded = true;
-        game.phaser.state.start("NameInput");
-      }, this);
-    }
+    let keySPACE = game.phaser.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
+    keySPACE.onDown.add(() => {
+      game.phaser.state.start("NameInput");
+    }, this);
   }
 
   levelUpdate(level) {
@@ -567,8 +593,30 @@ class GameEngine {
             level.lilPeanut.obj.body.setSize(11, 26 - difLil, 10, 5 + difLil);
             level.lilPeanut.crouch = true;
           } else {
-            level.lilPeanut.obj.body.setSize(11, 26, 10, 5);
-            level.lilPeanut.crouch = false;
+            const difLil = 5;
+            let flagCrouch = true;
+            const pointsToCheck = [
+              { x: level.lilPeanut.obj.body.x, y: level.lilPeanut.obj.body.y - difLil },
+              {
+                x: level.lilPeanut.obj.body.x + level.lilPeanut.obj.body.width,
+                y: level.lilPeanut.obj.body.y - difLil,
+              },
+              {
+                x: level.lilPeanut.obj.body.x + level.lilPeanut.obj.body.width / 2,
+                y: level.lilPeanut.obj.body.y - difLil,
+              },
+            ];
+            for (let i = 0; i < level.map.slidingDoors.length; i++) {
+              pointsToCheck.map((key) => {
+                if (level.map.slidingDoors[i].data.getBounds().contains(key.x, key.y)) {
+                  flagCrouch = false;
+                }
+              });
+            }
+            if (flagCrouch === true) {
+              level.lilPeanut.obj.body.setSize(11, 26, 10, 5);
+              level.lilPeanut.crouch = false;
+            }
           }
           //  Allow the player to jump if they are touching the ground.
           if (
@@ -593,9 +641,32 @@ class GameEngine {
             level.bigMack.obj.body.setSize(16, 42 - difBig, 24, 13 + difBig);
             level.bigMack.crouch = true;
           } else {
-            level.bigMack.obj.body.setSize(16, 42, 24, 13);
-            level.bigMack.crouch = false;
+            const difBig = 13;
+            let flagCrouch = true;
+            const pointsToCheck = [
+              { x: level.bigMack.obj.body.x, y: level.bigMack.obj.body.y - difBig },
+              {
+                x: level.bigMack.obj.body.x + level.bigMack.obj.body.width,
+                y: level.bigMack.obj.body.y - difBig,
+              },
+              {
+                x: level.bigMack.obj.body.x + level.bigMack.obj.body.width / 2,
+                y: level.bigMack.obj.body.y - difBig,
+              },
+            ];
+            for (let i = 0; i < level.map.slidingDoors.length; i++) {
+              pointsToCheck.map((key) => {
+                if (level.map.slidingDoors[i].data.getBounds().contains(key.x, key.y)) {
+                  flagCrouch = false;
+                }
+              });
+            }
+            if (flagCrouch === true) {
+              level.bigMack.obj.body.setSize(16, 42, 24, 13);
+              level.bigMack.crouch = false;
+            }
           }
+
           if (this.phaser.input.keyboard.isDown(Phaser.KeyCode.E)) {
             //CHECK SE HA OVERLAP COM ALGUMA LEVER
             level.map.levers.map((key) => {
@@ -650,6 +721,7 @@ class GameEngine {
         //CASO OS DOIS ESTEJAM CADA UM NA SUA PORTA
         if (level.checkCompleted()) {
           level.animation = "COMPLETED";
+          level.timer.stopTimer();
         }
 
         //TIMER UPDATE
@@ -795,12 +867,29 @@ class GameEngine {
       }
     }
   }
+
+  playSingleSound(sound) {
+    sound.volume = this.player.soundEffectsVolume / 10;
+    sound.load(); //restarts sound
+    sound.play();
+  }
+
+  playContinuousSound(sound) {
+    if (sound.paused) {
+      sound.volume = this.player.soundEffectsVolume / 10;
+      sound.load(); //restarts sound
+      sound.loop = true;
+      sound.play();
+    }
+  }
+
+  stopContinuousSound(sound) {
+    sound.pause();
+  }
 }
 
 class MapLevel {
   constructor() {
-    this.bounds = null;
-    this.boundsTest = [];
     this.immovableObjects = [];
     this.elevators = [];
     this.chains = [];
@@ -1073,7 +1162,15 @@ class MapLevel {
   }
 
   addSlidingDoor(x, y, maxX, maxY, sizeX, sizeY, velocidade, inverted, chains) {
-    const slidingDoor = game.phaser.add.sprite(x, y, "slidingDoor");
+    let slidingDoor = null;
+    if (y == maxY) {
+      console.log("aaa");
+
+      slidingDoor = game.phaser.add.sprite(x, y, "slidingDoorHorizontal");
+    } else {
+      slidingDoor = game.phaser.add.sprite(x, y, "slidingDoor");
+    }
+
     game.phaser.physics.arcade.enable(slidingDoor);
     slidingDoor.body.gravity.y = 0;
     slidingDoor.enableBody = true;
@@ -1107,11 +1204,12 @@ class Level {
     this.doorChains = [];
     this.cutscene = null;
     this.levelID = idLevel;
+    game.currentLevel = this;
     //ADICIONAR AQUI A CONDIÇAO PARA MOSTRAR CUTSCENE
+    const levelStr = "level" + idLevel.toString();
 
-    if (numHelpers + numCut != 0) {
+    if (numHelpers + numCut != 0 && !game.player[levelStr].cutscenesCheck)
       this.cutscene = new Cutscene(numCut, numHelpers, coordsHelpers);
-    }
   }
 
   addGrayFilter(lista) {
@@ -1124,7 +1222,11 @@ class Level {
         key.data.filters = [gray];
       });
     } else {
-      this.map[lista].filters = [gray];
+      if (lista === "lilPeanutDoor" || lista === "bigMackDoor") {
+        this.map[lista].data.filters = [gray];
+      } else {
+        this.map[lista].filters = [gray];
+      }
     }
   }
 
@@ -1144,7 +1246,6 @@ class Level {
     this.addGrayFilter("platforms");
     this.addGrayFilter("slidingDoors");
     this.addGrayFilter("lavaBlocks");
-
     if (sprite === "lilpeanut") {
       this.bigMack.obj.filters = [gray];
     } else {
@@ -1170,8 +1271,6 @@ class Level {
   addMenuBoards(x, y) {
     const scale = 2;
     const offSetX = 100;
-    var pauseMenu = new PauseMenu();
-    game.pauseMenu = pauseMenu;
     var board = game.phaser.add.button(x, y, "restartBoard", () => {
       game.phaser.state.start(game.phaser.state.current);
     });
@@ -1182,12 +1281,12 @@ class Level {
     board = game.phaser.add.button(x + offSetX, y, "menuBoard", () => {
       var date = new Date();
       if (game.phaser.paused == true) {
-        pauseMenu.hideContent(game);
+        game.pauseMenu.hideContent(game);
         game.phaser.paused = false;
         game.currentLevel.timer.startTime = date.getTime();
       } else {
         game.phaser.paused = true;
-        pauseMenu.showContent(game);
+        game.pauseMenu.showContent(game);
         var currentTime = date.getTime();
         this.timer.timerAux += Math.round((currentTime - this.timer.startTime) / 1000);
       }
@@ -1229,20 +1328,19 @@ class Level {
     // game.phaser.debug.body(this.bigMack.obj, "rgba(255, 255, 0, 0.6)");
     // game.phaser.debug.body(this.map.buttons[0].data, "rgba(255, 255, 0, 0.6)");
     // game.phaser.debug.body(this.map.eletricSaw[0].data, "rgba(255, 255, 0, 0.6)");
-    game.phaser.debug.body(this.map.lavaBlocks[0].data, "rgba(255, 255, 0, 0.6)");
+    //game.phaser.debug.body(this.map.lavaBlocks[0].data, "rgba(255, 255, 0, 0.6)");
     //game.phaser.debug.body(this.map.spikes[0].data, "rgba(255, 255, 0, 0.6)");
     //game.phaser.debug.body(this.map.levers[0].data, "rgba(255, 255, 0, 0.6)");
+    //game.phaser.debug.body(this.map.slidingDoors[0].data, "rgba(255, 255, 0, 0.6)");
+    //game.phaser.debug.body(this.map.slidingDoors[1].data, "rgba(255, 255, 0, 0.6)");
   }
 
   drawMap(game, levelData) {
-    var nEletricSaw = 0;
-    var nPlataforma = 0;
     var bounds = game.phaser.add.group();
+    var pauseMenu = new PauseMenu();
+    game.pauseMenu = pauseMenu;
 
     bounds.enableBody = true;
-    this.bounds = bounds;
-
-    // DRAW BOUNDS
     levelData.bounds.map((bound_coords) => {
       this.map.drawBound(
         bound_coords[0],
@@ -1252,6 +1350,8 @@ class Level {
         bound_coords[3]
       );
     });
+    this.bounds = bounds;
+    console.log(bounds);
 
     var background = game.phaser.add.sprite(
       levelData.background[0],
@@ -1260,6 +1360,7 @@ class Level {
     );
     background.scale.setTo(levelData.background[3], levelData.background[4]);
     this.map.background = background;
+
     //TOCHAS
     levelData.tochas.map((tochas_coords) => {
       if (tochas_coords[2]) this.map.addTorchInverted(tochas_coords[0], tochas_coords[1], this.map);
@@ -1347,7 +1448,6 @@ class Level {
         plataformas_data.platform[4],
         this.map.slidingDoors
       );
-      nPlataforma++;
     });
 
     //BOXES
@@ -1376,7 +1476,6 @@ class Level {
           serras_coords[3],
           serras_coords[4]
         );
-      nEletricSaw++;
     });
 
     //BOTOES
@@ -1430,14 +1529,13 @@ class Level {
 
     //CIRA TIMER
     this.timer.createTimer();
+    if (!this.cutscene) {
+      //BOARD PARA COLECTAVEIS
+      this.addCollectableBoards(levelData.quadro_coletaveis[0], levelData.quadro_coletaveis[1]);
 
-    //BOARD PARA COLECTAVEIS
-    this.addCollectableBoards(levelData.quadro_coletaveis[0], levelData.quadro_coletaveis[1]);
-
-    //BOARD PARA RESTART E MENU
-    this.addMenuBoards(levelData.quadro_menu_restart[0], levelData.quadro_menu_restart[1]);
-
-    //COLLECTAVEIS
+      //BOARD PARA RESTART E MENU
+      this.addMenuBoards(levelData.quadro_menu_restart[0], levelData.quadro_menu_restart[1]);
+    } //COLLECTAVEIS
     levelData.coletaveis_peanut.map((coletavel) => {
       this.map.addCollectableLilPeanut(coletavel[0], coletavel[1]);
     });
@@ -1740,6 +1838,11 @@ class Lava extends Sprite {
     super(x, y, data);
     this.data.animations.add("animation", [0, 1, 2], 5, true);
     this.data.play("animation");
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "lavaSoundEffect") {
+        this.sound = sound[1];
+      }
+    });
   }
 }
 
@@ -1747,10 +1850,12 @@ class Lever extends Sprite {
   constructor(x, y, data, timeToReset, actionObjIndex) {
     super(x, y, data);
     this.timeToReset = timeToReset * 1000;
-    console.log(game.currentLevel.map.slidingDoors[actionObjIndex]);
-    console.log(game.currentLevel.map.slidingDoors);
-
     this.actionObj = game.currentLevel.map.slidingDoors[actionObjIndex];
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "leverSoundEffect") {
+        this.sound = sound[1];
+      }
+    });
   }
 
   resetLever = () => {
@@ -1761,6 +1866,11 @@ class Lever extends Sprite {
 class Spike extends Sprite {
   constructor(x, y, data) {
     super(x, y, data);
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "spikesSoundEffect") {
+        this.sound = sound[1];
+      }
+    });
   }
 }
 
@@ -1770,6 +1880,11 @@ class Elevator extends Sprite {
     this.num = num;
     this.maxX = maxX;
     this.minY = minY;
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "elevatorSoundEffect") {
+        this.sound = sound[1];
+      }
+    });
   }
 
   elevatorUp(elevator, chains) {
@@ -1799,6 +1914,11 @@ class PlataformaMovel extends Sprite {
     this.maxX = maxX;
     this.minY = minY;
     this.actionObj = actionObj;
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "elevatorSoundEffect") {
+        this.sound = sound[1];
+      }
+    });
   }
 
   platformUp(platform, chains) {
@@ -1865,12 +1985,24 @@ class Chain extends Sprite {
 class SmallBox extends Sprite {
   constructor(x, y, data) {
     super(x, y, data);
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "boxMoveSoundEffect") {
+        this.moveSound = sound[1];
+      } else if (sound[0] == "boxBreakSoundEffect") {
+        this.breakSound = sound[1];
+      }
+    });
   }
 }
 
 class BigBox extends Sprite {
   constructor(x, y, data) {
     super(x, y, data);
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "boxMoveSoundEffect") {
+        this.moveSound = sound[1];
+      }
+    });
   }
 }
 
@@ -1895,8 +2027,12 @@ class EletricSaw extends Sprite {
     this.stop = false;
     data.animations.add("rotate", [0, 1, 2], 8, true);
     data.body.velocity.x = velocity;
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "sawSoundEffect") {
+        this.sound = sound[1];
+      }
+    });
   }
-
   doAnimation() {
     this.data.play("rotate");
   }
@@ -1926,8 +2062,12 @@ class EletricSawVertical extends Sprite {
     this.velocity = velocity;
     this.stop = false;
     data.animations.add("rotate", [0, 1, 2], 8, true);
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "sawSoundEffect") {
+        this.sound = sound[1];
+      }
+    });
   }
-
   doAnimation() {
     this.data.play("rotate");
   }
@@ -1973,6 +2113,11 @@ class Button extends Sprite {
   constructor(x, y, data, actionObj) {
     super(x, y, data);
     this.actionObj = actionObj;
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "buttonSoundEffect") {
+        this.sound = sound[1];
+      }
+    });
   }
 
   buttonPressed() {
@@ -2024,6 +2169,11 @@ class Collectable extends Sprite {
     super(x, y, data);
     this.velocity = 20;
     this.target = target;
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "collectableSoundEffect") {
+        this.sound = sound[1];
+      }
+    });
   }
 
   doAnimation() {
@@ -2037,6 +2187,7 @@ class Collectable extends Sprite {
 
 class Timer {
   constructor() {
+    this.finalTime = 0;
     this.timerAux = 0;
     this.slot1 = {};
     this.slot2 = {};
@@ -2047,7 +2198,6 @@ class Timer {
   createTimer() {
     const posX = 400 - 60;
     const posY = -8;
-    const gravity = 0;
     const scale = 3;
     const board = game.phaser.add.sprite(posX, posY, "timerBoard");
     const xCoords = [361, 381, 416, 436];
@@ -2067,6 +2217,13 @@ class Timer {
         this["slot" + String(i)][k].smoothed = false;
       }
     }
+  }
+
+  stopTimer() {
+    var date = new Date();
+    var currentTime = date.getTime();
+    var timerValue = Math.round((currentTime - this.startTime) / 1000) + this.timerAux;
+    this.finalTime = timerValue;
   }
 
   updateDigit(digit, slot) {
@@ -2208,6 +2365,13 @@ class Menu {
   }
 
   toLevel(level) {
+    game.menuMusic.pause();
+    if (game.gameMusic.paused) {
+      game.gameMusic.volume = game.player.gameMusicVolume / 10;
+      game.gameMusic.loop = true;
+      game.gameMusic.load();
+      game.gameMusic.play();
+    }
     game.phaser.state.start("Level" + level.toString());
   }
 
@@ -2216,6 +2380,13 @@ class Menu {
   }
 
   toMainMenu() {
+    game.gameMusic.pause();
+    if (game.menuMusic.paused) {
+      game.menuMusic.volume = game.player.menuMusicVolume / 10;
+      game.menuMusic.loop = true;
+      game.menuMusic.load(); //resets sound
+      game.menuMusic.play();
+    }
     game.phaser.state.start("MainMenu");
   }
 
@@ -2283,6 +2454,7 @@ class Options extends Menu {
 
     if (game.phaser.paused == true) {
       this.this.hideContent();
+      game.pauseMenu.showContent();
     } else {
       this.this.toMainMenu();
     }
@@ -2293,12 +2465,17 @@ class Options extends Menu {
       if (sound == this.SoundEffectsFilledSoundBars) {
         this.soundEffectsVolume = volume;
         game.player.soundEffectsVolume = volume;
+        game.soundEffects.map((sound) => {
+          sound.volume = volume / 10;
+        });
       } else if (sound == this.GameMusicFilledSoundBars) {
         this.gameMusicVolume = volume;
         game.player.gameMusicVolume = volume;
+        game.gameMusic.volume = volume / 10;
       } else if (sound == this.MenuMusicFilledSoundBars) {
         this.menuMusicVolume = volume;
         game.player.menuMusicVolume = volume;
+        game.menuMusic.volume = volume / 10;
       }
 
       for (let i = 0; i < volume; i++) {
@@ -2438,10 +2615,17 @@ class MainMenu extends Menu {
   }
 
   addSprites(game) {
+    let anim = null;
     this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
     this.addSprite(100, -75, "titleInline").scale.setTo(0.6, 0.6);
-    this.addSprite(600, 350, "lilPeanutImg").scale.setTo(6, 6);
-    this.addSprite(110, 255, "bigMackImg").scale.setTo(6, 6);
+    anim = this.addSprite(570, 340, "lilPeanut");
+    anim.scale.setTo(6, 6);
+    anim.animations.add("restLeft", [10, 11], 5, true);
+    anim.play("restLeft");
+    anim = this.addSprite(-40, 185, "bigMack");
+    anim.scale.setTo(6, 6);
+    anim.animations.add("restRight", [10, 11], 4, true);
+    anim.play("restRight");
   }
 
   addButtons(game) {
@@ -2483,13 +2667,13 @@ class Ranking extends Menu {
   loadRankings() {
     var rankings = this.rankings;
     db.collection("players")
-      .orderBy("score", "desc")
+      .orderBy("totalScore", "desc")
       .limit(5)
       .get()
       .then(function (querySnapshot) {
         let i = 0;
         querySnapshot.forEach(function (doc) {
-          let score = String(doc.data().score);
+          let score = String(doc.data().totalScore);
           rankings[i].setText(
             rankings[i]._text.slice(0, 3) +
               doc.data().name +
@@ -2515,6 +2699,7 @@ class Help extends Menu {
   toExitHelp() {
     if (game.phaser.paused == true) {
       this.hideContent();
+      game.pauseMenu.showContent();
     } else {
       this.toMainMenu();
     }
@@ -2562,69 +2747,137 @@ class LevelSelector extends Menu {
   }
 
   addSprites() {
-    this.addSprite(0, 0, "menuBackground").scale.setTo(0.63, 0.85);
-    this.addSprite(20, -155, "levelsInline").scale.setTo(0.6, 0.6);
-    this.addSprite(65, 170, "pyramidLevelSelector").scale.setTo(0.7, 0.7);
-    //lvl1
-    this.addSprite(260, 380, "collectableBigMack").scale.setTo(3, 3);
-    this.addSprite(260, 400, "collectableLilPeanut").scale.setTo(3, 3);
-    //lvl2
-    this.addSprite(600, 380, "collectableBigMack").scale.setTo(3, 3);
-    this.addSprite(600, 400, "collectableLilPeanut").scale.setTo(3, 3);
-    //lvl3
-    this.addSprite(260, 235, "collectableBigMack").scale.setTo(3, 3);
-    this.addSprite(260, 255, "collectableLilPeanut").scale.setTo(3, 3);
-    //lvl4
-    this.addSprite(600, 235, "collectableBigMack").scale.setTo(3, 3);
-    this.addSprite(600, 255, "collectableLilPeanut").scale.setTo(3, 3);
+    var spriteData = [
+      [0, 0, "menuBackground", 0.63, 0.85],
+      [20, -155, "levelsInline", 0.6, 0.6],
+      [65, 170, "pyramidLevelSelector", 0.7, 0.7],
+      //lvl1
+      [260, 235, "collectableBigMack", 3, 3, "level1"],
+      [260, 255, "collectableLilPeanut", 3, 3, "level1"],
+      //lvl2
+      [600, 235, "collectableBigMack", 3, 3, "level2"],
+      [600, 255, "collectableLilPeanut", 3, 3, "level2"],
+      //lvl3
+      [260, 380, "collectableBigMack", 3, 3, "level3"],
+      [260, 400, "collectableLilPeanut", 3, 3, "level3"],
+      //lvl4
+      [600, 380, "collectableBigMack", 3, 3, "level4"],
+      [600, 400, "collectableLilPeanut", 3, 3, "level4"],
+    ];
+    let currentSprite = null;
+    spriteData.map((key) => {
+      if (key.length == 6) {
+        if (game.player[key[5]].score !== 0) {
+          currentSprite = this.addSprite(key[0], key[1], key[2]);
+          currentSprite.scale.setTo(key[3], key[4]);
+        }
+      } else {
+        currentSprite = this.addSprite(key[0], key[1], key[2]).scale.setTo(key[3], key[4]);
+      }
+    });
   }
   // TO-DO: DEPOIS DE REESTRUTURAR BD, METER OS COLECTAVEIS, SCORE E TIMERS DINAMICOS
   addTexts() {
-    this.addBitmapText(
-      530,
-      35,
-      "TOTAL SCORE:\n  " + "1500" + " PTS",
-      //String(game.player.score)
-      24
-    );
-    //lvl1
-    this.addBitmapText(310, 380, String(1) + " / 3", 16);
-    this.addBitmapText(310, 400, String(1) + " / 3", 16);
-    this.addBitmapText(260, 423, "TIME:" + String(1000), 16);
-    this.addBitmapText(260, 440, "SCORE:" + String(163), 16);
-    //lvl2
-    this.addBitmapText(650, 380, String(1) + " / 3", 16);
-    this.addBitmapText(650, 400, String(1) + " / 3", 16);
-    this.addBitmapText(600, 423, "TIME:" + String(1000), 16);
-    this.addBitmapText(600, 440, "SCORE:" + String(163), 16);
-    //lvl3
-    this.addBitmapText(310, 235, String(1) + " / 3", 16);
-    this.addBitmapText(310, 255, String(1) + " / 3", 16);
-    this.addBitmapText(260, 278, "TIME:" + String(1000), 16);
-    this.addBitmapText(260, 295, "SCORE:" + String(163), 16);
-    //lvl4
-    this.addBitmapText(650, 235, String(1) + " / 3", 16);
-    this.addBitmapText(650, 255, String(1) + " / 3", 16);
-    this.addBitmapText(600, 278, "TIME:" + String(1000), 16);
-    this.addBitmapText(600, 295, "SCORE:" + String(163), 16);
+    const scoreToShow = game.player.totalScore;
+    var textData = [
+      [530, 35, "TOTAL SCORE:\n  " + String(scoreToShow) + " PTS.", 24],
+      //level1
+      [310, 235, String(1) + " / 3", 16, "level1"],
+      [310, 255, String(1) + " / 3", 16, "level1"],
+      [260, 295, "SCORE:" + String(game.player.level1.score), 16, "level1"],
+      //level2
+      [650, 235, String(1) + " / 3", 16, "level2"],
+      [650, 255, String(1) + " / 3", 16, "level2"],
+      [600, 295, "SCORE:" + String(game.player.level1.score), 16, "level2"],
+      //level3
+      [310, 380, String(1) + " / 3", 16, "level3"],
+      [310, 400, String(1) + " / 3", 16, "level3"],
+      [260, 440, "SCORE:" + String(game.player.level1.score), 16, "level3"],
+      //lvl4
+      [650, 380, String(1) + " / 3", 16, "level4"],
+      [650, 400, String(1) + " / 3", 16, "level4"],
+      [600, 440, "SCORE:" + String(game.player.level1.score), 16, "level4"],
+    ];
+
+    textData.map((key) => {
+      if (key.length == 5) {
+        if (game.player[key[4]].score !== 0) {
+          this.addBitmapText(key[0], key[1], key[2], key[3]);
+        }
+      } else {
+        this.addBitmapText(key[0], key[1], key[2], key[3]);
+      }
+    });
   }
 
   addButtons() {
-    this.addButton(40, 30, "backBtn", this.toMainMenu).scale.setTo(2.8, 2.8);
-    this.addButton(85, 375, "lvl1", this.toStart).scale.setTo(0.65, 0.65);
-    this.addButton(425, 375, "lvl1", () => {
-      this.toLevel(2);
-    }).scale.setTo(0.65, 0.65);
-    this.addButton(85, 230, "lvl1", this.toStart).scale.setTo(0.65, 0.65);
-    this.addButton(425, 230, "lvl1", () => {
-      this.toLevel(2);
-    }).scale.setTo(0.65, 0.65);
+    const buttonsData = [
+      [100, 30, "backBtn", this.toMainMenu, 2.8, 2.8],
+      [
+        85,
+        362,
+        "lvl3",
+        () => {
+          this.toLevel(3);
+        },
+        0.3,
+        0.25,
+      ],
+      [
+        425,
+        362,
+        "lvl4",
+        () => {
+          this.toLevel(4);
+        },
+        0.3,
+        0.25,
+      ],
+      [
+        85,
+        230,
+        "lvl1",
+        () => {
+          this.toLevel(1);
+        },
+        0.3,
+        0.25,
+      ],
+      [
+        425,
+        230,
+        "lvl2",
+        () => {
+          this.toLevel(2);
+        },
+        0.3,
+        0.25,
+      ],
+    ];
+
+    buttonsData.map((key) => {
+      let spriteAux = null;
+      if (key[2].includes("lvl")) {
+        const levelAntStr = "level" + String(parseInt(key[2][3]) - 1);
+        if (levelAntStr == "level0" || game.player[levelAntStr].score != 0) {
+          this.addButton(key[0], key[1], key[2], key[3]).scale.setTo(key[4], key[5]);
+        } else {
+          spriteAux = this.addSprite(key[0], key[1], key[2], key[3]);
+          spriteAux.scale.setTo(key[4], key[5]);
+          var gray = game.phaser.add.filter("Gray");
+          spriteAux.filters = [gray];
+        }
+      } else {
+        this.addButton(key[0], key[1], key[2], key[3]).scale.setTo(key[4], key[5]);
+      }
+    });
   }
 }
 
 class GameOverMenu extends Menu {
   constructor() {
     super();
+    game.gameMusic.pause();
   }
 
   addButtons(game) {
@@ -2681,10 +2934,9 @@ class NameInput extends Menu {
     const inputFieldValue = document.getElementById("name-input");
 
     if (inputFieldValue.value != "") {
-      game.dataBaseGet(inputFieldValue.value);
+      game.dataBaseGet(inputFieldValue.value, this.toMainMenu);
       inputFieldValue.style.display = "none";
       inputFieldValue.disabled = true;
-      this.toMainMenu();
     } else {
       alert("Please enter a name");
     }
@@ -2728,6 +2980,7 @@ class PauseMenu extends Menu {
       this.toMainMenu();
     }).scale.setTo(2.5, 2.5);
     this.addButton(240, 260, "helpBtn", () => {
+      this.hideContent(game);
       var pauseHelpMenu = new Help();
       pauseHelpMenu.addSprites(game);
       pauseHelpMenu.addButtons(game);
@@ -2742,6 +2995,7 @@ class PauseMenu extends Menu {
       );
     }).scale.setTo(2.5, 2.5);
     this.addButton(420, 260, "optionsBtn", () => {
+      this.hideContent();
       var pauseOptionsMenu = new Options();
       pauseOptionsMenu.addSprites(game);
       pauseOptionsMenu.addButtons(game);
@@ -2763,24 +3017,71 @@ class PauseMenu extends Menu {
 class LevelCompletedMenu extends Menu {
   constructor() {
     super();
+    game.soundEffects.map((sound) => {
+      if (sound[0] == "levelCompleteSoundEffect") {
+        game.gameMusic.pause();
+        game.playSingleSound(sound[1]);
+      }
+    });
   }
 
-  addTexts() {
+  addTexts(score, time, highestScore) {
     this.addBitmapText(385, 252, String(game.currentLevel.nLilPeanutCollected) + " / 3", 20);
     this.addBitmapText(385, 292, String(game.currentLevel.nLilPeanutCollected) + " / 3", 20);
-    this.addBitmapText(305, 332, "TIME:" + String(game.currentLevel.timer.minutes), 20);
-    this.addBitmapText(305, 372, "SCORE:" + String(123), 20);
+    this.addBitmapText(305, 332, "TIME- " + time.minutes + ":" + time.seconds + " MIN", 20);
+    if (highestScore) {
+      this.addBitmapText(210, 372, "NEW HIGH SCORE- " + String(score) + " pts.", 20);
+    } else {
+      if (score >= 1000) {
+        this.addBitmapText(305, 372, "SCORE-" + String(score) + "pts.", 20);
+      } else {
+        this.addBitmapText(305, 372, "SCORE- " + String(score) + "pts.", 20);
+      }
+    }
   }
 
   addButtons() {
-    this.addButton(410, 417, "quitBtn", () => {
-      game.phaser.paused = false;
-      this.toMainMenu();
-    }).scale.setTo(2.5, 2.5);
-    this.addButton(230, 415, "backBtn", () => {
-      this.hideContent(game);
-      game.phaser.paused = false;
-    }).scale.setTo(2.5, 2.5);
+    const lastLvl = 4;
+    let posData = null;
+    const scale = 2.5;
+    if (game.currentLevel.levelID !== lastLvl) {
+      posData = [
+        [
+          230,
+          415,
+          "menuBtn",
+          () => {
+            game.phaser.paused = false;
+            this.toMainMenu();
+          },
+        ],
+        [
+          410,
+          415,
+
+          "nextLvlBtn",
+          () => {
+            this.hideContent(game);
+            this.toLevel(game.currentLevel.levelID + 1);
+          },
+        ],
+      ];
+    } else {
+      posData = [
+        [
+          320,
+          415,
+          "menuBtn",
+          () => {
+            game.phaser.paused = false;
+            this.toMainMenu();
+          },
+        ],
+      ];
+    }
+    posData.map((key) => {
+      this.addButton(key[0], key[1], key[2], key[3]).scale.setTo(scale, scale);
+    });
   }
 
   addSprites(game) {
@@ -2810,6 +3111,9 @@ class Cutscene {
     let yBig = 0;
     let xLil = 0;
     let yLil = 0;
+    const menuBoardsData = { quadro_coletaveis: [30, -2], quadro_menu_restart: [580, -2] };
+    const levelStr = "level" + game.currentLevel.levelID.toString();
+    console.log(isRightSide);
 
     if (isRightSide) {
       offSetXBig = -10;
@@ -2827,11 +3131,11 @@ class Cutscene {
         offSetXLil;
       yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
     } else {
-      offSetXBig = -10;
+      offSetXBig = -230;
       offSetYBig = -70;
-      offSetXLil = -10;
+      offSetXLil = -230;
       offSetYLil = -70;
-      xBig = game.currentLevel.bigMack.obj.body.x;
+      xBig = game.currentLevel.bigMack.obj.body.x + offSetXBig;
       yBig = game.currentLevel.bigMack.obj.body.y + offSetYBig;
       xLil = game.currentLevel.lilPeanut.obj.body.x + offSetXLil;
       yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
@@ -2841,7 +3145,6 @@ class Cutscene {
     this.currentScene.kill();
     this.currentScene.destroy();
 
-    //TODO: METER AQUI O NOME DO NIVEL DINAMICO
     let nameCutScene =
       "cut-level" + game.currentLevel.levelID.toString() + "-" + this.currentIndex.toString();
     if (this.numCutScenes >= this.currentIndex) {
@@ -2865,6 +3168,18 @@ class Cutscene {
       game.currentLevel.timer.timerAux = 0;
       this.spacebarSprite.destroy();
       this.spacebarSprite.kill();
+      game.player[levelStr].cutscenesCheck = true;
+      game.dataBaseSet();
+
+      //ADCIONA BOARD PARA RESTART E MENU
+      game.currentLevel.addCollectableBoards(
+        menuBoardsData.quadro_coletaveis[0],
+        menuBoardsData.quadro_coletaveis[1]
+      );
+      game.currentLevel.addMenuBoards(
+        menuBoardsData.quadro_menu_restart[0],
+        menuBoardsData.quadro_menu_restart[1]
+      );
     }
   };
 
@@ -2877,19 +3192,31 @@ class Cutscene {
   }
 
   startCutscene(level) {
-    const offSetXLil = -10;
-    const offSetYLil = -70;
-    const xLil =
-      game.currentLevel.lilPeanut.obj.body.x +
-      game.currentLevel.lilPeanut.obj.body.width +
-      offSetXLil;
-    const yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
+    const isRightSide =
+      game.currentLevel.lilPeanut.obj.frame === 8 || game.currentLevel.lilPeanut.obj.frame === 9;
+    let offSetXLil = 0;
+    let offSetYLil = 0;
+    let xLil = 0;
+    let yLil = 0;
+    if (isRightSide) {
+      offSetXLil = -10;
+      offSetYLil = -70;
+      xLil =
+        game.currentLevel.lilPeanut.obj.body.x +
+        game.currentLevel.lilPeanut.obj.body.width +
+        offSetXLil;
+      yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
+    } else {
+      offSetXLil = -230;
+      offSetYLil = -70;
+      xLil = game.currentLevel.lilPeanut.obj.body.x + offSetXLil;
+      yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
+    }
     const scale = 2.5;
     const spacebarX = 110;
     const spacebarY = 480;
     let nameCutScene =
       "cut-level" + game.currentLevel.levelID.toString() + "-" + this.currentIndex.toString();
-    console.log(nameCutScene);
     var newScene = game.phaser.add.sprite(xLil, yLil, nameCutScene);
     this.currentScene = newScene;
     level.bigMack.restAnimation();
@@ -2916,5 +3243,66 @@ class Load extends Menu {
     game.phaser.add
       .tween(spacebarText)
       .to({ alpha: 1 }, 1000, Phaser.Easing.Linear.None, true, 0, 1000, true);
+  }
+}
+
+class EndOfGame extends Menu {
+  constructor(num) {
+    super();
+    this.nTotal = num;
+    this.currentIndex = 0;
+    this.currentScene = null;
+  }
+
+  next = (key) => {
+    this.currentIndex = this.currentIndex + 1;
+    const nameScene = "credits" + String(this.current);
+    let offSetXBig = -10;
+    let offSetYBig = -70;
+    let offSetXLil = -10;
+    let offSetYLil = -70;
+    let xBig =
+      game.currentLevel.bigMack.obj.body.x + game.currentLevel.bigMack.obj.body.width + offSetXBig;
+    let yBig = game.currentLevel.bigMack.obj.body.y + offSetYBig;
+    let xLil =
+      game.currentLevel.lilPeanut.obj.body.x +
+      game.currentLevel.lilPeanut.obj.body.width +
+      offSetXLil;
+    let yLil = game.currentLevel.lilPeanut.obj.body.y + offSetYLil;
+    if (this.currentScene === null) {
+      keySPACE.onDown.add(this.nextCutscene, this);
+      this.spacebarSprite = game.phaser.add.sprite(spacebarX, spacebarY, "spacebar");
+      this.spacebarSprite.scale.setTo(scale, scale);
+      this.spacebarSprite.smoothed = false;
+    }
+    if (this.currentIndex % 2 == 0) {
+      var newScene = game.phaser.add.sprite(xBig, yBig, nameScene);
+    } else {
+      var newScene = game.phaser.add.sprite(xLil, yLil, nameScene);
+    }
+    this.currentScene = newScene;
+  };
+
+  startScene() {}
+
+  start() {
+    const coords = {
+      menu: { x: 0, y: 0 },
+      lilPeanut: { x: 500, y: 540 },
+      bigMack: { x: 430, y: 540 },
+    };
+    const scaleX = 0.63;
+    const scaleY = 0.85;
+    const sideBig = "right";
+    const sideLil = "right";
+    const timeSec = 1.5;
+    this.addSprite(coords.x, coords.y, "menuBackground").scale.setTo(scaleX, scaleY);
+    var lilPeanutObj = game.placeCharacter(coords.lilPeanut.x, coords.lilPeanut.y, "lilPeanut");
+    var newLilPeanut = new lilPeanut(lilPeanutObj, sideLil);
+    newLilPeanut.obj.animations.play("restLeft");
+    var bigMackObj = game.placeCharacter(coords.bigMack.x, coords.bigMack.y, "bigMack");
+    var newBigMack = new bigMack(bigMackObj, sideBig);
+    newBigMack.obj.animations.play("restRight");
+    setTimeout(this.startScene, timeSec * 1000);
   }
 }
