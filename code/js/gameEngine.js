@@ -946,9 +946,11 @@ class GameEngine {
 
   playSingleSound(sound) {
     const divideSound = 10;
-    sound.volume = this.player.soundEffectsVolume / divideSound;
-    sound.load(); //restarts sound
-    sound.play();
+    if (sound.paused) {
+      sound.volume = this.player.soundEffectsVolume / divideSound;
+      sound.load(); //restarts sound
+      sound.play();
+    }
   }
 
   playContinuousSound(sound) {
